@@ -34,9 +34,11 @@ python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-ca
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr/*.ipk
 ```
 
-準備パッケージと本体を含む18個のIPKと、チェックサム、インストール用のまとめたアーカイブを生成します。公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
+準備パッケージと本体を含む18個のIPKと、チェックサム、opkgフィードの一覧を生成します。公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
 
 機種・設定・容量の検査と旧RAM構成の移行準備は、専用の `luci-qsdk-wn7t94xr-prepare` に分離しています。処理はこのパッケージの `preinst` と `/usr/libexec/luci-qsdk-prepare` に含めています。iwinfoのIPKには移行処理を含めず、準備パッケージへの依存も追加していません。本体の `preinst` は専用パッケージの処理を呼ぶため、準備パッケージが導入済みでも、再起動後のインストール再試行時に検査できます。
+
+準備IPKには、リリースのopkgフィード設定と公開の署名検証鍵も含めます。残りはopkgが依存関係を解決して取得するため、パッケージ自身から別のopkgを起動する処理は不要です。リリース時は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で、圧縮前の一覧に署名します。秘密鍵はリポジトリや配布物に含めません。
 
 ## RAMとoverlayの配置
 
@@ -44,47 +46,55 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr/*.ipk
 
 | 内容 | 保存先 |
 | --- | --- |
-| 公式 `luci-base` の圧縮ファイル | インストール時に取得し、`/root/luci-base.tar.xz` へ保存 |
+| 公式 `luci-base` の圧縮ファイル | 起動時にRAMへ取得し、検証・展開後に削除 |
 | 展開した `luci-base` のコード | `/tmp/luci-base` |
 | 起動処理、LuCI設定、opkgのパッケージ情報 | 通常のoverlay |
 | LuCIの依存ライブラリ、Wireless、Software、テーマ、QSDK対応 | overlay |
 | 後からopkgで追加する拡張やLuCIファイルへの変更 | overlay |
 
-圧縮ファイルは自作IPKにもインストール用アーカイブにも含めません。[公式IPKのデータをXZで再圧縮した公開ファイル](https://github.com/onokatio/luci/releases/tag/luci-base-19.07)をインストール時にダウンロードし、SHA-256を確認します。展開後のtarは公式IPKとバイト単位で一致し、圧縮ファイルは118,844バイトです。
+圧縮ファイルは自作IPKに含めず、本体にも保存しません。[公式IPKのデータをXZで再圧縮した公開ファイル](https://github.com/onokatio/luci/releases/tag/luci-base-19.07)を毎回の起動時にダウンロードし、SHA-256を確認します。展開後のtarは公式IPKとバイト単位で一致し、ダウンロード量は118,844バイトです。
 
-`luci-base-ram` サービスが起動時に保存済みの圧縮ファイルを検証して展開します。再起動時のダウンロードはありません。展開に失敗するとLuCIを起動できませんが、SSHと純正サービスの起動は継続します。
+`luci-base-ram` サービスはネットワーク起動後の `START=95` で取得・展開します。ダウンロードの制限時間は45秒です。取得・検証・展開に失敗するとLuCIを起動できませんが、SSHと純正サービスの起動は継続します。オンライン復帰後は `/etc/init.d/luci-base-ram start` で再試行できます。同じ起動中に取得済みのベースを再利用するため、起動処理を繰り返しても重複取得はありません。
 
 LinuxのOverlayFSで `/usr/lib/lua`、`/usr/libexec/rpcd`、`/usr/share`、`/www` を重ねます。RAMのベースを読み取り用の層とし、既存ファイルも読み取り用の層に含めます。書き込み先はUBIFSの `/overlay/luci-base/upper` です。そのため、通常の `opkg install` で追加した拡張と、ベースファイルに加えた変更は再起動後も残ります。マウント用の `work` と拡張の保存先は、同じUBIFSに置きます。
 
-`/etc/rc.local` のLuCI起動処理は不要です。以前の既知の `luci-ram` サービスと圧縮ファイルは、移行時にバックアップして回収します。
+`/etc/rc.local` のLuCI起動処理は不要です。以前の既知の `luci-ram` サービスと圧縮ファイル、および検証済みの `/root/luci-base.tar.xz` は、移行時にRAMへバックアップして本体から回収します。
 
 ## インストール条件
 
 純正v2.5.1、rootシェル、インターネット接続が必要です。LuCIの事前インストールは不要です。有効なRPCdログイン設定を維持し、未設定の場合はOSのrootパスワードを使うログイン設定を作ります。rootパスワードも無効な場合は、インストール前に設定してください。認証情報や機器固有の校正データは配布物に含めていません。
 
-インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.1.1-1)のアーカイブを `/tmp` で展開してください。
+インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.2.0-1)の小さな準備IPKを `/tmp` へ取得してください。最初のIPKはリリースのSHA-256で確認し、以後の取得ではopkgが一覧の署名と各IPKのハッシュを検証します。
 
 ```sh
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-curl -fL https://github.com/onokatio/luci/releases/download/v3.1.1-1/wn7t94xr-luci-3.1.1-1.tar.gz -o packages.tar.gz
-tar -xzf packages.tar.gz
-sha256sum -c SHA256SUMS
-opkg --force-space install ./luci-qsdk-wn7t94xr-prepare_3.1.1-1_arm_cortex-a7_neon-vfpv4.ipk && opkg --force-space install ./*.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.2.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.2.0-1_arm_cortex-a7_neon-vfpv4.ipk
+curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
+curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
+awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
+test "$(wc -l < prepare.sha256)" -eq 1
+sha256sum -c prepare.sha256
+opkg --force-space install "./$wn7_prepare"
+opkg update
+opkg --force-space install luci-qsdk-wn7t94xr
 ```
 
-最初に専用の準備パッケージで機種・設定・容量を検査して移行を準備し、成功した場合に残りをインストールします。本体は準備パッケージの同じバージョンに依存します。opkgは圧縮前の容量を積算するため、`--force-space` の指定が必要です。インストール前後にも独自の容量検査を行い、圧縮後の必要容量と32 KiBの空きを確保します。容量不足はエラーです。UBIFSでは書き込み直後に未圧縮の容量が予約され、空き容量表示が一時的に0になることがあります。
+最初に専用の準備パッケージで機種・設定・容量を検査して移行を準備し、フィードを登録します。残りのIPKの取得もオンラインです。本体は準備パッケージの同じバージョンに依存します。opkgは圧縮前の容量を積算するため、`--force-space` の指定が必要です。インストール前後にも独自の容量検査を行い、圧縮後の必要容量と32 KiBの空きを確保します。容量不足はエラーです。UBIFSでは書き込み直後に未圧縮の容量が予約され、空き容量表示が一時的に0になることがあります。
 
-標準構成の必要容量の見積もりは約480 KiBです。既に同じパッケージが入っている場合はその分を差し引きます。データが変わっていないv3.1.0-1のパッケージも更新時に差し引き、確認済みの旧RAM用ファイルも回収します。無線ファームウェア、ドライバー、校正データは削除しません。追加する拡張パッケージの容量は別途必要です。
+純正の未変更のフィード設定は、公開アーカイブに対応先がある `base`、`luci`、`packages`、`routing` に変更します。元の設定は移行前のバックアップに含めます。変更済みのフィード設定はそのままです。純正の `19.07-SNAPSHOT` の機種専用フィードは公開先がないため、登録しません。
+
+標準構成の必要容量の見積もりは約356 KiBです。起動時に取得するLuCIベースの圧縮ファイルは含みません。既に対応するパッケージが入っている場合はその分を差し引き、確認済みの旧RAM用ファイルも回収します。無線ファームウェア、ドライバー、校正データは削除しません。追加する拡張パッケージの容量は別途必要です。
 
 この機器のopkgでは `--force-reinstall` を使わないでください。ROMにある他のパッケージのファイル一覧までoverlayへ複製し、容量を使い切る挙動を確認しました。更新時も上記の通常の `install` を使います。
 
-インストール時にネットワーク管理サービスを再起動するため、通信が一時的に切れます。既存のSSH設定と `/etc/rc.local` は変更しません。エラー時の移行前ファイルは、再起動するまで `/tmp/luci-qsdk-install/previous.tar.gz` に残ります。容量不足やダウンロード失敗が出た場合は再起動せず、このバックアップをPCにも保存してください。
+インストール時にネットワーク管理サービスを再起動するため、通信が一時的に切れます。既存のSSH設定と `/etc/rc.local` は変更しません。エラー時の移行前ファイルは、再起動するまで `/tmp/luci-qsdk-install/previous.tar.gz` に残ります。パッケージの導入に失敗した場合は再起動せず、このバックアップをPCにも保存してください。ベースの取得失敗だけであれば、SSHからLuCIの起動を再試行できます。
 
 純正の `/etc/init.d/network` と `/sbin/wifi` をROMから再利用し、Wireless操作をnetifdに接続します。純正の無線制御スクリプトそのものは再配布していません。LuCIはTCP 8080で起動し、`http://<本体のIPアドレス>:8080/cgi-bin/luci/` でアクセスできます。
 
-`opkg remove luci-qsdk-wn7t94xr` でQSDKのネットワーク起動処理と無線制御の入口をROM版へ戻します。別の依存パッケージは残ります。`luci-base` を削除する場合も、保存した拡張ファイルや圧縮ファイルは自動では削除しません。
+`opkg remove luci-qsdk-wn7t94xr` でQSDKのネットワーク起動処理と無線制御の入口をROM版へ戻します。別の依存パッケージは残ります。`luci-base` を削除する場合も、保存した拡張ファイルは自動では削除しません。
 
 他機種・他バージョンでの動作、STA 接続、EasyMesh の再構成、長時間の通信負荷は未検証です。適用前に本体の設定をバックアップしてください。
 
