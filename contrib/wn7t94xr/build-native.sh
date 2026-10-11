@@ -42,4 +42,4 @@ host="$sdk/staging_dir/host"
 cc -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" \
 	"$luci/contrib/wn7t94xr/switch-selfcheck.c" -L"$host/lib" -lblobmsg_json -lubox \
 	-Wl,-rpath,"$host/lib" -o /tmp/qsdk-switch-selfcheck
-/tmp/qsdk-switch-selfcheck
+LD_LIBRARY_PATH="$host/lib" /tmp/qsdk-switch-selfcheck
