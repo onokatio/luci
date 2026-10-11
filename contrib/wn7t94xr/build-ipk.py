@@ -4,10 +4,8 @@ import gzip
 import hashlib
 import io
 import json
-import lzma
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import tarfile
@@ -17,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.2.0-1'
+VERSION = '3.2.1-1'
 SUFFIX = '+qsdk3.1.1'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -90,7 +88,8 @@ def flash_bytes(payload):
 
 def record(path, payload, control):
     fields = dict(re.findall(r'^([A-Za-z-]+): (.*)$', control, re.M))
-    packages[fields['Package']] = control.rstrip() + f'\nFilename: {path.name}\nSize: {path.stat().st_size}\nSHA256sum: {hashlib.sha256(path.read_bytes()).hexdigest()}\n\n'
+    if path.parent == OUT:
+        packages[fields['Package']] = control.rstrip() + f'\nFilename: {path.name}\nSize: {path.stat().st_size}\nSHA256sum: {hashlib.sha256(path.read_bytes()).hexdigest()}\n\n'
     versions[fields['Package']] = fields['Version']
     logical = sum(len(data) for data, _ in payload.values() if isinstance(data, bytes))
     sizes[fields['Package']] = {'name': fields['Package'], 'ipk_bytes': path.stat().st_size,
@@ -108,11 +107,8 @@ for package in LOCK['base_packages']:
     ipk = read_archive(original.read_bytes())
     payload, hooks = read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])
     if package['name'] == 'luci-base':
-        cached = CACHE / RAM_BASE['filename']
-        assert hashlib.sha256(cached.read_bytes()).hexdigest() == RAM_BASE['sha256']
-        assert cached.stat().st_size == RAM_BASE['size']
-        assert lzma.decompress(cached.read_bytes()) == gzip.decompress(ipk['data.tar.gz'][0])
-        shutil.copyfile(cached, OUT / cached.name)
+        assert original.name == RAM_BASE['filename'] and package['sha256'] == RAM_BASE['sha256']
+        assert original.stat().st_size == RAM_BASE['size']
         init = (HERE / 'root/etc/init.d/luci-base-ram').read_text()
         init = init.replace('@BASE_SHA@', RAM_BASE['sha256']).replace('@BASE_URL@', RAM_BASE['url'])
         base_payload = {name: payload[name] for name in [
@@ -121,7 +117,7 @@ for package in LOCK['base_packages']:
         for name in ['etc/init.d/ucitrack', 'sbin/luci-reload']:
             base_payload[name] = ('/tmp/luci-base/' + name, 0o755)
         control = hooks['control'][0].decode()
-        version = package['version'] + '+ram3.2.0'
+        version = package['version'] + '+ram3.2.1'
         control = re.sub(r'^Version: .*$', 'Version: ' + version, control, flags=re.M)
         control = re.sub(r'^Depends: (.*)$', r'Depends: \1, curl', control, flags=re.M)
         base_hooks = {'control': (control.encode(), 0o644),
@@ -131,7 +127,7 @@ set -e
 [ -z "$IPKG_INSTROOT" ] || exit 0
 [ "$(readlink /etc/rc.d/S11luci-base-ram)" != ../init.d/luci-base-ram ] || rm /etc/rc.d/S11luci-base-ram
 /etc/init.d/luci-base-ram enable
-/etc/init.d/luci-base-ram start || logger -t luci-base-ram 'LuCI unavailable; retry with luci-base-ram start when online'
+/etc/init.d/luci-base-ram restart || logger -t luci-base-ram 'LuCI unavailable; retry with luci-base-ram start when online'
 ''', 0o755)
         base_hooks['prerm'] = (b'''#!/bin/sh
 [ "$PKG_UPGRADE" = 1 ] && exit 0
@@ -143,9 +139,7 @@ set -e
         sizes[package['name']]['boot_download_bytes'] = RAM_BASE['size']
         continue
     if package['name'] not in mapping:
-        dest = OUT / original.name
-        shutil.copyfile(original, dest)
-        record(dest, payload, hooks['control'][0].decode())
+        record(original, payload, hooks['control'][0].decode())
         continue
     for dest, source in mapping[package['name']].items():
         assert dest in payload
@@ -208,7 +202,7 @@ md5 = lambda data: hashlib.md5(data).hexdigest()
 # The live flash install used 26 KiB beyond the per-file estimate; allow 32 KiB plus a 32 KiB reserve.
 required_kib = (sum(s['estimated_ubifs_bytes'] for s in sizes.values()) + flash_bytes(payload) + 32768 + 1023) // 1024 + 32 + PREPARE_KIB
 # The 3.1.0 payloads are unchanged; replacing their package hooks frees the same data budget.
-previous_versions = {name: version.replace('+qsdk3.1.1', '+qsdk3.1.0').replace('+ram3.2.0', '+ram3.1.0')
+previous_versions = {name: version.replace('+qsdk3.1.1', '+qsdk3.1.0').replace('+ram3.2.1', '+ram3.2.0')
                      for name, version in versions.items()}
 credits = ' '.join(name + ':' + versions[name] + ':' + previous_versions[name] + ':' + str(size['estimated_ubifs_bytes'] // 1024)
                    for name, size in sizes.items())
@@ -263,7 +257,7 @@ if [ -e /etc/init.d/luci-ram ]; then
  done
 fi
 old_base=0
-if [ ! -L /root/luci-base.tar.xz ] && [ -f /root/luci-base.tar.xz ] && [ "$(sha256sum /root/luci-base.tar.xz | cut -d ' ' -f 1)" = {RAM_BASE['sha256']} ]; then
+if [ ! -L /root/luci-base.tar.xz ] && [ -f /root/luci-base.tar.xz ] && [ "$(sha256sum /root/luci-base.tar.xz | cut -d ' ' -f 1)" = d92fba712b3aea72977bcd8fb94bc873663b9adbf16e683099037a0a235ef56d ]; then
  old_base=1
  reclaim=$((reclaim + $(wc -c < /root/luci-base.tar.xz)))
 fi
@@ -433,9 +427,6 @@ write_package('luci-qsdk-wn7t94xr', VERSION, payload, hooks)
 (OUT / 'Packages.gz').write_bytes(gzip.compress((OUT / 'Packages').read_bytes(), mtime=0))
 (OUT / 'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n' for p in sorted(OUT.glob('*.ipk'))))
 (OUT / 'sizes.json').write_text(json.dumps({'preflight_kib': required_kib, 'packages': list(sizes.values())}, indent=2) + '\n')
-with tarfile.open(OUT / f'wn7t94xr-luci-{VERSION}.tar.gz', 'w:gz') as tar:
-    for path in sorted(OUT.glob('*.ipk')) + [OUT / 'SHA256SUMS']:
-        tar.add(path, arcname=path.name)
 for size in sizes.values():
     print(f"{size['name']}: IPK {size['ipk_bytes']} bytes, files {size['file_bytes']} bytes")
-print(f'Complete dependency set: {len(sizes)} IPKs; estimated flash budget including reserve {required_kib} KiB')
+print(f'Custom feed: {len(packages)} IPKs; complete dependency set: {len(sizes)} IPKs; estimated flash budget including reserve {required_kib} KiB')

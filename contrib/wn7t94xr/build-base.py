@@ -32,5 +32,5 @@ def download(package):
 
 
 with ThreadPoolExecutor(max_workers=4) as pool:
-    list(pool.map(download, packages + [dict(lock['ram_base'], name='RAM base archive')]))
+    list(pool.map(download, packages))
 print('Verified', len(packages), 'separate official dependency IPKs in', cache)
