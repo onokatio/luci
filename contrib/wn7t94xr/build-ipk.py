@@ -17,8 +17,13 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.1.0-1'
-SUFFIX = '+qsdk3.1.0'
+VERSION = '3.2.0-1'
+SUFFIX = '+qsdk3.1.1'
+PREPARE = 'luci-qsdk-wn7t94xr-prepare'
+PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
+PREPARE_KIB = 16
+FEED_KEY = 'f82c00f7b71cbbcc'
+FEED_URL = 'https://github.com/onokatio/luci/releases/download/v' + VERSION
 LOCK = json.loads((HERE / 'sources.json').read_text())
 RAM_BASE = LOCK['ram_base']
 OUT.mkdir(parents=True, exist_ok=True)
@@ -68,8 +73,6 @@ packages, versions, sizes = {}, {}, {}
 
 def write_package(name, version, payload, hooks):
     installed = sum(len(data) for data, _ in payload.values() if isinstance(data, bytes))
-    if name == 'luci-base':
-        installed += RAM_BASE['size']
     control = hooks['control'][0].decode()
     control = re.sub(r'^Installed-Size: .*\n', '', control, flags=re.M) + f'Installed-Size: {installed}\n'
     hooks['control'] = (control.encode(), 0o644)
@@ -118,7 +121,7 @@ for package in LOCK['base_packages']:
         for name in ['etc/init.d/ucitrack', 'sbin/luci-reload']:
             base_payload[name] = ('/tmp/luci-base/' + name, 0o755)
         control = hooks['control'][0].decode()
-        version = package['version'] + '+ram3.1.0'
+        version = package['version'] + '+ram3.2.0'
         control = re.sub(r'^Version: .*$', 'Version: ' + version, control, flags=re.M)
         control = re.sub(r'^Depends: (.*)$', r'Depends: \1, curl', control, flags=re.M)
         base_hooks = {'control': (control.encode(), 0o644),
@@ -126,13 +129,9 @@ for package in LOCK['base_packages']:
         base_hooks['postinst'] = (b'''#!/bin/sh
 set -e
 [ -z "$IPKG_INSTROOT" ] || exit 0
-/etc/init.d/luci-base-ram fetch
+[ "$(readlink /etc/rc.d/S11luci-base-ram)" != ../init.d/luci-base-ram ] || rm /etc/rc.d/S11luci-base-ram
 /etc/init.d/luci-base-ram enable
-/etc/init.d/luci-base-ram restart
-if [ ! -f /tmp/luci-qsdk-install/prepared ]; then
- /etc/init.d/rpcd restart
- [ ! -x /etc/init.d/uhttpd ] || /etc/init.d/uhttpd restart
-fi
+/etc/init.d/luci-base-ram start || logger -t luci-base-ram 'LuCI unavailable; retry with luci-base-ram start when online'
 ''', 0o755)
         base_hooks['prerm'] = (b'''#!/bin/sh
 [ "$PKG_UPGRADE" = 1 ] && exit 0
@@ -141,10 +140,7 @@ fi
 /etc/init.d/luci-base-ram disable
 ''', 0o755)
         write_package(package['name'], version, base_payload, base_hooks)
-        # The separately downloaded cache occupies flash but is absent from the IPK.
-        sizes[package['name']]['file_bytes'] += RAM_BASE['size']
-        sizes[package['name']]['estimated_ubifs_bytes'] += RAM_BASE['size'] + 4096
-        sizes[package['name']]['download_bytes'] = RAM_BASE['size']
+        sizes[package['name']]['boot_download_bytes'] = RAM_BASE['size']
         continue
     if package['name'] not in mapping:
         dest = OUT / original.name
@@ -157,7 +153,7 @@ fi
         if dest.endswith('.js'):
             data = subprocess.check_output([str(jsmin.resolve())], input=data)
         payload[dest] = (data, payload[dest][1])
-    version = package['version'] + SUFFIX
+    version = package['version'] + '+qsdk3.1.0'
     control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
     hooks['control'] = (control.encode(), 0o644)
     hooks['preinst'] = (b'''#!/bin/sh
@@ -210,13 +206,18 @@ payload = {'usr/share/luci-qsdk/network': (network, 0o755),
            'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
 md5 = lambda data: hashlib.md5(data).hexdigest()
 # The live flash install used 26 KiB beyond the per-file estimate; allow 32 KiB plus a 32 KiB reserve.
-required_kib = (sum(s['estimated_ubifs_bytes'] for s in sizes.values()) + flash_bytes(payload) + 32768 + 1023) // 1024 + 32
-credits = ' '.join(name + ':' + versions[name] + ':' + str(size['estimated_ubifs_bytes'] // 1024)
+required_kib = (sum(s['estimated_ubifs_bytes'] for s in sizes.values()) + flash_bytes(payload) + 32768 + 1023) // 1024 + 32 + PREPARE_KIB
+# The 3.1.0 payloads are unchanged; replacing their package hooks frees the same data budget.
+previous_versions = {name: version.replace('+qsdk3.1.1', '+qsdk3.1.0').replace('+ram3.2.0', '+ram3.1.0')
+                     for name, version in versions.items()}
+credits = ' '.join(name + ':' + versions[name] + ':' + previous_versions[name] + ':' + str(size['estimated_ubifs_bytes'] // 1024)
                    for name, size in sizes.items())
+credits += f' {PREPARE}:{VERSION}:{VERSION}:{PREPARE_KIB}'
 managed = ('etc/init.d/network sbin/wifi etc/config/rpcd etc/config/uhttpd '
            'etc/init.d/luci-ram etc/rc.d/S99luci-ram etc/rc.d/K10luci-ram '
            'root/luci-ram.tar.xz usr/share/luci-qsdk/overlay.tar.xz '
-           'usr/share/rpcd/acl.d/luci-base.json etc/opkg/distfeeds.conf.before-dropbear')
+           'usr/share/rpcd/acl.d/luci-base.json etc/opkg/distfeeds.conf.before-dropbear '
+           'root/luci-base.tar.xz etc/opkg/distfeeds.conf')
 guard = f'''[ -z "$IPKG_INSTROOT" ] && [ "${{PKG_ROOT:-/}}" = / ] || {{ echo 'Install in the live root destination.' >&2; exit 1; }}
 [ "$(md5sum /rom/etc/init.d/network | cut -d ' ' -f 1)" = f74e8e77542742781de3e29992bcdb02 ] || {{ echo 'Unsupported vendor network service.' >&2; exit 1; }}
 [ "$(md5sum /rom/sbin/wifi | cut -d ' ' -f 1)" = 0f9e16e177b75c05e31d6300e96faa8e ] || {{ echo 'Unsupported native Wireless controller.' >&2; exit 1; }}
@@ -243,7 +244,7 @@ auth = r'''usable_login() {
  return 1
 }
 '''
-preinst = '#!/bin/sh\nset -e\n' + guard + auth + f'''if [ -f /tmp/luci-qsdk-install/prepared ]; then
+prepare = '#!/bin/sh\nset -e\n' + guard + auth + f'''if [ -f /tmp/luci-qsdk-install/prepared ]; then
  [ ! -L /tmp/luci-qsdk-install ] && [ "$(stat -c '%u:%a' /tmp/luci-qsdk-install)" = 0:700 ] || exit 1
  [ "$(cat /tmp/luci-qsdk-install/prepared)" = {VERSION} ] || exit 1
  exit 0
@@ -261,17 +262,24 @@ if [ -e /etc/init.d/luci-ram ]; then
   [ ! -f "$file" ] || reclaim=$((reclaim + $(wc -c < "$file")))
  done
 fi
+old_base=0
+if [ ! -L /root/luci-base.tar.xz ] && [ -f /root/luci-base.tar.xz ] && [ "$(sha256sum /root/luci-base.tar.xz | cut -d ' ' -f 1)" = {RAM_BASE['sha256']} ]; then
+ old_base=1
+ reclaim=$((reclaim + $(wc -c < /root/luci-base.tar.xz)))
+fi
 old_feeds=0
 if [ -f /etc/opkg/distfeeds.conf.before-dropbear ] && [ "$(md5sum /etc/opkg/distfeeds.conf.before-dropbear | cut -d ' ' -f 1)" = 42630a2cf0641aebf947488d21f57284 ]; then
  old_feeds=1
  reclaim=$((reclaim + $(wc -c < /etc/opkg/distfeeds.conf.before-dropbear)))
 fi
+stock_feeds=0
+if [ ! -L /etc/opkg/distfeeds.conf ] && [ -f /etc/opkg/distfeeds.conf ] && [ "$(md5sum /etc/opkg/distfeeds.conf | cut -d ' ' -f 1)" = 42630a2cf0641aebf947488d21f57284 ]; then stock_feeds=1; fi
 required={required_kib}
 for credit in {credits}; do
- name="${{credit%%:*}}"; rest="${{credit#*:}}"; version="${{rest%:*}}"; kib="${{rest##*:}}"
- if [ -f "/usr/lib/opkg/info/$name.control" ] && [ "$(sed -n 's/^Version: //p' "/usr/lib/opkg/info/$name.control")" = "$version" ]; then
+ name="${{credit%%:*}}"; rest="${{credit#*:}}"; version="${{rest%%:*}}"; rest="${{rest#*:}}"; previous="${{rest%:*}}"; kib="${{rest##*:}}"
+ installed="$(sed -n 's/^Version: //p' "/usr/lib/opkg/info/$name.control" 2>/dev/null || true)"
+ if [ -n "$installed" ] && {{ [ "$installed" = "$version" ] || [ "$installed" = "$previous" ]; }}; then
   required=$((required - kib))
-  if [ "$name" = luci-base ] && {{ [ -L /root/luci-base.tar.xz ] || [ ! -f /root/luci-base.tar.xz ] || [ "$(sha256sum /root/luci-base.tar.xz | cut -d ' ' -f 1)" != {RAM_BASE['sha256']} ]; }}; then required=$((required + {(RAM_BASE['size'] + 1023) // 1024 + 4})); fi
  fi
 done
 [ "$required" -ge 32 ] || required=32
@@ -297,6 +305,7 @@ else
  [ ! -L /tmp/luci-qsdk-install ] && [ "$(stat -c '%u:%a' /tmp/luci-qsdk-install)" = 0:700 ] || exit 1
  [ "$(cat /tmp/luci-qsdk-install/version)" = {VERSION} ] && [ -f /tmp/luci-qsdk-install/previous.tar.gz ] || {{ echo 'Recover the existing installation backup first.' >&2; exit 1; }}
 fi
+[ "$old_base" != 1 ] || rm /root/luci-base.tar.xz
 if [ -e /etc/init.d/luci-ram ]; then
  /etc/init.d/luci-ram stop
  /etc/init.d/luci-ram disable
@@ -312,6 +321,12 @@ if [ -e /etc/init.d/luci-ram ]; then
 fi
 /etc/init.d/rpcd stop
 [ "$old_feeds" != 1 ] || rm -f /etc/opkg/distfeeds.conf.before-dropbear
+if [ "$stock_feeds" = 1 ]; then
+ : > /etc/opkg/distfeeds.conf
+ for feed in base luci packages routing; do
+  echo "src/gz openwrt_$feed https://archive.openwrt.org/releases/packages-19.07/{ARCH}/$feed" >> /etc/opkg/distfeeds.conf
+ done
+fi
 mount -o remount,compr=zlib /overlay
 sync
 available="$(df -k /overlay | awk 'NR==2 {{print $4}}')"
@@ -319,6 +334,28 @@ available="$(df -k /overlay | awk 'NR==2 {{print $4}}')"
 printf '%s\n' {VERSION} > /tmp/luci-qsdk-install/prepared
 sync
 echo 'Prepared direct overlay installation; rollback files are in /tmp/luci-qsdk-install.'
+'''
+prepare_control = f'''Package: {PREPARE}
+Version: {VERSION}
+Architecture: {ARCH}
+Depends: libc, opkg, uci, usign
+Section: luci
+Priority: optional
+Maintainer: onokatio
+License: GPL-2.0-only
+Description: Device preparation and signed online feed for WN-7T94XR LuCI
+ Validates the device, login and flash budget before migrating the old RAM setup.
+'''
+prepare_payload = {PREPARE_PATH: (prepare.encode(), 0o755),
+                   'etc/opkg/wn7t94xr-luci.conf': (f'src/gz wn7t94xr_luci {FEED_URL}\n'.encode(), 0o644),
+                   'etc/opkg/keys/' + FEED_KEY: ((HERE / 'feed.pub').read_bytes(), 0o644)}
+prepare_hooks = {'control': (prepare_control.encode(), 0o644), 'preinst': (prepare.encode(), 0o755)}
+assert flash_bytes(prepare_payload) + flash_bytes(prepare_hooks) <= PREPARE_KIB * 1024
+write_package(PREPARE, VERSION, prepare_payload, prepare_hooks)
+preinst = f'''#!/bin/sh
+set -e
+[ -x /{PREPARE_PATH} ] && [ "$(sed -n 's/^Version: //p' /usr/lib/opkg/info/{PREPARE}.control)" = {VERSION} ] || {{ echo 'Install {PREPARE} {VERSION} first.' >&2; exit 1; }}
+exec /{PREPARE_PATH}
 '''
 postinst = '#!/bin/sh\nset -e\n' + guard + auth + '''available="$(df -k /overlay | awk 'NR==2 {print $4}')"
 # UBIFS temporarily reserves dirty data at its uncompressed size until journal commit.
@@ -329,9 +366,8 @@ for attempt in 1 2 3 4 5 6 7 8 9 10; do
  available="$(df -k /overlay | awk 'NR==2 {print $4}')"
 done
 [ "$available" -ge 32 ] || { echo "Only $available KiB available after unpacking. Do not reboot; recover the installation backup." >&2; exit 1; }
-/etc/init.d/luci-base-ram fetch
 /etc/init.d/luci-base-ram enable
-/etc/init.d/luci-base-ram start
+/etc/init.d/luci-base-ram start || logger -t luci-base-ram 'LuCI unavailable; router services continue'
 cp /usr/share/luci-qsdk/network /etc/init.d/network
 cp /usr/share/luci-qsdk/wifi /sbin/wifi
 chmod 755 /etc/init.d/network /sbin/wifi
@@ -373,7 +409,7 @@ postrm = '''#!/bin/sh
 rm -f /tmp/luci-indexcache* /tmp/luci-modulecache/*
 echo 'Restored vendor network entry points; separate LuCI packages remain installed.'
 '''
-depends = ['libc', 'libgcc', 'netifd', 'ubus', 'jshn', 'opkg']
+depends = ['libc', 'libgcc', 'netifd', 'ubus', 'jshn', 'opkg', PREPARE + ' (= ' + VERSION + ')']
 depends += [name + ' (= ' + versions[name] + ')' for name in [
     'luci-base', 'luci-mod-network', 'libiwinfo20181126', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci']]
 depends += ['luci-theme-bootstrap', 'luci-app-opkg', 'uhttpd', 'uhttpd-mod-ubus']
@@ -386,19 +422,13 @@ Priority: optional
 Maintainer: onokatio
 License: GPL-2.0-only
 Description: Persistent QSDK extensions with an official LuCI base in RAM
- Downloads the base separately; keeps addons on UBIFS with standard OverlayFS.
+ Downloads the base into RAM at each boot; keeps addons on UBIFS with standard OverlayFS.
  Keeps vendor wireless firmware, drivers and calibration data.
 '''
 hooks = {'control': (control.encode(), 0o644)}
 hooks.update({name: (data.encode(), 0o755) for name, data in [
     ('preinst', preinst), ('postinst', postinst), ('prerm', prerm), ('postrm', postrm)]})
 write_package('luci-qsdk-wn7t94xr', VERSION, payload, hooks)
-# This backend dependency is unpacked before LuCI; migrate mounts before any frontend writes.
-lib_path = OUT / f"libiwinfo20181126_{native['libiwinfo20181126'][0]}_{ARCH}.ipk"
-lib_ipk = read_archive(lib_path.read_bytes())
-lib_hooks = read_archive(lib_ipk['control.tar.gz'][0])
-lib_hooks['preinst'] = (preinst.encode(), 0o755)
-write_package('libiwinfo20181126', native['libiwinfo20181126'][0], read_archive(lib_ipk['data.tar.gz'][0]), lib_hooks)
 (OUT / 'Packages').write_text(''.join(packages.values()))
 (OUT / 'Packages.gz').write_bytes(gzip.compress((OUT / 'Packages').read_bytes(), mtime=0))
 (OUT / 'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n' for p in sorted(OUT.glob('*.ipk'))))

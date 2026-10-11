@@ -56,7 +56,7 @@ for filename in sys.argv[1:]:
         if file in ('preinst', 'postinst', 'prerm', 'postrm'):
             subprocess.run(['sh', '-n'], input=data, check=True)
 
-assert len(records) == 17
+assert len(records) == 18
 available = set(records) | set(LOCK['rom_packages']) | {'libc', 'libgcc', 'libpthread', 'opkg', 'netifd', 'ubus', 'jshn'}
 for fields, _, _ in records.values():
     for dependency in fields['Depends'].split(', '):
@@ -73,7 +73,7 @@ for original in LOCK['base_packages']:
     elif name == 'luci-mod-network':
         assert fields['Version'] == original['version'] + '+qsdk3.1.0'
     if name == 'luci-base':
-        assert fields['Version'] == original['version'] + '+ram3.1.0'
+        assert fields['Version'] == original['version'] + '+ram3.2.0'
         assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'lib/upgrade/keep.d/luci-base',
                                 'etc/init.d/luci-base-ram', 'etc/init.d/ucitrack', 'sbin/luci-reload'}
         assert payload['sbin/luci-reload'] == '/tmp/luci-base/sbin/luci-reload'
@@ -81,6 +81,8 @@ for original in LOCK['base_packages']:
         subprocess.run(['sh', '-n'], input=init.encode(), check=True)
         assert LOCK['ram_base']['url'] in init and LOCK['ram_base']['sha256'] in init
         assert 'upperdir=$state/upper/$dir' in init and 'state=/overlay/luci-base' in init
+        assert 'START=95' in init and '/root/' not in init
+        assert int(fields['Installed-Size']) < 8192
     if name == 'luci-mod-network':
         assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
 
@@ -93,19 +95,56 @@ assert owners['usr/lib/rpcd/iwinfo.so'] == 'rpcd-mod-iwinfo'
 assert owners['usr/lib/lua/iwinfo.so'] == 'libiwinfo-lua'
 assert owners['etc/init.d/uhttpd'] == 'uhttpd'
 assert 'etc/init.d/rpcd' not in owners
-library_path = records['libiwinfo20181126'][2]
-preinst = unpack(unpack(library_path.read_bytes())['control.tar.gz'])['preinst'].decode()
+prepare_name = 'luci-qsdk-wn7t94xr-prepare'
+prepare_path = 'usr/libexec/luci-qsdk-prepare'
+prepare_fields, prepare_payload, prepare_ipk = records[prepare_name]
+assert set(prepare_payload) == {prepare_path, 'etc/opkg/wn7t94xr-luci.conf', 'etc/opkg/keys/f82c00f7b71cbbcc'}
+assert prepare_payload['etc/opkg/keys/f82c00f7b71cbbcc'] == (HERE / 'feed.pub').read_bytes()
+assert prepare_payload['etc/opkg/wn7t94xr-luci.conf'] == ('src/gz wn7t94xr_luci https://github.com/onokatio/luci/releases/download/v' + main['Version'] + '\n').encode()
+assert prepare_name + ' (= ' + main['Version'] + ')' in main['Depends'].split(', ')
+assert prepare_fields['Version'] == main['Version']
+preinst = unpack(unpack(prepare_ipk.read_bytes())['control.tar.gz'])['preinst'].decode()
+assert prepare_payload[prepare_path] == preinst.encode()
+assert 'opkg install' not in preinst and 'restore_cache' not in preinst
+for name in ('libiwinfo20181126', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci'):
+    hooks = unpack(unpack(records[name][2].read_bytes())['control.tar.gz'])
+    assert 'preinst' not in hooks, f'Device preparation must not live in {name}'
+    assert prepare_name not in records[name][0]['Depends']
+main_hooks = unpack(unpack(records['luci-qsdk-wn7t94xr'][2].read_bytes())['control.tar.gz'])
+main_preinst = main_hooks['preinst'].decode()
+assert 'exec /' + prepare_path in main_preinst
+assert 'required=' not in main_preinst and 'usable_login' not in main_preinst
+with tempfile.TemporaryDirectory() as directory:
+    root = pathlib.Path(directory)
+    helper = root / prepare_path
+    control = root / 'usr/lib/opkg/info' / (prepare_name + '.control')
+    script = main_preinst.replace('/' + prepare_path, str(helper))
+    script = script.replace('/usr/lib/opkg/info/' + prepare_name + '.control', str(control))
+
+    def check_prepare(expected, output=b''):
+        result = subprocess.run(['sh'], input=script.encode(), capture_output=True)
+        assert result.returncode == expected and result.stdout == output, result.stderr.decode()
+
+    check_prepare(1)
+    helper.parent.mkdir(parents=True)
+    helper.write_text('#!/bin/sh\nprintf prepared\n')
+    helper.chmod(0o755)
+    control.parent.mkdir(parents=True)
+    control.write_text('Version: outdated\n')
+    check_prepare(1)
+    control.write_text('Version: ' + main['Version'] + '\n')
+    check_prepare(0, b'prepared')
+    helper.write_text('#!/bin/sh\nexit 7\n')
+    check_prepare(7)
 capacity = preinst[preinst.index('\nrequired=') + 1:preinst.index('\numask 077')]
 required = int(re.search(r'^required=(\d+)$', capacity, re.M)[1])
-assert required >= 450, 'Include the downloaded cache, persistent dependencies, metadata and reserve'
+assert 300 <= required < 450, 'Count persistent dependencies, metadata and reserve; the base archive only uses RAM'
 with tempfile.TemporaryDirectory() as directory:
     info = pathlib.Path(directory)
     capacity = capacity.replace('/usr/lib/opkg/info', directory)
     capacity = capacity.replace('/overlay/upper/', directory + '/upper/')
     capacity = capacity.replace('"/$file"', '"' + directory + '/upper/$file"')
     capacity = capacity.replace('"/rom/$file"', '"' + directory + '/rom/$file"')
-    cache_path = info / 'cache.tar.xz'
-    capacity = capacity.replace('/root/luci-base.tar.xz', str(cache_path))
 
     def check_capacity(available, expected):
         stub = f"reclaim=0\ndf() {{ printf '%s\\n' 'Filesystem Blocks Used Available Use% Mounted' 'fake 1144 0 {available} 0% /overlay'; }}\n"
@@ -115,6 +154,10 @@ with tempfile.TemporaryDirectory() as directory:
 
     check_capacity(required - 1, False)
     check_capacity(required, True)
+    (info / (prepare_name + '.control')).write_text('Version: ' + main['Version'] + '\n')
+    prepare_kib = int(re.search(prepare_name + ':' + re.escape(main['Version']) + ':' + re.escape(main['Version']) + r':(\d+)', capacity)[1])
+    check_capacity(required - prepare_kib, True)
+    (info / (prepare_name + '.control')).unlink()
     for file in ('usr/lib/libiwinfo.so', 'usr/lib/lua/iwinfo.so'):
         for layer in ('upper', 'rom'):
             path = info / layer / file
@@ -128,14 +171,36 @@ with tempfile.TemporaryDirectory() as directory:
         path.unlink()
     for name, (fields, _, _) in records.items():
         (info / (name + '.control')).write_text('Version: ' + fields['Version'] + '\n')
-    cache_path.write_bytes((records['luci-base'][2].parent / LOCK['ram_base']['filename']).read_bytes())
-    credits = re.findall(r'([a-zA-Z0-9.+-]+):([^ :]+):(\d+)', re.search(r'for credit in (.*); do', capacity)[1])
-    credited = max(32, required - sum(int(kib) for _, _, kib in credits))
+    credits = re.findall(r'([a-zA-Z0-9.+-]+):([^ :]+):([^ :]+):(\d+)', re.search(r'for credit in (.*); do', capacity)[1])
+    credited = max(32, required - sum(int(kib) for _, _, _, kib in credits))
     check_capacity(credited, True)
-    cache_path.unlink()
+    for name, _, previous, _ in credits:
+        (info / (name + '.control')).write_text('Version: ' + previous + '\n')
+    check_capacity(credited, True)
+    (info / 'libiwinfo20181126.control').write_text('Version: unknown\n')
     check_capacity(credited, False)
+    (info / 'libiwinfo20181126.control').write_text('Version: ' + records['libiwinfo20181126'][0]['Version'] + '\n')
     (info / 'luci-base.control').write_text('Version: outdated\n')
     check_capacity(credited, False)
+
+with tempfile.TemporaryDirectory() as directory:
+    config = pathlib.Path(directory) / 'distfeeds.conf'
+    detect = preinst[preinst.index('\nstock_feeds=') + 1:preinst.index('\nrequired=')]
+    replace = preinst[preinst.index('\nif [ "$stock_feeds" = 1 ]; then') + 1:preinst.index('\nmount -o remount')]
+    script = (detect + '\n' + replace).replace('/etc/opkg/distfeeds.conf', str(config))
+    for digest, changed in [('unknown', False), ('42630a2cf0641aebf947488d21f57284', True)]:
+        config.write_text('original\n')
+        stub = f"md5sum() {{ echo '{digest}  file'; }}\n"
+        subprocess.run(['sh', '-e'], input=(stub + script).encode(), check=True)
+        if changed:
+            assert len(config.read_text().splitlines()) == 4
+            assert 'packages-19.07/' in config.read_text()
+        else:
+            assert config.read_text() == 'original\n'
+    config.unlink()
+    config.symlink_to(pathlib.Path(directory) / 'missing')
+    subprocess.run(['sh', '-e'], input=(stub + script).encode(), check=True)
+    assert config.is_symlink() and not config.exists()
 
 base = LOCK['ram_base']
 base_archive = records['luci-base'][2].parent / base['filename']
@@ -160,8 +225,10 @@ with tempfile.TemporaryDirectory() as directory:
     script = script.replace('"/$dir"', f'"{root}/root/$dir"')
     script = script.replace('lowerdir=/$dir:', f'lowerdir={root}/root/$dir:')
     script = script.replace('/etc/init.d/rpcd stop', ':').replace('/etc/init.d/uhttpd stop', ':')
+    script = script.replace('/etc/init.d/rpcd restart', f"echo restarted >> '{root}/services'")
+    script = script.replace('/etc/init.d/uhttpd restart', ':')
     stub = f'''
-cache='{root}/cache.tar.xz'; ram='{root}/ram'; state='{root}/state'
+ram='{root}/ram'; state='{root}/state'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
 logger() {{ :; }}
 stat() {{ echo 0; }}
@@ -181,11 +248,11 @@ umount() {{
  mv '{mounts}.new' '{mounts}'
 }}
 fixture='{base_archive}'; fail_curl=1
-if fetch; then exit 10; fi
-[ ! -e "$cache" ]
+if start; then exit 10; fi
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e '{root}/services' ]
 fail_curl=0; fixture='{root}/bad'; echo bad > "$fixture"
 if fetch; then exit 11; fi
-[ ! -e "$cache" ]
+[ ! -e "$ram" ]
 fixture='{base_archive}'; fetch
 requests="$(wc -l < '{root}/requests')"
 fetch
@@ -197,14 +264,20 @@ stop
 [ ! -e "$ram" ] && [ ! -s '{mounts}' ]
 start
 [ "$(cat "$state/upper/www/addon")" = persistent ]
+[ "$(wc -l < '{root}/requests')" -eq "$((requests + 1))" ]
 stop
 fail_mount='{root}/root/usr/share'
 if start; then exit 12; fi
 [ ! -s '{mounts}' ] && [ ! -e "$ram" ]
-echo corrupt > "$cache"
+fail_mount=''; fixture='{root}/bad'
 if start; then exit 13; fi
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ]
+fixture='{base_archive}'; fetch
+requests="$(wc -l < '{root}/requests')"
+echo corrupt > "$ram/.archive-sha256"
+if start; then exit 14; fi
 [ "$(wc -l < '{root}/requests')" = "$requests" ]
 '''
     result = subprocess.run(['bash', '-e'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + result.stderr.decode()
-print('17 IPKs passed: pinned dependencies, separate downloaded base, persistent addon mounts, failure handling, capacity checks and ARM ABI')
+print('18 IPKs passed: separate preparation and signed-feed setup, dependency closure, boot downloads into RAM, persistent addons, failure isolation, capacity checks and ARM ABI')
