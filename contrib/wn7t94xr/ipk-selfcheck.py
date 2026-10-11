@@ -192,6 +192,7 @@ mount() {{
  fi
 }}
 umount() {{
+ [ "$fail_umount" != "$1" ] || return 1
  if [ -e "$1.vendor" ]; then rm "$1"; mv "$1.vendor" "$1"; fi
  awk -v target="$1" '$2 != target' '{mounts}' > '{mounts}.new'
  mv '{mounts}.new' '{mounts}'
@@ -210,6 +211,7 @@ bad_sha=0; fetch
 ! grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
 grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
 [ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq 17 ]
+! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"
 requests="$(wc -l < '{requests}')"
 fetch
 [ "$(wc -l < '{requests}')" = "$requests" ]
@@ -217,6 +219,13 @@ start; start
 [ "$(wc -l < '{mounts}' | tr -d ' ')" -eq 10 ]
 [ "$(grep -c '^network restart$' '{root}/services')" -eq 1 ]
 echo persistent > "$state/upper/www/addon"
+fail_umount='{targets}/www'
+if stop; then exit 15; fi
+[ -e "$ram" ] && [ ! -e "$ram/.started" ]
+[ "$(grep -c '^network restart$' '{root}/services')" -eq 1 ]
+! grep -q '^network stop$' '{root}/services'
+fail_umount=''
+start
 stop
 [ ! -e "$ram" ] && [ ! -s '{mounts}' ]
 [ "$(cat '{targets}/sbin/wifi')" = vendor ]

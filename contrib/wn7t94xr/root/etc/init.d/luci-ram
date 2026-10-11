@@ -45,7 +45,8 @@ fetch() {
 		   ! tar -tzf "$download/data.tar.gz" > "$download/filelist" ||
 		   ! sed -e '/\/$/d' -e 's,^\./,,' -e '/^etc\//d' -e '/^sbin\/luci-reload$/d' -e '/^sbin\/wifi$/d' \
 		     -e '/^usr\/sbin\/uhttpd$/d' -e '/^usr\/libexec\/cgi-io$/d' \
-		     -e '/^usr\/lib\/liblucihttp.so\(\.0\)\?$/d' -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \
+		     -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
+		     -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \
 		     "$download/filelist" > "$unpack/usr/lib/opkg/info/$name.list"; then
 			rm -rf "$unpack" "$download"
 			return 1
@@ -101,22 +102,24 @@ start() {
 }
 
 stop() {
-	local mounted=0
+	local mounted=0 result=0
 	for dir in $dirs; do owns_mount "$dir" && mounted=1; done
 	for file in $bindings; do [ "/$file" -ef "$ram/$file" ] && mounted=1; done
 	[ "$mounted" = 1 ] || return 0
+	rm -f "$ram/.started"
 	[ ! -x "$ram/etc/init.d/uhttpd" ] || "$ram/etc/init.d/uhttpd" stop
 	/etc/init.d/rpcd stop
-	/etc/init.d/network stop
+	# Keep routing active if a busy mount prevents restoring the vendor view.
 	for file in usr/lib/libiwinfo.so sbin/wifi etc/init.d/network; do
-		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || return 1
+		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || result=1
 	done
 	for dir in lib/netifd/wireless www usr/share usr/lib/opkg usr/libexec/rpcd usr/lib/rpcd usr/lib/lua; do
 		owns_mount "$dir" || continue
-		umount "/$dir" || return 1
+		umount "/$dir" || result=1
 	done
 	/etc/init.d/rpcd start
-	/etc/init.d/network start
+	[ "$result" = 0 ] || return 1
+	/etc/init.d/network restart || return 1
 	[ ! -L "$ram" ] && [ "$(stat -c '%u' "$ram")" = 0 ] || return 1
 	rm -rf "$ram"
 }
