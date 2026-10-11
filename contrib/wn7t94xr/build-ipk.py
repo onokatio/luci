@@ -14,7 +14,7 @@ NATIVE = pathlib.Path(sys.argv[1])
 NETIFD = pathlib.Path(sys.argv[2])
 OUT = pathlib.Path(sys.argv[3])
 PACKAGE = 'luci-qsdk-wn7t94xr'
-VERSION = '2.0.0-5'
+VERSION = '2.0.0-6'
 BASE_SHA = '0fb0e696c262c5a09df8b39722dcf12a9bf0eee1c92b659ddc3decc5842f51cf'
 
 
