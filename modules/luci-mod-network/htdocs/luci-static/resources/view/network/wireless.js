@@ -247,6 +247,9 @@ function render_network_status(radioNet) {
 }
 
 function render_modal_status(node, radioNet) {
+	if (!radioNet)
+		return node || E('em', _('No information available'));
+
 	var mode = radioNet.getActiveMode(),
 	    noise = radioNet.getNoise(),
 	    bssid = radioNet.getActiveBSSID(),

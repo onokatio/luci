@@ -14,7 +14,7 @@ NATIVE = pathlib.Path(sys.argv[1])
 NETIFD = pathlib.Path(sys.argv[2])
 OUT = pathlib.Path(sys.argv[3])
 PACKAGE = 'luci-qsdk-wn7t94xr'
-VERSION = '2.0.0-4'
+VERSION = '2.0.0-5'
 BASE_SHA = '0fb0e696c262c5a09df8b39722dcf12a9bf0eee1c92b659ddc3decc5842f51cf'
 
 
@@ -46,7 +46,7 @@ mapping = {
     'usr/lib/lua/luci/view/header.htm': 'modules/luci-base/luasrc/view/header.htm',
 }
 entries = [(dest, (LUCI / src).read_bytes(), 0o755 if 'libexec/' in dest else 0o644) for dest, src in mapping.items()]
-entries += [('usr/lib/lua/luci/version.lua', b'module "luci.version"\ndistname="OpenWrt"\ndistversion="19.07"\nluciname="LuCI QSDK backend"\nluciversion="git-22.115.68448-712bc8e+qsdk-backend1"\n', 0o644)]
+entries += [('usr/lib/lua/luci/version.lua', b'module "luci.version"\ndistname="OpenWrt"\ndistversion="19.07"\nluciname="LuCI QSDK backend"\nluciversion="git-22.115.68448-712bc8e+qsdk-backend2"\n', 0o644)]
 native_files = ['usr/lib/libiwinfo.so', 'usr/lib/lua/iwinfo.so', 'usr/lib/rpcd/luci.so',
                 'usr/lib/rpcd/iwinfo.so', 'usr/bin/iwinfo']
 for name in native_files:

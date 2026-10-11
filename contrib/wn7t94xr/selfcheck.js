@@ -22,6 +22,11 @@ const uci = {
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
 const helpers = wireless.slice(wireless.indexOf('function qca_members'), wireless.indexOf('function count_changes'));
+const modalStatusCode = wireless.slice(wireless.indexOf('function render_modal_status'), wireless.indexOf('function format_wifirate'));
+const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_modal_status;')((tag, text) => ({ tag, text }), v => v);
+assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
+const hiddenStatus = {};
+assert.equal(modalStatus(hiddenStatus, undefined), hiddenStatus);
 const qca = new Function('uci', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, requiresSAE: qca_requires_sae, removeNetwork: qca_remove_network };')(uci);
 assert.equal(qca.requiresSAE('ath05'), true);
 assert.equal(qca.requiresSAE('ath1'), false);
