@@ -1,0 +1,80 @@
+#!/bin/sh /etc/rc.common
+
+START=11
+STOP=89
+EXTRA_COMMANDS=fetch
+EXTRA_HELP="fetch  Download and verify the official LuCI base archive"
+
+cache=/root/luci-base.tar.xz
+ram=/tmp/luci-base
+state=/overlay/luci-base
+sha=@BASE_SHA@
+url=@BASE_URL@
+dirs='usr/lib/lua usr/libexec/rpcd usr/share www'
+
+fetch() {
+	[ ! -L "$cache" ] || return 1
+	[ ! -f "$cache" ] || [ "$(sha256sum "$cache" | cut -d ' ' -f 1)" != "$sha" ] || return 0
+	local download staged
+	download="$(mktemp -d /tmp/luci-base-download.XXXXXX)" || return 1
+	if ! curl -fsSL --connect-timeout 10 --max-time 45 "$url" -o "$download/base.tar.xz" ||
+	   [ "$(sha256sum "$download/base.tar.xz" | cut -d ' ' -f 1)" != "$sha" ]; then
+		rm -rf "$download"
+		logger -t luci-base-ram 'LuCI base download or SHA-256 verification failed'
+		return 1
+	fi
+	staged="$(mktemp "$cache.XXXXXX")" || { rm -rf "$download"; return 1; }
+	if ! cp "$download/base.tar.xz" "$staged" || ! chmod 600 "$staged" || ! mv -f "$staged" "$cache"; then
+		rm -f "$staged"
+		rm -rf "$download"
+		return 1
+	fi
+	rm -rf "$download"
+}
+
+owns_mount() {
+	grep -F " /$1 overlay " /proc/mounts | grep -Fq "upperdir=$state/upper/$1,"
+}
+
+start() {
+	[ -f "$cache" ] && [ "$(sha256sum "$cache" | cut -d ' ' -f 1)" = "$sha" ] || {
+		logger -t luci-base-ram 'Verified LuCI base cache is missing; SSH and vendor services remain available'
+		return 1
+	}
+	if [ ! -d "$ram" ]; then
+		local unpack
+		unpack="$(mktemp -d /tmp/luci-base-unpack.XXXXXX)" || return 1
+		tar -xJf "$cache" -C "$unpack" || { rm -rf "$unpack"; return 1; }
+		[ -f "$unpack/usr/lib/lua/luci/dispatcher.lua" ] && [ -f "$unpack/www/cgi-bin/luci" ] || { rm -rf "$unpack"; return 1; }
+		printf '%s\n' "$sha" > "$unpack/.archive-sha256"
+		chmod 755 "$unpack"
+		mv "$unpack" "$ram" || { rm -rf "$unpack"; return 1; }
+	fi
+	[ ! -L "$ram" ] && [ "$(cat "$ram/.archive-sha256")" = "$sha" ] || return 1
+	[ ! -L "$state" ] || return 1
+	mount -o remount,compr=zlib /overlay || return 1
+	mkdir -p "$state" || return 1
+	chmod 700 "$state"
+	for dir in $dirs; do
+		owns_mount "$dir" && continue
+		grep -Fq " /$dir " /proc/mounts && return 1
+	done
+	for dir in $dirs; do
+		owns_mount "$dir" && continue
+		mkdir -p "/$dir" "$state/upper/$dir" "$state/work/$dir" || { stop; return 1; }
+		mount -t overlay overlay -o "lowerdir=/$dir:$ram/$dir,upperdir=$state/upper/$dir,workdir=$state/work/$dir" "/$dir" || { stop; return 1; }
+	done
+}
+
+stop() {
+	[ ! -x /etc/init.d/uhttpd ] || /etc/init.d/uhttpd stop
+	/etc/init.d/rpcd stop
+	for dir in www usr/share usr/libexec/rpcd usr/lib/lua; do
+		owns_mount "$dir" || continue
+		umount "/$dir" || return 1
+	done
+	if [ ! -L "$ram" ] && [ "$(stat -c '%u' "$ram" 2>/dev/null)" = 0 ] &&
+	   grep -Eq '^[0-9a-f]{64}$' "$ram/.archive-sha256" 2>/dev/null; then
+		rm -rf "$ram"
+	fi
+}

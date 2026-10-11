@@ -2,6 +2,8 @@ name: QSDK userspace IPK
 on:
   push:
     branches: [qsdk-wn7t94xr]
+  pull_request:
+    branches: [qsdk-wn7t94xr]
   workflow_dispatch:
 permissions:
   contents: read
@@ -44,7 +46,8 @@ jobs:
           python3 netifd/contrib/qsdk/selfcheck.py
           python3 iwinfo/tests/channel-selfcheck.py
           sh luci/contrib/wn7t94xr/build-native.sh sdk iwinfo native
-          python3 luci/contrib/wn7t94xr/build-ipk.py native netifd package
+          python3 luci/contrib/wn7t94xr/build-base.py base-cache
+          python3 luci/contrib/wn7t94xr/build-ipk.py native netifd base-cache package
           python3 luci/contrib/wn7t94xr/ipk-selfcheck.py package/*.ipk
       - uses: actions/upload-artifact@v4
         with:
@@ -52,3 +55,6 @@ jobs:
           path: |
             package/*.ipk
             package/SHA256SUMS
+            package/Packages*
+            package/sizes.json
+            package/wn7t94xr-luci-*.tar.gz
