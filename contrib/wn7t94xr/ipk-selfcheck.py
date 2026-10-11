@@ -89,7 +89,7 @@ for original in LOCK['base_packages']:
 main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages', 'sbin/luci-reload',
-                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/uhttpd_ubus.so'}
+                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
 assert payload['sbin/luci-reload'] == '/tmp/luci-ram/sbin/luci-reload'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
@@ -109,6 +109,13 @@ for line in manifest.splitlines():
     assert url.startswith('https://github.com/onokatio/luci/releases/download/v' + main['Version'] + '/') if name in custom_names else url.startswith('https://archive.openwrt.org/releases/packages-19.07/')
     fixtures[url] = str(path.resolve())
 assert ram_names == set(records) - persistent and len(ram_names) == 17
+libraries = {file: data for name in ram_names for file, data in records[name][1].items()
+             if file.startswith('usr/lib/') and '/' not in file.removeprefix('usr/lib/')}
+exposed = set(payload) | {'usr/lib/libiwinfo.so'}
+for file, data in libraries.items():
+    if file in exposed and isinstance(data, str):
+        exposed.add(str(pathlib.PurePosixPath(file).parent / data))
+assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
 assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh'}
 

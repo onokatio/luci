@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.3.0-1'
+VERSION = '3.3.0-2'
 SUFFIX = '+qsdk3.1.1'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -195,7 +195,7 @@ payload['etc/config/uhttpd'] = http['etc/config/uhttpd']
 payload['etc/init.d/luci-ram'] = ((HERE / 'root/etc/init.d/luci-ram').read_bytes(), 0o755)
 payload['etc/luci-qsdk/ram-packages'] = (manifest, 0o644)
 payload['sbin/luci-reload'] = ('/tmp/luci-ram/sbin/luci-reload', 0o755)
-for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/uhttpd_ubus.so'):
+for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
     payload[name] = ('/tmp/luci-ram/' + name, 0o755)
 
 md5 = lambda data: hashlib.md5(data).hexdigest()
