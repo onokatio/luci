@@ -1,3 +1,7 @@
+# WN-7T94XR QSDK 対応フォーク
+
+純正ドライバーを使い、LuCI の標準 Wireless 画面で AP を管理するためのフォークです。[実装・IPK・導入手順](contrib/wn7t94xr/README.md)を参照してください。
+
 # OpenWrt luci feed
 
 [![Translation status](https://hosted.weblate.org/widgets/openwrt/-/svg-badge.svg)](https://hosted.weblate.org/engage/openwrt/?utm_source=widget)
