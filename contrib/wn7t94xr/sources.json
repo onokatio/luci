@@ -4,12 +4,6 @@
     "iwinfo": "8c4a3734812c374848e537725be9808784731626"
   },
   "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
-  "ram_base": {
-    "filename": "luci-base_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-    "url": "https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/luci/luci-base_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-    "sha256": "bb4819011c44fbc12f0b8ca12c2377aedbc9cddcbb6fee54427654b097700e4c",
-    "size": 140489
-  },
   "base_packages": [
     {
       "name": "cgi-io",
