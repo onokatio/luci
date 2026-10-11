@@ -31,10 +31,10 @@ python3 ../iwinfo/tests/channel-selfcheck.py
 sh contrib/wn7t94xr/build-native.sh /path/to/sdk ../iwinfo /tmp/wn7-native
 python3 contrib/wn7t94xr/build-base.py /tmp/wn7-base-cache
 python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-cache ./dist/wn7t94xr
-python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr/*.ipk
+python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 ```
 
-準備パッケージと本体を含む18個のIPKと、チェックサム、opkgフィードの一覧を生成します。公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
+準備パッケージと本体を含む8個の自作IPKと、チェックサム、opkgフィードの一覧を生成します。変更のない10個の依存IPKは公式リポジトリから取得し、GitHubには再配布しません。ビルド時の公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
 
 機種・設定・容量の検査と旧RAM構成の移行準備は、専用の `luci-qsdk-wn7t94xr-prepare` に分離しています。処理はこのパッケージの `preinst` と `/usr/libexec/luci-qsdk-prepare` に含めています。iwinfoのIPKには移行処理を含めず、準備パッケージへの依存も追加していません。本体の `preinst` は専用パッケージの処理を呼ぶため、準備パッケージが導入済みでも、再起動後のインストール再試行時に検査できます。
 
@@ -46,13 +46,13 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr/*.ipk
 
 | 内容 | 保存先 |
 | --- | --- |
-| 公式 `luci-base` の圧縮ファイル | 起動時にRAMへ取得し、検証・展開後に削除 |
+| 公式 `luci-base` のIPK | 起動時に公式リポジトリからRAMへ取得し、検証・展開後に削除 |
 | 展開した `luci-base` のコード | `/tmp/luci-base` |
 | 起動処理、LuCI設定、opkgのパッケージ情報 | 通常のoverlay |
 | LuCIの依存ライブラリ、Wireless、Software、テーマ、QSDK対応 | overlay |
 | 後からopkgで追加する拡張やLuCIファイルへの変更 | overlay |
 
-圧縮ファイルは自作IPKに含めず、本体にも保存しません。[公式IPKのデータをXZで再圧縮した公開ファイル](https://github.com/onokatio/luci/releases/tag/luci-base-19.07)を毎回の起動時にダウンロードし、SHA-256を確認します。展開後のtarは公式IPKとバイト単位で一致し、ダウンロード量は118,844バイトです。
+毎回の起動時に[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/luci/)から `luci-base_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk` を取得し、SHA-256を確認して中の `data.tar.gz` をRAMへ展開します。ダウンロード量は140,489バイトです。IPK標準の圧縮をそのまま使い、別形式への再圧縮は行いません。IPKと展開途中のファイルはRAMだけに置き、展開後に削除します。GitHubのベース用アーカイブには依存しません。
 
 `luci-base-ram` サービスはネットワーク起動後の `START=95` で取得・展開します。ダウンロードの制限時間は45秒です。取得・検証・展開に失敗するとLuCIを起動できませんが、SSHと純正サービスの起動は継続します。オンライン復帰後は `/etc/init.d/luci-base-ram start` で再試行できます。同じ起動中に取得済みのベースを再利用するため、起動処理を繰り返しても重複取得はありません。
 
@@ -64,14 +64,14 @@ LinuxのOverlayFSで `/usr/lib/lua`、`/usr/libexec/rpcd`、`/usr/share`、`/www
 
 純正v2.5.1、rootシェル、インターネット接続が必要です。LuCIの事前インストールは不要です。有効なRPCdログイン設定を維持し、未設定の場合はOSのrootパスワードを使うログイン設定を作ります。rootパスワードも無効な場合は、インストール前に設定してください。認証情報や機器固有の校正データは配布物に含めていません。
 
-インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.2.0-1)の小さな準備IPKを `/tmp` へ取得してください。最初のIPKはリリースのSHA-256で確認し、以後の取得ではopkgが一覧の署名と各IPKのハッシュを検証します。
+インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.2.1-1)の小さな準備IPKを `/tmp` へ取得してください。最初のIPKはリリースのSHA-256で確認し、以後の取得ではopkgが各フィードの署名とIPKのハッシュを検証します。公式パッケージは公式フィードから、自作パッケージはGitHubのフィードから取得します。
 
 ```sh
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.2.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.2.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.2.1-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.2.1-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256

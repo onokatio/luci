@@ -3,7 +3,6 @@
 import hashlib
 import io
 import json
-import lzma
 import pathlib
 import re
 import subprocess
@@ -14,6 +13,12 @@ import tempfile
 HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
+OUT, CACHE = map(pathlib.Path, sys.argv[1:])
+custom_names = {'luci-base', 'luci-mod-network', 'libiwinfo20181126', 'libiwinfo-lua',
+                'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
+published = list(OUT.glob('*.ipk'))
+assert len(published) == len(custom_names)
+official = [CACHE / p['filename'] for p in LOCK['base_packages'] if p['name'] not in custom_names]
 
 
 def unpack(raw):
@@ -36,7 +41,7 @@ def unpack(raw):
         return result
 
 
-for filename in sys.argv[1:]:
+for filename in published + official:
     path = pathlib.Path(filename)
     ipk = unpack(path.read_bytes())
     assert set(ipk) == {'debian-binary', 'control.tar.gz', 'data.tar.gz'}
@@ -57,6 +62,8 @@ for filename in sys.argv[1:]:
             subprocess.run(['sh', '-n'], input=data, check=True)
 
 assert len(records) == 18
+assert {name for name, (_, _, path) in records.items() if path.parent == OUT} == custom_names
+assert set(re.findall(r'^Package: (.*)$', (OUT / 'Packages').read_text(), re.M)) == custom_names
 available = set(records) | set(LOCK['rom_packages']) | {'libc', 'libgcc', 'libpthread', 'opkg', 'netifd', 'ubus', 'jshn'}
 for fields, _, _ in records.values():
     for dependency in fields['Depends'].split(', '):
@@ -73,7 +80,7 @@ for original in LOCK['base_packages']:
     elif name == 'luci-mod-network':
         assert fields['Version'] == original['version'] + '+qsdk3.1.0'
     if name == 'luci-base':
-        assert fields['Version'] == original['version'] + '+ram3.2.0'
+        assert fields['Version'] == original['version'] + '+ram3.2.1'
         assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'lib/upgrade/keep.d/luci-base',
                                 'etc/init.d/luci-base-ram', 'etc/init.d/ucitrack', 'sbin/luci-reload'}
         assert payload['sbin/luci-reload'] == '/tmp/luci-base/sbin/luci-reload'
@@ -203,17 +210,15 @@ with tempfile.TemporaryDirectory() as directory:
     assert config.is_symlink() and not config.exists()
 
 base = LOCK['ram_base']
-base_archive = records['luci-base'][2].parent / base['filename']
+base_archive = CACHE / base['filename']
 assert base_archive.stat().st_size == base['size']
 assert hashlib.sha256(base_archive.read_bytes()).hexdigest() == base['sha256']
-core = unpack(lzma.decompress(base_archive.read_bytes()))
+core = unpack(unpack(base_archive.read_bytes())['data.tar.gz'])
 assert core['www/cgi-bin/luci'].startswith(b'#!/usr/bin/lua\n')
 assert b'getHTModes' in core['www/luci-static/resources/network.js']
 for _, payload, _ in records.values():
     assert not any(name.endswith(('.tar.xz', '.tar.gz')) for name in payload)
-bundle = records['luci-base'][2].parent / ('wn7t94xr-luci-' + main['Version'] + '.tar.gz')
-with tarfile.open(bundle) as tar:
-    assert base['filename'] not in tar.getnames()
+assert not list(OUT.glob('*.tar.*'))
 
 with tempfile.TemporaryDirectory() as directory:
     root = pathlib.Path(directory)
@@ -280,4 +285,4 @@ if start; then exit 14; fi
 '''
     result = subprocess.run(['bash', '-e'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + result.stderr.decode()
-print('18 IPKs passed: separate preparation and signed-feed setup, dependency closure, boot downloads into RAM, persistent addons, failure isolation, capacity checks and ARM ABI')
+print('8 custom and 10 official IPKs passed: separate preparation and signed-feed setup, dependency closure, official boot downloads into RAM, persistent addons, failure isolation, capacity checks and ARM ABI')

@@ -20,14 +20,15 @@ fetch() {
 	fi
 	local download unpack
 	download="$(mktemp -d /tmp/luci-base-download.XXXXXX)" || return 1
-	if ! curl -fsSL --connect-timeout 10 --max-time 45 "$url" -o "$download/base.tar.xz" ||
-	   [ "$(sha256sum "$download/base.tar.xz" | cut -d ' ' -f 1)" != "$sha" ]; then
+	if ! curl -fsSL --connect-timeout 10 --max-time 45 "$url" -o "$download/base.ipk" ||
+	   [ "$(sha256sum "$download/base.ipk" | cut -d ' ' -f 1)" != "$sha" ]; then
 		rm -rf "$download"
 		logger -t luci-base-ram 'LuCI base download or SHA-256 verification failed'
 		return 1
 	fi
 	unpack="$(mktemp -d /tmp/luci-base-unpack.XXXXXX)" || { rm -rf "$download"; return 1; }
-	tar -xJf "$download/base.tar.xz" -C "$unpack" || { rm -rf "$unpack" "$download"; return 1; }
+	tar -xzf "$download/base.ipk" -C "$download" ./data.tar.gz &&
+	   tar -xzf "$download/data.tar.gz" -C "$unpack" || { rm -rf "$unpack" "$download"; return 1; }
 	[ -f "$unpack/usr/lib/lua/luci/dispatcher.lua" ] && [ -f "$unpack/www/cgi-bin/luci" ] || { rm -rf "$unpack" "$download"; return 1; }
 	printf '%s\n' "$sha" > "$unpack/.archive-sha256"
 	chmod 755 "$unpack"
