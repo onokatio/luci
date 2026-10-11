@@ -56,7 +56,7 @@ for filename in sys.argv[1:]:
         if file in ('preinst', 'postinst', 'prerm', 'postrm'):
             subprocess.run(['sh', '-n'], input=data, check=True)
 
-assert len(records) == 17
+assert len(records) == 18
 available = set(records) | set(LOCK['rom_packages']) | {'libc', 'libgcc', 'libpthread', 'opkg', 'netifd', 'ubus', 'jshn'}
 for fields, _, _ in records.values():
     for dependency in fields['Depends'].split(', '):
@@ -93,8 +93,44 @@ assert owners['usr/lib/rpcd/iwinfo.so'] == 'rpcd-mod-iwinfo'
 assert owners['usr/lib/lua/iwinfo.so'] == 'libiwinfo-lua'
 assert owners['etc/init.d/uhttpd'] == 'uhttpd'
 assert 'etc/init.d/rpcd' not in owners
-library_path = records['libiwinfo20181126'][2]
-preinst = unpack(unpack(library_path.read_bytes())['control.tar.gz'])['preinst'].decode()
+prepare_name = 'luci-qsdk-wn7t94xr-prepare'
+prepare_path = 'usr/libexec/luci-qsdk-prepare'
+prepare_fields, prepare_payload, prepare_ipk = records[prepare_name]
+assert set(prepare_payload) == {prepare_path}
+assert prepare_name + ' (= ' + main['Version'] + ')' in main['Depends'].split(', ')
+assert prepare_fields['Version'] == main['Version']
+preinst = unpack(unpack(prepare_ipk.read_bytes())['control.tar.gz'])['preinst'].decode()
+assert prepare_payload[prepare_path] == preinst.encode()
+for name in ('libiwinfo20181126', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci'):
+    hooks = unpack(unpack(records[name][2].read_bytes())['control.tar.gz'])
+    assert 'preinst' not in hooks, f'Device preparation must not live in {name}'
+    assert prepare_name not in records[name][0]['Depends']
+main_hooks = unpack(unpack(records['luci-qsdk-wn7t94xr'][2].read_bytes())['control.tar.gz'])
+main_preinst = main_hooks['preinst'].decode()
+assert 'exec /' + prepare_path in main_preinst
+assert 'required=' not in main_preinst and 'usable_login' not in main_preinst
+with tempfile.TemporaryDirectory() as directory:
+    root = pathlib.Path(directory)
+    helper = root / prepare_path
+    control = root / 'usr/lib/opkg/info' / (prepare_name + '.control')
+    script = main_preinst.replace('/' + prepare_path, str(helper))
+    script = script.replace('/usr/lib/opkg/info/' + prepare_name + '.control', str(control))
+
+    def check_prepare(expected, output=b''):
+        result = subprocess.run(['sh'], input=script.encode(), capture_output=True)
+        assert result.returncode == expected and result.stdout == output, result.stderr.decode()
+
+    check_prepare(1)
+    helper.parent.mkdir(parents=True)
+    helper.write_text('#!/bin/sh\nprintf prepared\n')
+    helper.chmod(0o755)
+    control.parent.mkdir(parents=True)
+    control.write_text('Version: outdated\n')
+    check_prepare(1)
+    control.write_text('Version: ' + main['Version'] + '\n')
+    check_prepare(0, b'prepared')
+    helper.write_text('#!/bin/sh\nexit 7\n')
+    check_prepare(7)
 capacity = preinst[preinst.index('\nrequired=') + 1:preinst.index('\numask 077')]
 required = int(re.search(r'^required=(\d+)$', capacity, re.M)[1])
 assert required >= 450, 'Include the downloaded cache, persistent dependencies, metadata and reserve'
@@ -115,6 +151,10 @@ with tempfile.TemporaryDirectory() as directory:
 
     check_capacity(required - 1, False)
     check_capacity(required, True)
+    (info / (prepare_name + '.control')).write_text('Version: ' + main['Version'] + '\n')
+    prepare_kib = int(re.search(prepare_name + ':' + re.escape(main['Version']) + ':' + re.escape(main['Version']) + r':(\d+)', capacity)[1])
+    check_capacity(required - prepare_kib, True)
+    (info / (prepare_name + '.control')).unlink()
     for file in ('usr/lib/libiwinfo.so', 'usr/lib/lua/iwinfo.so'):
         for layer in ('upper', 'rom'):
             path = info / layer / file
@@ -129,9 +169,15 @@ with tempfile.TemporaryDirectory() as directory:
     for name, (fields, _, _) in records.items():
         (info / (name + '.control')).write_text('Version: ' + fields['Version'] + '\n')
     cache_path.write_bytes((records['luci-base'][2].parent / LOCK['ram_base']['filename']).read_bytes())
-    credits = re.findall(r'([a-zA-Z0-9.+-]+):([^ :]+):(\d+)', re.search(r'for credit in (.*); do', capacity)[1])
-    credited = max(32, required - sum(int(kib) for _, _, kib in credits))
+    credits = re.findall(r'([a-zA-Z0-9.+-]+):([^ :]+):([^ :]+):(\d+)', re.search(r'for credit in (.*); do', capacity)[1])
+    credited = max(32, required - sum(int(kib) for _, _, _, kib in credits))
     check_capacity(credited, True)
+    for name, _, previous, _ in credits:
+        (info / (name + '.control')).write_text('Version: ' + previous + '\n')
+    check_capacity(credited, True)
+    (info / 'libiwinfo20181126.control').write_text('Version: unknown\n')
+    check_capacity(credited, False)
+    (info / 'libiwinfo20181126.control').write_text('Version: ' + records['libiwinfo20181126'][0]['Version'] + '\n')
     cache_path.unlink()
     check_capacity(credited, False)
     (info / 'luci-base.control').write_text('Version: outdated\n')
@@ -207,4 +253,4 @@ if start; then exit 13; fi
 '''
     result = subprocess.run(['bash', '-e'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + result.stderr.decode()
-print('17 IPKs passed: pinned dependencies, separate downloaded base, persistent addon mounts, failure handling, capacity checks and ARM ABI')
+print('18 IPKs passed: separate device preparation, dependency closure, pinned base, persistent addons, retry and failure handling, capacity checks and ARM ABI')

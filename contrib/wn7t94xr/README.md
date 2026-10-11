@@ -34,7 +34,9 @@ python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-ca
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr/*.ipk
 ```
 
-17個の依存IPKと、チェックサム、インストール用のまとめたアーカイブを生成します。公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
+準備パッケージと本体を含む18個のIPKと、チェックサム、インストール用のまとめたアーカイブを生成します。公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
+
+機種・設定・容量の検査と旧RAM構成の移行準備は、専用の `luci-qsdk-wn7t94xr-prepare` に分離しています。処理はこのパッケージの `preinst` と `/usr/libexec/luci-qsdk-prepare` に含めています。iwinfoのIPKには移行処理を含めず、準備パッケージへの依存も追加していません。本体の `preinst` は専用パッケージの処理を呼ぶため、準備パッケージが導入済みでも、再起動後のインストール再試行時に検査できます。
 
 ## RAMとoverlayの配置
 
@@ -60,21 +62,21 @@ LinuxのOverlayFSで `/usr/lib/lua`、`/usr/libexec/rpcd`、`/usr/share`、`/www
 
 純正v2.5.1、rootシェル、インターネット接続が必要です。LuCIの事前インストールは不要です。有効なRPCdログイン設定を維持し、未設定の場合はOSのrootパスワードを使うログイン設定を作ります。rootパスワードも無効な場合は、インストール前に設定してください。認証情報や機器固有の校正データは配布物に含めていません。
 
-インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.1.0-1)のアーカイブを `/tmp` で展開してください。
+インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.1.1-1)のアーカイブを `/tmp` で展開してください。
 
 ```sh
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-curl -fL https://github.com/onokatio/luci/releases/download/v3.1.0-1/wn7t94xr-luci-3.1.0-1.tar.gz -o packages.tar.gz
+curl -fL https://github.com/onokatio/luci/releases/download/v3.1.1-1/wn7t94xr-luci-3.1.1-1.tar.gz -o packages.tar.gz
 tar -xzf packages.tar.gz
 sha256sum -c SHA256SUMS
-opkg --force-space install ./libiwinfo20181126_2019-10-16-07315b6f-1+qsdk3.1.0_arm_cortex-a7_neon-vfpv4.ipk && opkg --force-space install ./*.ipk
+opkg --force-space install ./luci-qsdk-wn7t94xr-prepare_3.1.1-1_arm_cortex-a7_neon-vfpv4.ipk && opkg --force-space install ./*.ipk
 ```
 
-最初のIPKで機種・設定・容量を検査して移行を準備し、成功した場合に残りをインストールします。opkgは圧縮前の容量を積算するため、`--force-space` の指定が必要です。インストール前後にも独自の容量検査を行い、圧縮後の必要容量と32 KiBの空きを確保します。容量不足はエラーです。UBIFSでは書き込み直後に未圧縮の容量が予約され、空き容量表示が一時的に0になることがあります。
+最初に専用の準備パッケージで機種・設定・容量を検査して移行を準備し、成功した場合に残りをインストールします。本体は準備パッケージの同じバージョンに依存します。opkgは圧縮前の容量を積算するため、`--force-space` の指定が必要です。インストール前後にも独自の容量検査を行い、圧縮後の必要容量と32 KiBの空きを確保します。容量不足はエラーです。UBIFSでは書き込み直後に未圧縮の容量が予約され、空き容量表示が一時的に0になることがあります。
 
-標準構成の必要容量の見積もりは約460 KiBです。既に同じパッケージが入っている場合はその分を差し引き、確認済みの旧RAM用ファイルも回収します。無線ファームウェア、ドライバー、校正データは削除しません。追加する拡張パッケージの容量は別途必要です。
+標準構成の必要容量の見積もりは約480 KiBです。既に同じパッケージが入っている場合はその分を差し引きます。データが変わっていないv3.1.0-1のパッケージも更新時に差し引き、確認済みの旧RAM用ファイルも回収します。無線ファームウェア、ドライバー、校正データは削除しません。追加する拡張パッケージの容量は別途必要です。
 
 この機器のopkgでは `--force-reinstall` を使わないでください。ROMにある他のパッケージのファイル一覧までoverlayへ複製し、容量を使い切る挙動を確認しました。更新時も上記の通常の `install` を使います。
 
