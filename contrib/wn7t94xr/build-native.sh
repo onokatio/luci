@@ -40,6 +40,6 @@ pathlib.Path(sys.argv[2]).write_text(readstr + switch)
 PY
 host="$sdk/staging_dir/host"
 cc -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" \
-	"$luci/contrib/wn7t94xr/switch-selfcheck.c" -L"$host/lib" -lblobmsg_json -lubox \
-	-Wl,-rpath,"$host/lib" -o /tmp/qsdk-switch-selfcheck
-LD_LIBRARY_PATH="$host/lib" /tmp/qsdk-switch-selfcheck
+	"$luci/contrib/wn7t94xr/switch-selfcheck.c" "$host/lib/libblobmsg_json.a" \
+	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-switch-selfcheck
+/tmp/qsdk-switch-selfcheck
