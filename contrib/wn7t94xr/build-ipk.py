@@ -80,7 +80,12 @@ for old in /usr/share/luci-qsdk/overlay.tar.gz /usr/share/luci-qsdk/overlay.tar.
  [ ! -f "$old" ] || reclaim=$((reclaim + $(wc -c < "$old")))
 done
 needed=$(({installed_size // 1024 + 1} + 32 - reclaim / 1024))
-[ "$(df -k /overlay | awk 'NR==2 {{print $4}}')" -ge "$needed" ] || {{ echo 'Insufficient overlay space including the replaced archive and 32 KiB reserve.' >&2; exit 1; }}
+available="$(df -k /overlay | awk 'NR==2 {{print $4}}')"
+[ "$available" -ge "$needed" ] || {{ echo "Overlay needs $needed KiB including replacement and reserve; $available KiB available." >&2; exit 1; }}
+if ubus call network.wireless status 2>/dev/null | jsonfilter -e '@.*.pending' | grep -q '^true$'; then
+ echo 'Wait for active Wireless setup/teardown before installing.' >&2
+ exit 1
+fi
 exit 0
 '''
 
