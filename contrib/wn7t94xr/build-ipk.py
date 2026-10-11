@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.3.0-4'
-SUFFIX = '+qsdk3.1.2'
+VERSION = '3.3.0-5'
+SUFFIX = '+qsdk3.1.3'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -147,7 +147,7 @@ Section: libs
 Priority: optional
 Maintainer: onokatio
 License: GPL-2.0-only AND ISC
-Description: QSDK Wireless backend for WN-7T94XR v2.5.1
+Description: QSDK network backend for WN-7T94XR v2.5.1
 '''
     if name == 'libiwinfo20181126':
         control += 'Provides: libiwinfo\n'
