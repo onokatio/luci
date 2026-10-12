@@ -40,6 +40,10 @@ Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を�
 
 筐体のLAN1・LAN2・LAN3が、それぞれSSDKのポート1・2・3に対応することを、実機のケーブル差し替えとリンク状態で確認しました。画面にもLAN1〜LAN3を表示します。リンク状態とVLAN機能の取得には、既存の標準RPCと純正 `swconfig` を使います。この追加処理はVLANの有効化や設定変更を行いません。VLANを編集する際は、CPUポートとLANインターフェースの対応を確認してください。VLAN機能を無効にする場合は、設定項目を削除せず `enable_vlan=0` を保存します。QSDKでは項目がないと有効な状態が残るため、標準フォームの保存処理を修正しました。
 
+EAP ClientはPEAP・TTLS・FASTの内部認証をwpa_supplicantの設定へ変換します。TTLSのEAP方式には `autheap=`、PEAP・FASTには `auth=` を使います。FASTのPACファイルとプロビジョニングも設定できます。
+
+MLOはGeneral SetupのMulti-Link Operationでグループを作成・選択します。各ラジオを1リンクずつ、最大3リンク追加できます。全ラジオでBEモードを使い、Clientにはブリッジではないネットワークを割り当ててください。リンクを削除してグループが空になると、そのグループも削除します。
+
 ## IPK のビルド
 
 Linux amd64 と OpenWrt 19.07.10 の ipq40xx SDK を使います。SDK はユーザー空間のモジュールをビルドするために使い、カーネルやファームウェアは置き換えません。
