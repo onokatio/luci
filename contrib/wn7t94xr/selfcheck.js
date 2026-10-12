@@ -127,7 +127,7 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', freque
 	frequency.qca = null;
 	frequency.write('wifi1', ['VHT80', '11a', '36']);
 	assert.equal(data.wifi1.hwmode, '11a');
-	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js'])
+	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js'])
 		new Function(fs.readFileSync(path.join(root, file), 'utf8'));
 	assert(!wireless.includes('require tools.qca'));
 	console.log('Core Wireless selfcheck passed: AP lifecycle, standard iwinfo frequency routing, failed-save cancellation, MLO, validation and JS syntax');

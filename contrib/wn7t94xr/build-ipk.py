@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.3.0-7'
+VERSION = '3.3.0-8'
 SUFFIX = '+qsdk3.1.4'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -98,6 +98,7 @@ def record(path, payload, control):
 mapping = {
     'luci-mod-network': {
         'www/luci-static/resources/view/network/wireless.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js',
+        'www/luci-static/resources/view/network/switch.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js',
     },
 }
 for package in LOCK['base_packages']:
@@ -114,7 +115,7 @@ for package in LOCK['base_packages']:
         if dest.endswith('.js'):
             data = subprocess.check_output([str(jsmin.resolve())], input=data)
         payload[dest] = (data, payload[dest][1])
-    version = package['version'] + '+qsdk3.1.0'
+    version = package['version'] + '+qsdk3.1.1'
     control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
     hooks['control'] = (control.encode(), 0o644)
     hooks['preinst'] = (b'''#!/bin/sh
