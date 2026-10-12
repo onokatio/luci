@@ -1151,14 +1151,18 @@ return view.extend({
 						if (!/^11be/.test(frequency ? frequency.formvalue(radio)[1] : uci.get('wireless', radio, 'hwmode')) || members.some(function(s) { return !/^11be/.test(uci.get('wireless', s.device, 'hwmode')); })) return _('MLO requires BE mode on every radio.');
 						return true;
 						};
-					o.onchange = function(ev, id, value) {
-						var member = uci.sections('wireless', 'wifi-iface').filter(function(s) { return s.mld == value && s['.name'] != id; })[0];
-						if (!member) return;
-						[ 'mode', 'ssid', 'network', 'encryption', 'cipher', '_wpa_key' ].concat(qca_shared).forEach(function(key) {
-							var option = this.map.lookupOption(key, id)[0], widget = option && option.getUIElement(id);
-							if (widget) widget.setValue(option.cfgvalue(member['.name']));
-							}, this);
-						this.map.checkDepends();
+					o.renderWidget = function(id, index, value) {
+						var node = form.ListValue.prototype.renderWidget.apply(this, arguments);
+						node.addEventListener('widget-change', L.bind(function() {
+							var value = this.formvalue(id), member = uci.sections('wireless', 'wifi-iface').filter(function(s) { return s.mld == value && s['.name'] != id; })[0];
+							if (!member) return;
+							[ 'mode', 'ssid', 'network', 'encryption', 'cipher', '_wpa_key' ].concat(qca_shared).forEach(function(key) {
+								var option = this.map.lookupOption(key, id)[0], widget = option && option.getUIElement(id);
+								if (widget) widget.setValue(option.cfgvalue(member['.name']));
+								}, this);
+							this.map.checkDepends();
+							}, this));
+						return node;
 						};
 					o = ss.taboption('advanced', form.Flag, '_allow_non_ml', _('Allow non-MLO AP'), _('Allow the MLO Client to connect to an access point with a single link.'));
 					o.default = '0';

@@ -126,6 +126,21 @@ assert.equal(data.new_link2.mode, 'sta');
 assert.equal(data.new_link2.key, 'mlo-password');
 assert.equal(data.new_link2.auth, 'EAP-MSCHAPV2');
 assert.equal(data.new_link2.ssid, 'new-mlo');
+const populateCode = wireless.slice(wireless.indexOf('o.renderWidget = function(id, index, value)'), wireless.indexOf("o = ss.taboption('advanced', form.Flag, '_allow_non_ml'"));
+let populateListener, dependenciesChecked = false;
+const populated = {}, groupOption = { formvalue: () => 'mld3', map: {
+	lookupOption: key => [{ getUIElement: () => ({ setValue: value => { populated[key] = value; } }), cfgvalue: id => key == '_wpa_key' ? data[id].key : data[id][key] }],
+	checkDepends: () => { dependenciesChecked = true; }
+} };
+new Function('o', 'form', 'L', 'uci', 'qca_shared', populateCode)(groupOption,
+	{ ListValue: { prototype: { renderWidget: () => ({ addEventListener: (event, fn) => { assert.equal(event, 'widget-change'); populateListener = fn; } }) } } },
+	{ bind: (fn, context) => fn.bind(context) }, uci, ['auth']);
+groupOption.renderWidget('duplicate', 0, '');
+populateListener();
+assert.equal(populated.ssid, 'new-mlo');
+assert.equal(populated._wpa_key, 'mlo-password');
+assert.equal(populated.auth, 'EAP-MSCHAPV2');
+assert(dependenciesChecked);
 assert.throws(() => qca.writeMLD('duplicate', 'mld3'));
 assert.throws(() => qca.writeMLD('duplicate', 'mld3/invalid'));
 assert.throws(() => qca.writeMLD('duplicate', 'wifi0'));
