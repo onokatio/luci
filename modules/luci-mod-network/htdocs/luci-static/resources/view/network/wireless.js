@@ -1050,13 +1050,17 @@ return view.extend({
 				if (hwtype == 'mac80211' || hwtype == 'qcawificfg80211') {
 					o = ss.taboption('general', CBIWifiTxPowerValue, 'txpower', _('Maximum transmit power'), _('Specifies the maximum transmit power the wireless radio may use. Depending on regulatory requirements and wireless usage, the actual transmit power may be reduced by the driver.'));
 					o.wifiNetwork = radioNet;
-					if (hwtype == 'qcawificfg80211') {
-						o.cfgvalue = function(id) { var value = uci.get('wireless', id, 'txpower'); return value ? String(Number(value) / 100) : ''; };
-						o.write = function(id, value) { uci.set('wireless', id, 'txpower', value ? String(Number(value) * 100) : null); };
-					}
 
 					o = ss.taboption('advanced', CBIWifiCountryValue, 'country', _('Country Code'));
 					o.wifiNetwork = radioNet;
+				}
+
+				if (hwtype == 'qcawificfg80211' && /g$/.test(uci.get('wireless', radioNet.getWifiDeviceName(), 'hwmode') || '')) {
+					o = ss.taboption('advanced', form.Flag, 'legacy_rates', _('Allow legacy 802.11b rates'));
+					o.rmempty = false;
+					o.default = uci.get('wireless', radioNet.getWifiDeviceName(), 'hwmode') == '11g' ? '0' : '1';
+					o = ss.taboption('advanced', form.Flag, 'noscan', _('Force 40MHz mode'), _('Always use 40MHz channels even if the secondary channel overlaps. Using this option does not comply with IEEE 802.11n-2009!'));
+					o.rmempty = false;
 				}
 
 				if (hwtype == 'mac80211') {
@@ -1330,6 +1334,14 @@ return view.extend({
 						o = ss.taboption('advanced', form.Value, p[0], p[1]);
 						o.datatype = p[2]; o.placeholder = p[3]; o.optional = true;
 						o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
+						if (p[0] == 'frag') {
+							o.description = _('The native driver supports fragmentation thresholds in legacy modes only.');
+							o.validate = function(id, value) {
+								var radio = radioNet.getWifiDeviceName(), frequency = this.map.lookupOption('_freq', radio)[0];
+								var hwmode = frequency ? frequency.formvalue(radio)[1] : uci.get('wireless', radio, 'hwmode');
+								return !value || /^11[abg]$/.test(hwmode) || _('Clear the fragmentation threshold before selecting N, AC, AX or BE mode.');
+								};
+							}
 					});
 					if (radioNet.get('mld')) {
 						o = ss.taboption('general', form.DummyValue, '_mld', _('Multi-Link Operation'));
