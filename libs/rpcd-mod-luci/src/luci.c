@@ -1752,12 +1752,15 @@ rpc_luci_qsdk_switch(struct blob_buf *buf)
 	/* The vendor board generator skips port metadata when network UCI already exists. */
 	if (strcmp(readstr("/sys/firmware/devicetree/base/compatible"), "qcom,ipq5332-ap-mi01.6") ||
 	    strcmp(readstr("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible"), "qcom,ess-switch-qca8386") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/aliases/ethernet1"), "/soc/dp2") ||
+	    strcmp(readstr("/sys/class/net/eth1/type"), "1") ||
 	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/device_id", 1) ||
 	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp", 1) ||
 	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp", 14) ||
 	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp", 0) ||
-	    !rpc_luci_dt_u32("/sys/class/net/eth1/device/of_node/qcom,is_switch_connected", 1) ||
-	    !rpc_luci_dt_u32("/sys/class/net/eth1/device/of_node/qcom,mht-dev", 1))
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1))
 		return;
 
 	blobmsg_parse(&switch_policy, 1, &switches, blob_data(buf->head), blob_len(buf->head));

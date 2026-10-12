@@ -16,13 +16,16 @@ static const char *properties[] = {
 	"/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp",
 	"/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp",
 	"/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp",
-	"/sys/class/net/eth1/device/of_node/qcom,is_switch_connected",
-	"/sys/class/net/eth1/device/of_node/qcom,mht-dev"
+	"/sys/firmware/devicetree/base/soc/dp2/qcom,id",
+	"/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected",
+	"/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev",
+	"/sys/firmware/devicetree/base/aliases/ethernet1",
+	"/sys/class/net/eth1/type"
 };
 
 static FILE *fixture_fopen(const char *path, const char *mode)
 {
-	static const uint32_t values[] = { 0, 0, 1, 1, 14, 0, 1, 1 };
+	static const uint32_t values[] = { 0, 0, 1, 1, 14, 0, 1, 1, 1 };
 	uint32_t value;
 	FILE *f;
 	int i;
@@ -36,9 +39,11 @@ static FILE *fixture_fopen(const char *path, const char *mode)
 		return NULL;
 	f = tmpfile();
 	assert(f);
-	if (i < 2) {
+	if (i < 2 || i >= 9) {
 		const char *s = i == bad_property ? "unrecognized" :
-		               i == 0 ? "qcom,ipq5332-ap-mi01.6" : "qcom,ess-switch-qca8386";
+		               i == 0 ? "qcom,ipq5332-ap-mi01.6" :
+		               i == 1 ? "qcom,ess-switch-qca8386" :
+		               i == 9 ? "/soc/dp2" : "1\n";
 		fwrite(s, 1, strlen(s) + 1, f);
 	}
 	else {
@@ -101,8 +106,8 @@ int main(void)
 	check("{\"switch\":{\"switch1\":false}}", "{\"switch\":{\"switch1\":false}}");
 	check("{\"switch\":{\"switch1\":{\"ports\":false}}}",
 	      "{\"switch\":{\"switch1\":{\"ports\":false}}}");
-	for (bad_property = 0; bad_property < 8; bad_property++)
-		for (fault = 0; fault < (bad_property < 2 ? 2 : 4); fault++)
+	for (bad_property = 0; bad_property < 11; bad_property++)
+		for (fault = 0; fault < (bad_property < 2 || bad_property >= 9 ? 2 : 4); fault++)
 			check(BOARD "}", BOARD "}");
 	bad_property = -1;
 	for (i = 0; i < 20; i++)
