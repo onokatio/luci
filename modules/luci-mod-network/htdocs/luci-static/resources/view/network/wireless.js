@@ -1220,8 +1220,8 @@ return view.extend({
 				if (hwtype == 'qcawificfg80211') {
 					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds'); o.depends('mode', 'sta'); o.depends('mode', 'sta-wds');
 					o.validate = function(id, value) {
-						var mode = this.section.children[0].formvalue(id);
-						return mode != 'sta' || !L.toArray(value).some(function(n) { return uci.get('network', n, 'type') == 'bridge'; }) || _('Use an unbridged network for Client mode, or select Client (WDS).');
+						var mode = this.map.lookupOption('mode', id)[0].formvalue(id), values = Array.isArray(value) ? value : String(value || '').split(/\s+/);
+						return mode != 'sta' || !values.some(function(n) { return uci.get('network', n, 'type') == 'bridge'; }) || _('Use an unbridged network for Client mode, or select Client (WDS).');
 						};
 					}
 				o.write = function(section_id, value) {
