@@ -44,7 +44,7 @@ static FILE *fixture_fopen(const char *path, const char *mode)
 		               i == 0 ? "qcom,ipq5332-ap-mi01.6" :
 		               i == 1 ? "qcom,ess-switch-qca8386" :
 		               i == 9 ? "/soc/dp2" : "1\n";
-		fwrite(s, 1, strlen(s) + 1, f);
+		fwrite(s, 1, strlen(s) + (i == 10 ? 0 : 1), f);
 	}
 	else {
 		value = htonl(values[i] + (i == bad_property && fault == 1));
