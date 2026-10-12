@@ -14,7 +14,7 @@ const data = {
 	mld0: { '.type': 'wifi-mld', mld_ssid: 'authoritative-mld-ssid' }
 };
 const uci = {
-	get: (config, id, option) => data[id]?.[option == null ? '.type' : option],
+	get: (config, id, option) => option == null ? data[id] : data[id]?.[option],
 	set: (config, id, option, value) => { data[id][option] = value; },
 	add: (config, type, id) => { data[id] = { '.type': type }; return id; },
 	unset: (config, id, option) => { delete data[id][option]; },

@@ -130,7 +130,7 @@ function qca_write_mld(id, value) {
 		uci.add('wireless', 'wifi-mld', value);
 		uci.set('wireless', value, 'mld_ssid', uci.get('wireless', id, 'ssid'));
 	}
-	if (value && (!/^mld[0-9]+$/.test(value) || uci.get('wireless', value) != 'wifi-mld')) throw new Error(_('Invalid MLO group'));
+	if (value && (!/^mld[0-9]+$/.test(value) || uci.get('wireless', value, '.type') != 'wifi-mld')) throw new Error(_('Invalid MLO group'));
 	if (value != previous) {
 		members = uci.sections('wireless', 'wifi-iface').filter(function(s) { return s.mld == value && s['.name'] != id; });
 		if (value && members.some(function(s) { return s.device == uci.get('wireless', id, 'device'); })) throw new Error(_('An MLO group can have only one link per radio.'));
@@ -1143,7 +1143,7 @@ return view.extend({
 					o.remove = function(id) { qca_write_mld(id, ''); };
 					o.validate = function(id, value) {
 						if (!value) return true;
-						if (value != '_new' && (!/^mld[0-9]+$/.test(value) || uci.get('wireless', value) != 'wifi-mld')) return _('Invalid MLO group');
+						if (value != '_new' && (!/^mld[0-9]+$/.test(value) || uci.get('wireless', value, '.type') != 'wifi-mld')) return _('Invalid MLO group');
 						var members = uci.sections('wireless', 'wifi-iface').filter(function(s) { return s.mld == value && s['.name'] != id; }),
 						    radio = uci.get('wireless', id, 'device'), frequency = this.map.lookupOption('_freq', radio)[0];
 						if (members.some(function(s) { return s.device == radio; })) return _('An MLO group can have only one link per radio.');
