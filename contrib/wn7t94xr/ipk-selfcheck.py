@@ -192,7 +192,13 @@ mount() {{
  fi
 }}
 umount() {{
- [ "$fail_umount" != "$1" ] || return 1
+ if [ "$1" = -l ]; then
+  shift
+  [ "$allow_lazy" = "$1" ] || return 1
+  echo "lazy umount $1" >> '{root}/services'
+ else
+  [ "$fail_umount" != "$1" ] || return 1
+ fi
  if [ -e "$1.vendor" ]; then rm "$1"; mv "$1.vendor" "$1"; fi
  awk -v target="$1" '$2 != target' '{mounts}' > '{mounts}.new'
  mv '{mounts}.new' '{mounts}'
@@ -231,7 +237,16 @@ stop
 [ "$(cat '{targets}/sbin/wifi')" = vendor ]
 start
 [ "$(cat "$state/upper/www/addon")" = persistent ]
+fail_umount='{targets}/lib/netifd/wireless'; allow_lazy=''
+restarts="$(grep -c '^network restart$' '{root}/services')"
+if stop; then exit 16; fi
+[ -e "$ram" ] && [ "$(grep -c '^network restart$' '{root}/services')" = "$restarts" ]
+! grep -q '^lazy umount' '{root}/services'
+allow_lazy="$fail_umount"
 stop
+grep -qx 'lazy umount {targets}/lib/netifd/wireless' '{root}/services'
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ]
+fail_umount=''
 fail_mount='{targets}/www'
 if start; then exit 13; fi
 [ ! -s '{mounts}' ] && [ ! -e "$ram" ]

@@ -115,7 +115,10 @@ stop() {
 	done
 	for dir in lib/netifd/wireless www usr/share usr/lib/opkg usr/libexec/rpcd usr/lib/rpcd usr/lib/lua; do
 		owns_mount "$dir" || continue
-		umount "/$dir" || result=1
+		if ! umount "/$dir"; then
+			# netifd retains a directory fd until the network restart below.
+			[ "$dir" = lib/netifd/wireless ] && umount -l "/$dir" || result=1
+		fi
 	done
 	/etc/init.d/rpcd start
 	[ "$result" = 0 ] || return 1

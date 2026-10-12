@@ -63,6 +63,8 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 
 `luci-ram` はネットワーク起動後の `START=95` で全てを取得します。取得制限は各IPKにつき45秒です。全ての取得・検証・展開が終わるまで純正サービスやマウント構成は変更しません。取得に失敗した場合はLuCIを起動せず、純正のルーター機能とSSHは起動を続けます。オンライン復帰後は `/etc/init.d/luci-ram start` で再試行できます。同じ起動中に取得済みの場合は再ダウンロードしません。
 
+停止時はマウントを解除してからネットワーク管理サービスを再起動します。netifdが無線ドライバーのディレクトリを開いたまま保持するため、その所有マウントに限り通常の解除に失敗した場合はlazy unmountを使います。参照はその後のnetifd再起動で閉じます。他のマウントの解除に失敗した場合は、ネットワークとRAMを保持して再試行できる状態を残します。
+
 取得成功後はOverlayFSでLua、RPC、opkg管理情報、共有データ、Webファイル、netifdプラグインのディレクトリにRAM上のファイルを重ねます。ネットワーク起動処理、`/sbin/wifi`、iwinfoのライブラリはbind mountし、新規の実行ファイルとライブラリにはRAMを参照するシンボリックリンクを使います。純正領域のドライバー、ファームウェア、校正データは維持します。netifdはプロセス起動時にドライバープラグインを検出するため、RAMへの展開後にネットワーク管理サービスを一度再起動します。この際、通信が一時的に切れます。
 
 17個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
@@ -77,8 +79,8 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.3.0-6
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.3.0-6_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.3.0-7
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.3.0-7_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -90,7 +92,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v3.3.0-6)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v3.3.0-7)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
