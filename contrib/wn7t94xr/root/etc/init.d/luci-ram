@@ -96,6 +96,8 @@ start() {
 		/etc/init.d/network restart || { stop; return 1; }
 		ubus -t 30 wait_for network.interface || { stop; return 1; }
 		/etc/init.d/rpcd restart || { stop; return 1; }
+		rm -rf /tmp/luci-modulecache
+		rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*.json
 		"$ram/etc/init.d/uhttpd" start || { stop; return 1; }
 		touch "$ram/.started"
 	fi

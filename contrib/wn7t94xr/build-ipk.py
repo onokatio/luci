@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.3.0-8'
-SUFFIX = '+qsdk3.1.4'
+VERSION = '3.4.0-3'
+SUFFIX = '+qsdk3.2.1'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -115,7 +115,7 @@ for package in LOCK['base_packages']:
         if dest.endswith('.js'):
             data = subprocess.check_output([str(jsmin.resolve())], input=data)
         payload[dest] = (data, payload[dest][1])
-    version = package['version'] + '+qsdk3.1.1'
+    version = package['version'] + SUFFIX
     control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
     hooks['control'] = (control.encode(), 0o644)
     hooks['preinst'] = (b'''#!/bin/sh
@@ -166,6 +166,12 @@ driver = (NETIFD / 'examples/wireless/qcawificfg80211.sh').read_bytes()
 runtime_payload = {'etc/init.d/network': (network, 0o755),
                    'sbin/wifi': (wifi, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
+base = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
+base_ipk = read_archive((CACHE / base['filename']).read_bytes())
+version_file = read_archive(base_ipk['data.tar.gz'][0])['usr/lib/lua/luci/version.lua'][0]
+# Give changed Javascript a new cache key while downloading the unchanged official base.
+runtime_payload['usr/lib/lua/luci/version.lua'] = (version_file +
+    ('\nluciversion = luciversion .. "+qsdk' + VERSION + '"\n').encode(), 0o644)
 runtime_control = f'''Package: luci-qsdk-wn7t94xr-runtime
 Version: {VERSION}
 Architecture: {ARCH}

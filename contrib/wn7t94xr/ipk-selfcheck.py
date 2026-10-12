@@ -83,7 +83,7 @@ for original in LOCK['base_packages']:
     if name != 'luci-mod-network':
         assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
     else:
-        assert fields['Version'] == original['version'] + '+qsdk3.1.1'
+        assert fields['Version'] == original['version'] + '+qsdk3.2.1'
         assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
         assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
 
@@ -118,7 +118,8 @@ for file, data in libraries.items():
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
-assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh'}
+assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua'}
+assert ('+qsdk' + main['Version']).encode() in records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/version.lua']
 
 prepare_name = 'luci-qsdk-wn7t94xr-prepare'
 prepare_path = 'usr/libexec/luci-qsdk-prepare'

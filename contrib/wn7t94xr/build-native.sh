@@ -24,7 +24,7 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 	"$luci/libs/rpcd-mod-luci/src/luci.c" -L"$stage/usr/lib" -lubox -lubus -luci -lnl-tiny -ldl \
 	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/luci.so"
 "$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
-	-I"$iwinfo/include" -I"$(dirname "$rpcd_source")/include" "$rpcd_source" \
+	-I"$iwinfo/include" -I"$(dirname "$rpcd_source")/include" "$luci/libs/rpcd-mod-iwinfo/src/iwinfo.c" \
 	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
@@ -43,3 +43,18 @@ cc -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" \
 	"$luci/contrib/wn7t94xr/switch-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-switch-selfcheck
 /tmp/qsdk-switch-selfcheck
+python3 - "$luci" "$output" <<'PY'
+import pathlib, sys
+luci, output = map(pathlib.Path, sys.argv[1:])
+control = (luci / 'libs/rpcd-mod-luci/src/qsdk-hostapd.h').read_text()
+(output / 'qsdk-hostapd-control.inc').write_text(control[:control.index('struct qsdk_hostapd_ban')])
+rpc = (luci / 'libs/rpcd-mod-iwinfo/src/iwinfo.c').read_text()
+(output / 'qsdk-rate.inc').write_text(rpc[rpc.index('static void\nrpc_iwinfo_add_rateinfo('):rpc.index('static int\nrpc_iwinfo_assoclist(')])
+PY
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" \
+	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
+/tmp/qsdk-hostapd-selfcheck
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
+	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
+	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
+/tmp/qsdk-rate-selfcheck
