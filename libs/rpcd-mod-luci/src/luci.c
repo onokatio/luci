@@ -1721,6 +1721,102 @@ rpc_luci_get_duid_hints(struct ubus_context *ctx, struct ubus_object *obj,
 	return UBUS_STATUS_OK;
 }
 
+/* QSDK switch topology */
+static bool
+rpc_luci_dt_u32(const char *path, uint32_t value)
+{
+	uint32_t data;
+	FILE *f = fopen(path, "rb");
+	bool match;
+
+	if (!f)
+		return false;
+
+	match = fread(&data, 1, sizeof(data), f) == sizeof(data) &&
+	        fgetc(f) == EOF && !ferror(f) && ntohl(data) == value;
+	fclose(f);
+	return match;
+}
+
+static void
+rpc_luci_qsdk_switch(struct blob_buf *buf)
+{
+	static const struct blobmsg_policy switch_policy = { "switch", BLOBMSG_TYPE_UNSPEC };
+	static const struct blobmsg_policy device_policy = { "switch1", BLOBMSG_TYPE_UNSPEC };
+	static const struct blobmsg_policy ports_policy = { "ports", BLOBMSG_TYPE_UNSPEC };
+	struct blob_attr *switches = NULL, *device = NULL, *ports = NULL, *cur;
+	struct blob_buf original;
+	void *s, *d, *a, *p;
+	int rem, i;
+
+	/* The vendor board generator skips port metadata when network UCI already exists. */
+	if (strcmp(readstr("/sys/firmware/devicetree/base/compatible"), "qcom,ipq5332-ap-mi01.6") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible"), "qcom,ess-switch-qca8386") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/aliases/ethernet1"), "/soc/dp2") ||
+	    strcmp(readstr("/sys/class/net/eth1/type"), "1") ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/device_id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp", 14) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp", 0) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1))
+		return;
+
+	blobmsg_parse(&switch_policy, 1, &switches, blob_data(buf->head), blob_len(buf->head));
+	if (switches) {
+		if (blobmsg_type(switches) != BLOBMSG_TYPE_TABLE)
+			return;
+		blobmsg_parse(&device_policy, 1, &device, blobmsg_data(switches), blobmsg_data_len(switches));
+		if (device) {
+			if (blobmsg_type(device) != BLOBMSG_TYPE_TABLE)
+				return;
+			blobmsg_parse(&ports_policy, 1, &ports, blobmsg_data(device), blobmsg_data_len(device));
+			if (ports && (blobmsg_type(ports) != BLOBMSG_TYPE_ARRAY || blobmsg_data_len(ports)))
+				return;
+		}
+	}
+
+	original = *buf;
+	memset(buf, 0, sizeof(*buf));
+	blob_buf_init(buf, 0);
+	blob_for_each_attr(cur, original.head, rem)
+		if (strcmp(blobmsg_name(cur), "switch"))
+			blobmsg_add_blob(buf, cur);
+
+	s = blobmsg_open_table(buf, "switch");
+	if (switches)
+		blobmsg_for_each_attr(cur, switches, rem)
+			if (strcmp(blobmsg_name(cur), "switch1"))
+				blobmsg_add_blob(buf, cur);
+
+	d = blobmsg_open_table(buf, "switch1");
+	if (device)
+		blobmsg_for_each_attr(cur, device, rem)
+			if (strcmp(blobmsg_name(cur), "ports"))
+				blobmsg_add_blob(buf, cur);
+
+	a = blobmsg_open_array(buf, "ports");
+	for (i = 0; i <= 3; i++) {
+		p = blobmsg_open_table(buf, NULL);
+		blobmsg_add_u32(buf, "num", i);
+		if (i == 0) {
+			blobmsg_add_string(buf, "device", "eth1");
+			blobmsg_add_u8(buf, "need_tag", false);
+		}
+		else {
+			blobmsg_add_string(buf, "role", "lan");
+			blobmsg_add_u32(buf, "index", i);
+		}
+		blobmsg_close_table(buf, p);
+	}
+	blobmsg_close_array(buf, a);
+	blobmsg_close_table(buf, d);
+	blobmsg_close_table(buf, s);
+	blob_buf_free(&original);
+}
+/* End QSDK switch topology */
+
 static int
 rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
                         struct ubus_request_data *req, const char *method,
@@ -1730,6 +1826,8 @@ rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
 
 	if (!blobmsg_add_json_from_file(&blob, "/etc/board.json"))
 		return UBUS_STATUS_UNKNOWN_ERROR;
+
+	rpc_luci_qsdk_switch(&blob);
 
 	ubus_send_reply(ctx, req, blob.head);
 	return UBUS_STATUS_OK;

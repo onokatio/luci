@@ -31,3 +31,15 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$iwinfo/include" \
 	"$iwinfo/tests/qsdk-selfcheck.c" -o /tmp/qsdk-iwinfo-selfcheck
 /tmp/qsdk-iwinfo-selfcheck
+python3 - "$luci/libs/rpcd-mod-luci/src/luci.c" "$output/qsdk-switch.inc" <<'PY'
+import pathlib, sys
+source = pathlib.Path(sys.argv[1]).read_text()
+readstr = source[source.index('static char *\nreadstr('):source.index('static char *\nea2str(')]
+switch = source[source.index('/* QSDK switch topology */'):source.index('/* End QSDK switch topology */')]
+pathlib.Path(sys.argv[2]).write_text(readstr + switch)
+PY
+host="$sdk/staging_dir/host"
+cc -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" \
+	"$luci/contrib/wn7t94xr/switch-selfcheck.c" "$host/lib/libblobmsg_json.a" \
+	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-switch-selfcheck
+/tmp/qsdk-switch-selfcheck

@@ -1,6 +1,6 @@
-# WN-7T94XR の QSDK Wireless 対応
+# WN-7T94XR の QSDK Wireless・Switch 対応
 
-I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 19.07 の標準 Wireless 画面を使うための実装です。無線ドライバー、ファームウェア、校正データは本体のものを使います。
+I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 19.07 の標準 Wireless・Switch 画面を使うための実装です。ドライバー、ファームウェア、校正データは本体のものを使います。
 
 実装は次のフォークで管理しています。
 
@@ -8,13 +8,23 @@ I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 19.07 の標
 | --- | --- |
 | [netifd / qsdk-legacy](https://github.com/onokatio/netifd/tree/qsdk-legacy) | 標準の wireless driver プラグイン。純正の制御処理を呼び、無線インターフェースの状態とブリッジへの接続を netifd に通知します。 |
 | [iwinfo / qsdk](https://github.com/onokatio/iwinfo/tree/qsdk) | QSDK のラジオ名と VAP の対応、HE/EHT の機能情報、6 GHz のチャンネル、hostapd の暗号化情報、純正の WEXT スキャンに対応します。 |
-| [LuCI / qsdk-wn7t94xr](https://github.com/onokatio/luci/tree/qsdk-wn7t94xr) | `rpcd-mod-luci` の MLO と HE/EHT 対応、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
+| [LuCI / qsdk-wn7t94xr](https://github.com/onokatio/luci/tree/qsdk-wn7t94xr) | `rpcd-mod-luci` の MLO・HE/EHT・Switch構成情報、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
 
 状態の取得には `network.wireless`、`luci-rpc.getWirelessDevices`、`iwinfo` を使います。独自の状態 API や常駐デーモンは追加していません。`/lib/netifd/wireless/qcawificfg80211.sh` は netifd が読み込む標準形式のドライバープラグインです。
 
 MLOを含む設定変更は、純正の制御処理でラジオ全体に適用します。同じ設定には、netifdから複数のsetup呼び出しが来ても適用を一度にまとめる処理があります。片方のラジオを停止した場合は、残る有効なラジオの再起動と共有MLDのブリッジ接続の復元も必要です。このため、単一ラジオの操作でもMLOグループの通信が一時的に切れることがあります。MLOのブリッジには `mld*` を接続し、LuCIには各リンクの `ath*` の情報を返します。
 
 追加APのインターフェース名は、純正管理画面とEasyMeshが使う番号を避けて割り当てます。追加直後は無効にし、SSID・暗号化・パスワードを設定してから有効にできます。6 GHzとMLOの暗号化はSAEです。スキャンは有効なラジオで利用できますが、スキャン結果からのSTA接続は対象外です。
+
+Associated Stationsの接続端末一覧はiwinfoで取得します。nl80211が空の一覧を返す場合は、本体の `wlanconfig` からMACアドレス・信号強度・送受信速度を取得し、標準のRPCへ返します。LuCI専用の取得スクリプトは追加しません。この代替取得では、端末ごとのMCS・チャネル幅・パケット数は取得しません。
+
+## Switch構成情報
+
+純正の `/etc/board.json` にポート定義がないため、標準Switch画面は `has an unknown topology` と表示します。`rpcd-mod-luci` の標準API `luci-rpc.getBoardJSON` に、欠けている `switch1.ports` を補う処理を追加しました。既存のポート定義や、モデル・ネットワーク設定・他のSwitch情報は保持します。ファイルの書き換えや起動スクリプトの追加は行いません。
+
+実行中のDTSがAP-MI01.6とQCA8386を示し、デバイス番号・CPU/LAN/WANのビットマップ・Ethernet1のエイリアスとdp2の接続属性が一致した場合だけ補完します。QSDKのeth1はsysfsではvirtualデバイスとして公開されるため、DTS側の対応情報を参照します。CPU側はポート0のeth1、外部ポートは1〜3です。10GbpsのWAN側eth0は、この外部Switchのポートには含めません。
+
+筐体のLAN1・LAN2・LAN3が、それぞれSSDKのポート1・2・3に対応することを、実機のケーブル差し替えとリンク状態で確認しました。画面にもLAN1〜LAN3を表示します。リンク状態とVLAN機能の取得には、既存の標準RPCと純正 `swconfig` を使います。この追加処理はVLANの有効化や設定変更を行いません。VLANを編集する際は、CPUポートとLANインターフェースの対応を確認してください。VLAN機能を無効にする場合は、設定項目を削除せず `enable_vlan=0` を保存します。QSDKでは項目がないと有効な状態が残るため、標準フォームの保存処理を修正しました。
 
 ## IPK のビルド
 
@@ -34,44 +44,43 @@ python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-ca
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 ```
 
-準備パッケージと本体を含む8個の自作IPKと、チェックサム、opkgフィードの一覧を生成します。変更のない10個の依存IPKは公式リポジトリから取得し、GitHubには再配布しません。ビルド時の公式IPKは `sources.json` のバージョンとSHA-256に固定しています。QSDK対応を加えるのは `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインです。対応するパッケージで純正のiwinfoモジュールを置き換え、純正rpcd本体は使い続けます。
+準備・起動用の2個と、RAMに展開するQSDK対応6個の、計8個の自作IPKを生成します。変更のない11個のIPKは公式リポジトリから取得し、GitHubには再配布しません。QSDK対応は `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインに含みます。純正rpcd本体は使い続けます。
 
-機種・設定・容量の検査と旧RAM構成の移行準備は、専用の `luci-qsdk-wn7t94xr-prepare` に分離しています。処理はこのパッケージの `preinst` と `/usr/libexec/luci-qsdk-prepare` に含めています。iwinfoのIPKには移行処理を含めず、準備パッケージへの依存も追加していません。本体の `preinst` は専用パッケージの処理を呼ぶため、準備パッケージが導入済みでも、再起動後のインストール再試行時に検査できます。
-
-準備IPKには、リリースのopkgフィード設定と公開の署名検証鍵も含めます。残りはopkgが依存関係を解決して取得するため、パッケージ自身から別のopkgを起動する処理は不要です。リリース時は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で、圧縮前の一覧に署名します。秘密鍵はリポジトリや配布物に含めません。
+機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
 
 ## RAMとoverlayの配置
 
-`luci-base` のコードは公式版を使います。RAMへ配置するために、このIPKだけインストール処理を変更しています。QSDKの機能変更は含みません。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の17個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
 
 | 内容 | 保存先 |
 | --- | --- |
-| 公式 `luci-base` のIPK | 起動時に公式リポジトリからRAMへ取得し、検証・展開後に削除 |
-| 展開した `luci-base` のコード | `/tmp/luci-base` |
-| 起動処理、LuCI設定、opkgのパッケージ情報 | 通常のoverlay |
-| LuCIの依存ライブラリ、Wireless、Software、テーマ、QSDK対応 | overlay |
-| 後からopkgで追加する拡張やLuCIファイルへの変更 | overlay |
+| 起動処理、取得先とSHA-256の一覧、LuCI設定、フィード設定 | overlay |
+| 公式の11個のIPK | 公式アーカイブからRAMへ取得 |
+| QSDK対応の6個のIPK | このフォークのGitHub ReleaseからRAMへ取得 |
+| 展開したLuCI、ライブラリ、uhttpd、QSDK連携 | `/tmp/luci-ram` |
+| 取得したIPKと展開途中のファイル | 展開後に削除 |
+| 後からopkgで追加した拡張や変更 | `/overlay/luci-ram/upper` |
 
-毎回の起動時に[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/luci/)から `luci-base_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk` を取得し、SHA-256を確認して中の `data.tar.gz` をRAMへ展開します。ダウンロード量は140,489バイトです。IPK標準の圧縮をそのまま使い、別形式への再圧縮は行いません。IPKと展開途中のファイルはRAMだけに置き、展開後に削除します。GitHubのベース用アーカイブには依存しません。
+`luci-ram` はネットワーク起動後の `START=95` で全てを取得します。取得制限は各IPKにつき45秒です。全ての取得・検証・展開が終わるまで純正サービスやマウント構成は変更しません。取得に失敗した場合はLuCIを起動せず、純正のルーター機能とSSHは起動を続けます。オンライン復帰後は `/etc/init.d/luci-ram start` で再試行できます。同じ起動中に取得済みの場合は再ダウンロードしません。
 
-`luci-base-ram` サービスはネットワーク起動後の `START=95` で取得・展開します。ダウンロードの制限時間は45秒です。取得・検証・展開に失敗するとLuCIを起動できませんが、SSHと純正サービスの起動は継続します。オンライン復帰後は `/etc/init.d/luci-base-ram start` で再試行できます。同じ起動中に取得済みのベースを再利用するため、起動処理を繰り返しても重複取得はありません。
+停止時はマウントを解除してからネットワーク管理サービスを再起動します。netifdが無線ドライバーのディレクトリを開いたまま保持するため、その所有マウントに限り通常の解除に失敗した場合はlazy unmountを使います。参照はその後のnetifd再起動で閉じます。他のマウントの解除に失敗した場合は、ネットワークとRAMを保持して再試行できる状態を残します。
 
-LinuxのOverlayFSで `/usr/lib/lua`、`/usr/libexec/rpcd`、`/usr/share`、`/www` を重ねます。RAMのベースを読み取り用の層とし、既存ファイルも読み取り用の層に含めます。書き込み先はUBIFSの `/overlay/luci-base/upper` です。そのため、通常の `opkg install` で追加した拡張と、ベースファイルに加えた変更は再起動後も残ります。マウント用の `work` と拡張の保存先は、同じUBIFSに置きます。
+取得成功後はOverlayFSでLua、RPC、opkg管理情報、共有データ、Webファイル、netifdプラグインのディレクトリにRAM上のファイルを重ねます。ネットワーク起動処理、`/sbin/wifi`、iwinfoのライブラリはbind mountし、新規の実行ファイルとライブラリにはRAMを参照するシンボリックリンクを使います。純正領域のドライバー、ファームウェア、校正データは維持します。netifdはプロセス起動時にドライバープラグインを検出するため、RAMへの展開後にネットワーク管理サービスを一度再起動します。この際、通信が一時的に切れます。
 
-`/etc/rc.local` のLuCI起動処理は不要です。以前の既知の `luci-ram` サービスと圧縮ファイル、および検証済みの `/root/luci-base.tar.xz` は、移行時にRAMへバックアップして本体から回収します。
+17個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
 
-## インストール条件
+## インストール
 
-純正v2.5.1、rootシェル、インターネット接続が必要です。LuCIの事前インストールは不要です。有効なRPCdログイン設定を維持し、未設定の場合はOSのrootパスワードを使うログイン設定を作ります。rootパスワードも無効な場合は、インストール前に設定してください。認証情報や機器固有の校正データは配布物に含めていません。
+純正v2.5.1、rootシェル、インターネット接続が必要です。LuCIの事前インストールは不要です。有効なRPCdログイン設定を維持し、未設定の場合はOSのrootパスワードを使うログイン設定を作ります。rootパスワードが無効な場合は先に設定してください。認証情報や機器固有の校正データは配布物に含めません。
 
-インストール処理はROMのネットワーク起動処理と無線制御の入口を確認し、未知の変更がある場合は停止します。機器の設定をバックアップしてから、[リリース](https://github.com/onokatio/luci/releases/tag/v3.2.1-1)の小さな準備IPKを `/tmp` へ取得してください。最初のIPKはリリースのSHA-256で確認し、以後の取得ではopkgが各フィードの署名とIPKのハッシュを検証します。公式パッケージは公式フィードから、自作パッケージはGitHubのフィードから取得します。
+次の手順で永続領域に入るパッケージは、準備パッケージと起動パッケージの2個だけです。必要な実行用IPKは起動処理が取得します。最初のIPKをSHA-256で確認し、以後はopkgがフィードの署名とIPKのハッシュを検証します。
 
 ```sh
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.2.1-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.2.1-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.3.0-8
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.3.0-8_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -80,30 +89,13 @@ sha256sum -c prepare.sha256
 opkg --force-space install "./$wn7_prepare"
 opkg update
 opkg --force-space install luci-qsdk-wn7t94xr
+/etc/init.d/luci-ram start
 ```
 
-最初に専用の準備パッケージで機種・設定・容量を検査して移行を準備し、フィードを登録します。残りのIPKの取得もオンラインです。本体は準備パッケージの同じバージョンに依存します。opkgは圧縮前の容量を積算するため、`--force-space` の指定が必要です。インストール前後にも独自の容量検査を行い、圧縮後の必要容量と32 KiBの空きを確保します。容量不足はエラーです。UBIFSでは書き込み直後に未圧縮の容量が予約され、空き容量表示が一時的に0になることがあります。
+[リリース](https://github.com/onokatio/luci/releases/tag/v3.3.0-8)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
-純正の未変更のフィード設定は、公開アーカイブに対応先がある `base`、`luci`、`packages`、`routing` に変更します。元の設定は移行前のバックアップに含めます。変更済みのフィード設定はそのままです。純正の `19.07-SNAPSHOT` の機種専用フィードは公開先がないため、登録しません。
+v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
-標準構成の必要容量の見積もりは約356 KiBです。起動時に取得するLuCIベースの圧縮ファイルは含みません。既に対応するパッケージが入っている場合はその分を差し引き、確認済みの旧RAM用ファイルも回収します。無線ファームウェア、ドライバー、校正データは削除しません。追加する拡張パッケージの容量は別途必要です。
+この機器のopkgでは `--force-reinstall` を使わないでください。ROMにある他のパッケージのファイル一覧までoverlayへ複製し、容量を使い切る挙動を確認しました。更新時も通常の `install` を使います。
 
-この機器のopkgでは `--force-reinstall` を使わないでください。ROMにある他のパッケージのファイル一覧までoverlayへ複製し、容量を使い切る挙動を確認しました。更新時も上記の通常の `install` を使います。
-
-インストール時にネットワーク管理サービスを再起動するため、通信が一時的に切れます。既存のSSH設定と `/etc/rc.local` は変更しません。エラー時の移行前ファイルは、再起動するまで `/tmp/luci-qsdk-install/previous.tar.gz` に残ります。パッケージの導入に失敗した場合は再起動せず、このバックアップをPCにも保存してください。ベースの取得失敗だけであれば、SSHからLuCIの起動を再試行できます。
-
-純正の `/etc/init.d/network` と `/sbin/wifi` をROMから再利用し、Wireless操作をnetifdに接続します。純正の無線制御スクリプトそのものは再配布していません。LuCIはTCP 8080で起動し、`http://<本体のIPアドレス>:8080/cgi-bin/luci/` でアクセスできます。
-
-`opkg remove luci-qsdk-wn7t94xr` でQSDKのネットワーク起動処理と無線制御の入口をROM版へ戻します。別の依存パッケージは残ります。`luci-base` を削除する場合も、保存した拡張ファイルは自動では削除しません。
-
-他機種・他バージョンでの動作、STA 接続、EasyMesh の再構成、長時間の通信負荷は未検証です。適用前に本体の設定をバックアップしてください。
-
-## 実機での確認
-
-WN-7T94XR v2.5.1 で、標準 API による 3 ラジオの状態取得、2.4/5/6 GHz の暗号化 AP の追加・削除、標準 Scan 画面を確認しました。6 GHz は純正ライブラリでも検出 0 件でした。既存の 160/320 MHz 幅を維持し、テスト後に無線設定をバイト単位で復元しています。
-
-片方のラジオの停止・復帰では、動作中の MLO リンクのブリッジ接続も確認しました。停止後の再接続は約 37 秒、復帰は約 44 秒、3 帯域の AP 追加は約 66 秒、削除は約 48 秒でした。
-
-v3.1.0-1への移行、ベースのダウンロードとハッシュ検証、再起動後のLuCI自動起動を確認しました。通常のopkgで検証用のLuCI拡張を追加して変更し、再起動後も画面表示とLuaモジュールが残ることを確認しています。ベースファイルへの変更もUBIFSに残りました。検証用の拡張と変更は削除しています。
-
-移行前後で、無線・ネットワーク設定、認証情報、SSH本体、校正データなど12ファイルが一致しました。未変更の新品への導入、長時間の通信負荷は未検証です。
+`opkg remove luci-qsdk-wn7t94xr` はLuCIを停止し、RAMのマウントを解除して純正のネットワーク起動処理を使う状態へ戻します。準備パッケージと設定、後から追加した拡張は自動では削除しません。
