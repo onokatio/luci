@@ -126,7 +126,7 @@ assert.equal(data.new_link2.mode, 'sta');
 assert.equal(data.new_link2.key, 'mlo-password');
 assert.equal(data.new_link2.auth, 'EAP-MSCHAPV2');
 assert.equal(data.new_link2.ssid, 'new-mlo');
-const populateCode = wireless.slice(wireless.indexOf('o.renderWidget = function(id, index, value)'), wireless.indexOf("o = ss.taboption('advanced', form.Flag, '_allow_non_ml'"));
+const populateCode = wireless.match(/o\.renderWidget = function\(id, index, value\) \{[\s\S]*?return node;\s*\};/)[0];
 let populateListener, dependenciesChecked = false;
 const populated = {}, groupOption = { formvalue: () => 'mld3', map: {
 	lookupOption: key => key == 'missing' ? null : [{ default: key == 'unset' ? '1' : undefined, getUIElement: () => ({ setValue: value => { assert.notEqual(value, undefined); populated[key] = value; } }), cfgvalue: id => key == '_wpa_key' ? data[id].key : key == 'network' ? undefined : data[id][key] }],

@@ -42,7 +42,7 @@ Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を�
 
 EAP ClientはPEAP・TTLS・FASTの内部認証をwpa_supplicantの設定へ変換します。TTLSのEAP方式には `autheap=`、PEAP・FASTには `auth=` を使います。FASTのPACファイルとプロビジョニングも設定できます。
 
-MLOはGeneral SetupのMulti-Link Operationでグループを作成・選択します。各ラジオを1リンクずつ、最大3リンク追加できます。全ラジオでBEモードを使い、Clientにはブリッジではないネットワークを割り当ててください。リンクを削除してグループが空になると、そのグループも削除します。MLO ClientはAdvanced Settingsで接続開始に使うリンクを選びます。
+MLOはGeneral SetupのMulti-Link Operationでグループを作成・選択します。各ラジオを1リンクずつ、最大3リンク追加できます。全ラジオでBEモードを使い、Clientにはブリッジではないネットワークを割り当ててください。リンクを削除してグループが空になると、そのグループも削除します。MLO Clientの接続先にはMLOが有効なAPが必要です。
 
 ## IPK のビルド
 
