@@ -66,6 +66,14 @@ assert.equal(data.ath1.key, 'test-password');
 qca.setShared('ath15', 'hidden', '1');
 qca.setShared('ath15', 'hidden', null);
 for (const id of ['ath05', 'ath15', 'ath25']) assert.equal(data[id].hidden, null);
+qca.setShared('ath15', 'macfilter', 'allow');
+for (const id of ['ath05', 'ath15', 'ath25']) {
+	assert.equal(data[id].macaddr_acl, '1');
+	assert.equal(data[id].accept_mac_file, '/etc/luci-qsdk/maclist-' + id);
+	assert.equal(data[id].deny_mac_file, null);
+}
+qca.setShared('ath15', 'macfilter', null);
+assert.equal(data.ath15.accept_mac_file, null);
 qca.writeSecurity('ath1', 'psk2');
 assert.equal(data.ath1.sae, '0');
 qca.writeSecurity('ath1', 'sae-mixed');

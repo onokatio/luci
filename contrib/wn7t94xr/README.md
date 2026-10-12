@@ -23,7 +23,7 @@ MLOを含む設定変更は、純正の制御処理でラジオ全体に適用�
 | AP追加・削除、スキャン、Client接続 | 純正制御処理とnetifdの標準インターフェースを使います。 |
 | AP/ClientのWDS、Monitor | 純正ドライバーのモードとWDS設定を使います。MLOの既存リンクはAPとして扱います。 |
 | Legacy/N/AC/AX/BE、チャンネル、幅、国、送信出力 | ラジオの対応モードを取得し、QSDKのUCI形式へ保存します。送信出力の単位はdBmです。 |
-| MAC許可・拒否リスト | 純正hostapdの標準ACLで判定します。追加APで正しく動かないドライバー側のACLは、競合を避けるため解除します。 |
+| MAC許可・拒否リスト | 純正hostapdの標準ACLで判定します。追加APで正しく動かないドライバー側のACLは、競合を避けるため解除します。許可・拒否リストは設定ファイルとしてoverlayに保存し、ダウンロード失敗時にも純正hostapdが読める形式でUCIへ登録します。 |
 | WMM、DTIM、ビーコン、RTS、プリアンブル、GTK更新、端末の無通信時間 | 純正の設定生成を使い、不足する標準項目はhostapdの起動前に補います。フラグメント閾値はLegacyモードで使えます。 |
 | WPA2/SAE、OWE、EAP/RADIUS、PMF、802.11r、WPSの有効化 | 純正hostapd/wpa_supplicantの設定へ反映します。6 GHzとMLOではSAE、OWE、WPA3-EAPの強い暗号化を選びます。 |
 | Associated Stations、Disconnect | iwinfoと標準の `hostapd.<ifname>.del_client` APIを使います。一時拒否は期限後に解除します。 |
@@ -68,7 +68,7 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 
 | 内容 | 保存先 |
 | --- | --- |
-| 起動処理、取得先とSHA-256の一覧、LuCI設定、フィード設定 | overlay |
+| 起動処理、取得先とSHA-256の一覧、LuCI設定、フィード設定、設定したMAC許可・拒否リスト | overlay |
 | 公式の11個のIPK | 公式アーカイブからRAMへ取得 |
 | QSDK対応の6個のIPK | このフォークのGitHub ReleaseからRAMへ取得 |
 | 展開したLuCI、ライブラリ、uhttpd、QSDK連携 | `/tmp/luci-ram` |
