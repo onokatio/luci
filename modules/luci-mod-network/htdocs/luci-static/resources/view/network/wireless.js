@@ -1157,8 +1157,11 @@ return view.extend({
 							var value = this.formvalue(id), member = uci.sections('wireless', 'wifi-iface').filter(function(s) { return s.mld == value && s['.name'] != id; })[0];
 							if (!member) return;
 							[ 'mode', 'ssid', 'network', 'encryption', 'cipher', '_wpa_key' ].concat(qca_shared).forEach(function(key) {
-								var option = this.map.lookupOption(key, id)[0], widget = option && option.getUIElement(id);
-								if (widget) widget.setValue(option.cfgvalue(member['.name']));
+								var option = (this.map.lookupOption(key, id) || [])[0], widget = option && option.getUIElement(id);
+								if (widget) {
+									var value = option.cfgvalue(member['.name']);
+									widget.setValue(value != null ? value : option.default != null ? option.default : '');
+									}
 								}, this);
 							this.map.checkDepends();
 							}, this));
