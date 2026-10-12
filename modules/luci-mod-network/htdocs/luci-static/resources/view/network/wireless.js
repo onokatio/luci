@@ -73,6 +73,7 @@ function qca_write_security(id, value) {
 		qca_set_shared(id, 'sae_password', null);
 	}
 	if (sae) {
+		if (qca_mlo(id) || qca_secure_band(id)) qca_set_shared(id, 'sae_pwe', '1');
 		qca_members(id).forEach(function(sid) {
 			var key = uci.get('wireless', sid, 'key');
 			if (key) uci.set('wireless', sid, 'sae_password', [ key ]);
@@ -136,7 +137,7 @@ function qca_write_mld(id, value) {
 		if (value && members.some(function(s) { return s.device == uci.get('wireless', id, 'device'); })) throw new Error(_('An MLO group can have only one link per radio.'));
 		if (value && members.length >= 3) throw new Error(_('An MLO group can have up to three links.'));
 		if (value && members.length) {
-			[ 'mode', 'wds', 'ssid', 'network', 'encryption', 'key', 'sae', 'owe', 'sae_password', 'suite_b', 'add_sha256', 'wps_pbc', 'wps' ].concat(qca_shared).forEach(function(key) {
+			[ 'mode', 'wds', 'ssid', 'network', 'encryption', 'key', 'sae', 'sae_pwe', 'owe', 'sae_password', 'suite_b', 'add_sha256', 'wps_pbc', 'wps' ].concat(qca_shared).forEach(function(key) {
 				uci.set('wireless', id, key, uci.get('wireless', members[0]['.name'], key));
 			});
 			uci.set('wireless', id, 'ssid', qca_ssid(members[0]['.name']));
@@ -1159,7 +1160,7 @@ return view.extend({
 							[ 'mode', 'ssid', 'network', 'encryption', 'cipher', '_wpa_key' ].concat(qca_shared).forEach(function(key) {
 								var option = (this.map.lookupOption(key, id) || [])[0], widget = option && option.getUIElement(id);
 								if (widget) {
-									var value = option.cfgvalue(member['.name']);
+									var value = [ 'mode', 'ssid', 'encryption', 'cipher', '_wpa_key', 'eap_type', 'r0kh', 'r1kh', 'wps_pushbutton' ].indexOf(key) >= 0 ? option.cfgvalue(member['.name']) : uci.get('wireless', member['.name'], key);
 									widget.setValue(value != null ? value : option.default != null ? option.default : '');
 									}
 								}, this);

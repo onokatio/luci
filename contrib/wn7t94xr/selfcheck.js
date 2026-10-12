@@ -116,7 +116,7 @@ qca.removeNetwork('test_link1');
 assert(data.test_mld && data.test_link2);
 qca.removeNetwork('test_link2');
 assert(!data.test_mld && data.mld0);
-data.new_link1 = { '.type': 'wifi-iface', device: 'wifi0', mode: 'sta', ssid: 'new-mlo', encryption: 'ccmp', sae: '1', key: 'mlo-password', auth: 'EAP-MSCHAPV2' };
+data.new_link1 = { '.type': 'wifi-iface', device: 'wifi0', mode: 'sta', ssid: 'new-mlo', encryption: 'ccmp', sae: '1', key: 'mlo-password', auth: 'EAP-MSCHAPV2', network: ['test_dhcp'] };
 data.new_link2 = { '.type': 'wifi-iface', device: 'wifi1', mode: 'ap', ssid: 'old', encryption: 'none' };
 data.duplicate = { '.type': 'wifi-iface', device: 'wifi0' };
 assert.equal(qca.writeMLD('new_link1', '_new'), 'mld3');
@@ -129,7 +129,7 @@ assert.equal(data.new_link2.ssid, 'new-mlo');
 const populateCode = wireless.slice(wireless.indexOf('o.renderWidget = function(id, index, value)'), wireless.indexOf("o = ss.taboption('advanced', form.Flag, '_allow_non_ml'"));
 let populateListener, dependenciesChecked = false;
 const populated = {}, groupOption = { formvalue: () => 'mld3', map: {
-	lookupOption: key => key == 'missing' ? null : [{ default: key == 'unset' ? '1' : undefined, getUIElement: () => ({ setValue: value => { assert.notEqual(value, undefined); populated[key] = value; } }), cfgvalue: id => key == '_wpa_key' ? data[id].key : data[id][key] }],
+	lookupOption: key => key == 'missing' ? null : [{ default: key == 'unset' ? '1' : undefined, getUIElement: () => ({ setValue: value => { assert.notEqual(value, undefined); populated[key] = value; } }), cfgvalue: id => key == '_wpa_key' ? data[id].key : key == 'network' ? undefined : data[id][key] }],
 	checkDepends: () => { dependenciesChecked = true; }
 } };
 new Function('o', 'form', 'L', 'uci', 'qca_shared', populateCode)(groupOption,
@@ -140,6 +140,7 @@ populateListener();
 assert.equal(populated.ssid, 'new-mlo');
 assert.equal(populated._wpa_key, 'mlo-password');
 assert.equal(populated.auth, 'EAP-MSCHAPV2');
+assert.deepEqual(populated.network, ['test_dhcp']);
 assert.equal(populated.unset, '1');
 assert(dependenciesChecked);
 const networkValidateCode = wireless.match(/o\.validate = function\(id, value\) \{\n\s*var mode = this\.map\.lookupOption\('mode'[\s\S]*?\n\s*\};/)[0];
@@ -149,6 +150,9 @@ assert.notEqual(clientNetwork.validate('link', 'lan'), true);
 assert.notEqual(clientNetwork.validate('link', 'lan test_dhcp'), true);
 assert.notEqual(clientNetwork.validate('link', ['lan', 'test_dhcp']), true);
 assert.equal(clientNetwork.validate('link', ['test_dhcp']), true);
+qca.writeSecurity('new_link1', 'sae');
+assert.equal(data.new_link1.sae_pwe, '1');
+assert.equal(data.new_link2.sae_pwe, '1');
 assert.throws(() => qca.writeMLD('duplicate', 'mld3'));
 assert.throws(() => qca.writeMLD('duplicate', 'mld3/invalid'));
 assert.throws(() => qca.writeMLD('duplicate', 'wifi0'));
