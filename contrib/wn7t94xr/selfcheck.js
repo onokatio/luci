@@ -14,20 +14,20 @@ const data = {
 	mld0: { '.type': 'wifi-mld', mld_ssid: 'authoritative-mld-ssid' }
 };
 const uci = {
-	get: (config, id, option) => data[id]?.[option],
+	get: (config, id, option) => data[id]?.[option == null ? '.type' : option],
 	set: (config, id, option, value) => { data[id][option] = value; },
 	add: (config, type, id) => { data[id] = { '.type': type }; return id; },
 	unset: (config, id, option) => { delete data[id][option]; },
 	remove: (config, id) => { delete data[id]; },
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
-const helpers = wireless.slice(wireless.indexOf('function qca_members'), wireless.indexOf('function count_changes'));
+const helpers = wireless.slice(wireless.indexOf('var qca_shared'), wireless.indexOf('function count_changes'));
 const modalStatusCode = wireless.slice(wireless.indexOf('function render_modal_status'), wireless.indexOf('function format_wifirate'));
 const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_modal_status;')((tag, text) => ({ tag, text }), v => v);
 assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
 const hiddenStatus = {};
 assert.equal(modalStatus(hiddenStatus, undefined), hiddenStatus);
-const qca = new Function('uci', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network };')(uci);
+const qca = new Function('uci', '_', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network, writeMLD: qca_write_mld };')(uci, v => v);
 assert.equal(qca.mlo('ath05'), true);
 assert.equal(qca.mlo('ath1'), false);
 data.new6 = { '.type': 'wifi-iface', device: 'wifi2' };
@@ -116,6 +116,25 @@ qca.removeNetwork('test_link1');
 assert(data.test_mld && data.test_link2);
 qca.removeNetwork('test_link2');
 assert(!data.test_mld && data.mld0);
+data.new_link1 = { '.type': 'wifi-iface', device: 'wifi0', mode: 'sta', ssid: 'new-mlo', encryption: 'ccmp', sae: '1', key: 'mlo-password', auth: 'EAP-MSCHAPV2' };
+data.new_link2 = { '.type': 'wifi-iface', device: 'wifi1', mode: 'ap', ssid: 'old', encryption: 'none' };
+data.duplicate = { '.type': 'wifi-iface', device: 'wifi0' };
+assert.equal(qca.writeMLD('new_link1', '_new'), 'mld3');
+assert.equal(data.mld3.role, 'Non-AP');
+qca.writeMLD('new_link2', 'mld3');
+assert.equal(data.new_link2.mode, 'sta');
+assert.equal(data.new_link2.key, 'mlo-password');
+assert.equal(data.new_link2.auth, 'EAP-MSCHAPV2');
+assert.equal(data.new_link2.ssid, 'new-mlo');
+assert.throws(() => qca.writeMLD('duplicate', 'mld3'));
+assert.throws(() => qca.writeMLD('duplicate', 'mld3/invalid'));
+assert.throws(() => qca.writeMLD('duplicate', 'wifi0'));
+qca.writeMLD('new_link1', '');
+assert(data.mld3 && data.new_link2.mld == 'mld3');
+qca.removeNetwork('new_link2');
+assert(!data.mld3 && data.mld0);
+delete data.new_link1;
+delete data.duplicate;
 const addCode = wireless.slice(wireless.indexOf('s.handleAdd = function'), wireless.indexOf("\n\t\to = s.option(form.DummyValue, '_badge')"));
 const section = { renderMoreOptionsModal: id => Promise.resolve(id) };
 new Function('s', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_mlo', 'qca_secure_band', addCode)(section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.mlo, qca.secureBand);
@@ -129,6 +148,21 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['HT20', 'HT40', 'HE20', 'HE40', 'EHT20', 'EHT40'], getHWModes: () => ['n', 'ax', 'be'] }) },
 	uci, { bind: (fn, ctx) => fn.bind(ctx) }, v => v, qca.hwmode);
 (async () => {
+	let notifications = 0, saves = 0;
+	const toggleCode = wireless.slice(wireless.indexOf('function network_updown'), wireless.indexOf('function next_free_sid'));
+	const toggle = new Function('uci', 'qca_valid_ssid', 'qca_ssid', 'qca_security', 'qca_valid_key', 'ui', 'E', '_', toggleCode + '\nreturn network_updown;')(
+		uci, qca.validSSID, qca.ssid, qca.security, qca.validKey, { addNotification: () => notifications++, changes: { apply() {} } }, () => null, v => v);
+	for (const profile of [{ encryption: 'ccmp', owe: '1', mode: 'ap', ssid: 'owe' }, { encryption: 'wpa2+ccmp', mode: 'ap', ssid: 'eap' }, { encryption: 'none', mode: 'monitor' }]) {
+		data.toggle = { '.type': 'wifi-iface', device: 'wifi1', disabled: '1', ...profile };
+		await toggle('toggle', { save: () => { saves++; return Promise.resolve(); } });
+		assert.notEqual(data.toggle.disabled, '1');
+	}
+	data.toggle = { '.type': 'wifi-iface', device: 'wifi1', disabled: '1', mode: 'ap', ssid: 'psk', encryption: 'psk2+ccmp' };
+	await toggle('toggle', { save: () => { saves++; return Promise.resolve(); } });
+	assert.equal(data.toggle.disabled, '1');
+	assert.equal(saves, 3);
+	assert.equal(notifications, 1);
+	delete data.toggle;
 	await section.handleAdd({ getName: () => 'wifi0', get: option => data.wifi0[option], ubus: () => null });
 	assert.equal(data.wifi0.disabled, '1');
 	assert.equal(data.new_ap.ifname, 'ath06');
