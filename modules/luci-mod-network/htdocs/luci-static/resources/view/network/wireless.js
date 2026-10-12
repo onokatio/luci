@@ -1829,17 +1829,9 @@ return view.extend({
 					o.value('tls',  'TLS');
 					o.value('ttls', 'TTLS');
 					o.value('peap', 'PEAP');
-					o.value('fast', 'FAST');
+					if (hwtype != 'qcawificfg80211') o.value('fast', 'FAST');
 					add_dependency_permutations(o, { mode: ['sta', 'sta-wds'], encryption: ['wpa', 'wpa2', 'wpa3', 'wpa3-mixed'] });
 
-					if (hwtype == 'qcawificfg80211') {
-						o = ss.taboption('encryption', form.FileUpload, 'pac_file', _('Path to PAC file'));
-						add_dependency_permutations(o, { mode: ['sta', 'sta-wds'], encryption: ['wpa2', 'wpa3', 'wpa3-mixed'], eap_type: ['fast'] });
-						o = ss.taboption('encryption', form.ListValue, 'fast_provisioning', _('EAP-FAST PAC provisioning'));
-						o.value('0', _('Disabled')); o.value('1', _('Unauthenticated')); o.value('2', _('Authenticated')); o.value('3', _('Both'));
-						o.default = '0';
-						add_dependency_permutations(o, { mode: ['sta', 'sta-wds'], encryption: ['wpa2', 'wpa3', 'wpa3-mixed'], eap_type: ['fast'] });
-					}
 
 					o = ss.taboption('encryption', form.FileUpload, 'ca_cert', _('Path to CA-Certificate'));
 					add_dependency_permutations(o, { mode: ['sta', 'sta-wds'], encryption: ['wpa', 'wpa2', 'wpa3', 'wpa3-mixed'] });
