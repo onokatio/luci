@@ -19,16 +19,7 @@ function qca_members(id) {
 }
 
 function qca_set_shared(id, option, value) {
-	qca_members(id).forEach(function(sid) {
-		uci.set('wireless', sid, option, value);
-		if (option == 'macfilter') {
-			var ifname = uci.get('wireless', sid, 'ifname') || sid;
-			if (!/^ath[0-9]+$/.test(ifname)) throw new Error('Invalid native interface name');
-			uci.set('wireless', sid, 'macaddr_acl', value == 'allow' ? '1' : '0');
-			uci.set('wireless', sid, 'accept_mac_file', value == 'allow' ? '/etc/luci-qsdk/maclist-' + ifname : null);
-			uci.set('wireless', sid, 'deny_mac_file', value == 'deny' ? '/etc/luci-qsdk/maclist-' + ifname : null);
-		}
-	});
+	qca_members(id).forEach(function(sid) { uci.set('wireless', sid, option, value); });
 	if (option == 'ssid') {
 		var mld = uci.get('wireless', id, 'mld');
 		if (mld) uci.set('wireless', mld, 'mld_ssid', value);
