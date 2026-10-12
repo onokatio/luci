@@ -34,6 +34,7 @@
 #include <netinet/ether.h>
 #include <linux/rtnetlink.h>
 #include <linux/if_packet.h>
+#include <dirent.h>
 
 #include <netlink/msg.h>
 #include <netlink/attr.h>
@@ -50,6 +51,7 @@
 #include <iwinfo.h>
 
 #include <rpcd/plugin.h>
+#include "qsdk-hostapd.h"
 
 
 static struct blob_buf blob;
@@ -2011,7 +2013,9 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		.n_methods = ARRAY_SIZE(luci_methods),
 	};
 
-	return ubus_add_object(ctx, &obj);
+	int ret = ubus_add_object(ctx, &obj);
+	if (!ret) qsdk_hostapd_init(ctx);
+	return ret;
 }
 
 struct rpc_plugin rpc_plugin = {

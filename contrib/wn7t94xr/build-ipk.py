@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.3.0-8'
-SUFFIX = '+qsdk3.1.4'
+VERSION = '3.4.0-1'
+SUFFIX = '+qsdk3.2.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -115,7 +115,7 @@ for package in LOCK['base_packages']:
         if dest.endswith('.js'):
             data = subprocess.check_output([str(jsmin.resolve())], input=data)
         payload[dest] = (data, payload[dest][1])
-    version = package['version'] + '+qsdk3.1.1'
+    version = package['version'] + '+qsdk3.2.0'
     control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
     hooks['control'] = (control.encode(), 0o644)
     hooks['preinst'] = (b'''#!/bin/sh

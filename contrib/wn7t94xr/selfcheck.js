@@ -27,11 +27,11 @@ const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_mo
 assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
 const hiddenStatus = {};
 assert.equal(modalStatus(hiddenStatus, undefined), hiddenStatus);
-const qca = new Function('uci', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, requiresSAE: qca_requires_sae, removeNetwork: qca_remove_network };')(uci);
-assert.equal(qca.requiresSAE('ath05'), true);
-assert.equal(qca.requiresSAE('ath1'), false);
+const qca = new Function('uci', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network };')(uci);
+assert.equal(qca.mlo('ath05'), true);
+assert.equal(qca.mlo('ath1'), false);
 data.new6 = { '.type': 'wifi-iface', device: 'wifi2' };
-assert.equal(qca.requiresSAE('new6'), true);
+assert.equal(qca.mlo('new6'), false);
 assert.throws(() => qca.writeSecurity('new6', 'none'));
 delete data.new6;
 assert.equal(qca.security('ath1'), 'sae-mixed');
@@ -46,6 +46,14 @@ for (const invalid of ['short', 'password\n', 'password|id=other']) assert.equal
 assert.throws(() => qca.writeSecurity('ath1', 'unsupported'));
 assert.throws(() => qca.writeSecurity('ath25', 'psk2'));
 assert.throws(() => qca.writeSecurity('ath05', 'none'));
+qca.writeSecurity('ath1', 'owe');
+assert.equal(qca.security('ath1'), 'owe');
+assert.equal(data.ath1.ieee80211w, '2');
+qca.writeSecurity('ath1', 'wpa3-192');
+assert.equal(data.ath1.suite_b, '192');
+assert.equal(data.ath1.encryption, 'wpa2+gcmp-256');
+qca.writeSecurity('ath1', 'sae-mixed');
+qca.writeKey('ath1', 'test-password');
 qca.setShared('ath15', 'ssid', 'changed-mlo');
 qca.writeKey('ath15', 'new-test-password');
 for (const id of ['ath05', 'ath15', 'ath25']) {
@@ -89,16 +97,16 @@ qca.removeNetwork('test_link2');
 assert(!data.test_mld && data.mld0);
 const addCode = wireless.slice(wireless.indexOf('s.handleAdd = function'), wireless.indexOf("\n\t\to = s.option(form.DummyValue, '_badge')"));
 const section = { renderMoreOptionsModal: id => Promise.resolve(id) };
-new Function('s', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_requires_sae', addCode)(section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.requiresSAE);
+new Function('s', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_mlo', 'qca_secure_band', addCode)(section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.mlo, qca.secureBand);
 const networkJS = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/network.js'), 'utf8');
 const saveCode = wireless.slice(wireless.indexOf('s.handleModalSave = function'), wireless.indexOf('s.handleScan = function'));
 const modalSection = { addedSection: 'new_ap', map: { load: () => Promise.resolve(), reset: () => Promise.resolve() } };
 new Function('s', 'L', 'ui', 'E', saveCode)(modalSection, { bind: (fn, ctx) => fn.bind(ctx) }, { hideModal() {}, addNotification() {} }, (tag, text) => ({ tag, text }));
 const frequencyCode = wireless.slice(wireless.indexOf('var CBIWifiFrequencyValue'), wireless.indexOf('var CBIWifiTxPowerValue'));
-const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', frequencyCode + '\nreturn CBIWifiFrequencyValue;')(
+const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_hwmode', frequencyCode + '\nreturn CBIWifiFrequencyValue;')(
 	{ Value: { extend: v => v } }, { declare: () => () => Promise.resolve([]) },
-	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['EHT20', 'EHT40'] }) },
-	uci, { bind: (fn, ctx) => fn.bind(ctx) }, v => v);
+	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['HT20', 'HT40', 'HE20', 'HE40', 'EHT20', 'EHT40'], getHWModes: () => ['n', 'ax', 'be'] }) },
+	uci, { bind: (fn, ctx) => fn.bind(ctx) }, v => v, qca.hwmode);
 (async () => {
 	await section.handleAdd({ getName: () => 'wifi0', get: option => data.wifi0[option], ubus: () => null });
 	assert.equal(data.wifi0.disabled, '1');
@@ -115,13 +123,14 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', freque
 	await modalSection.handleModalSave({ save: () => Promise.resolve() });
 	assert.equal(modalSection.addedSection, null);
 	await frequency.load('wifi0');
-	assert.deepEqual(frequency.htmodes.qca, ['EHT20', '20 MHz', true, 'HT40', '40 MHz', true]);
+	assert.deepEqual(frequency.htmodes['11beg'], ['EHT20', '20 MHz', true, 'HT40', '40 MHz', true]);
 	assert.equal(data.wifi0.hwmode, '11beg');
-	const node = { querySelector: selector => ({ value: selector == '.htmode' ? 'HT40' : '0' }) };
+	const node = { querySelector: selector => ({ value: selector == '.htmode' ? 'HT40' : selector == '.mode' ? '11beg' : '0' }) };
 	frequency.map = { findElement: () => node };
 	frequency.cbid = id => id;
 	assert.deepEqual(frequency.formvalue('wifi0'), ['HT40', '11beg', 'auto']);
-	frequency.write('wifi2', ['EHT320', 'wrong-hwmode', '0']);
+	assert.notEqual(frequency.validate('wifi2', ['HE160', '11axa', '0']), true);
+	frequency.write('wifi2', ['EHT320', '11bea', '0']);
 	assert.equal(data.wifi2.hwmode, '11bea');
 	assert.equal(data.wifi2.band, '3');
 	frequency.qca = null;
