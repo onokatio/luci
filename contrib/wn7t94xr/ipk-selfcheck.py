@@ -83,7 +83,7 @@ for original in LOCK['base_packages']:
     if name != 'luci-mod-network':
         assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
     else:
-        assert fields['Version'] == original['version'] + '+qsdk3.1.1'
+        assert fields['Version'] == original['version'] + '+qsdk3.2.0'
         assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
         assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
 

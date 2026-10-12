@@ -319,9 +319,9 @@ function format_wifirate(rate) {
 	}
 
 	if (ht || vht) {
-		if (vht) s += ', VHT-MCS\xa0%d'.format(mcs);
+		if (vht && mcs != null && mcs >= 0) s += ', VHT-MCS\xa0%d'.format(mcs);
 		if (nss) s += ', VHT-NSS\xa0%d'.format(nss);
-		if (ht)  s += ', MCS\xa0%s'.format(mcs);
+		if (ht && mcs != null && mcs >= 0) s += ', MCS\xa0%s'.format(mcs);
 		if (sgi) s += ', ' + _('Short GI').replace(/ /g, '\xa0');
 	}
 
@@ -1143,7 +1143,6 @@ return view.extend({
 				o.rmempty = true;
 				o.multiple = true;
 				o.novirtual = true;
-				o.nocreate = hwtype == 'qcawificfg80211';
 				if (hwtype == 'qcawificfg80211') o.remove = function(id) { qca_set_shared(id, 'network', null); };
 				if (hwtype == 'qcawificfg80211') {
 					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds'); o.depends('mode', 'sta'); o.depends('mode', 'sta-wds');
@@ -1155,7 +1154,14 @@ return view.extend({
 				o.write = function(section_id, value) {
 					if (hwtype == 'qcawificfg80211') {
 						qca_set_shared(section_id, 'network', value);
-						return Promise.resolve();
+						var ap = uci.get('wireless', section_id, 'mode') == 'ap';
+						return Promise.all(L.toArray(value).map(function(name) {
+							return network.getNetwork(name).then(function(net) {
+								if (!net) return network.addNetwork(name, ap ? { proto: 'none', type: 'bridge' } : { proto: 'none' });
+								if (ap && !net.isEmpty()) net.set('type', 'bridge');
+								return net;
+								});
+							}));
 					}
 					return network.getDevice(section_id).then(L.bind(function(dev) {
 						var old_networks = dev.getNetworks().reduce(function(o, v) { o[v.getName()] = v; return o }, {}),
@@ -1253,6 +1259,7 @@ return view.extend({
 								}
 							break;
 						}
+						if (hwtype == 'qcawificfg80211' && radioNet.get('mld')) qca_set_shared(section_id, 'wds', uci.get('wireless', section_id, 'wds'));
 					};
 
 					mode.cfgvalue = function(section_id) {
@@ -1826,9 +1833,9 @@ return view.extend({
 						// ieee802.11w options
 						if (hwtype == 'qcawificfg80211' || L.hasSystemFeature('hostapd', '11w')) {
 							o = ss.taboption('encryption', form.ListValue, 'ieee80211w', _('802.11w Management Frame Protection'), _("Requires the 'full' version of wpad/hostapd and support from the wifi driver <br />(as of Jan 2019: ath9k, ath10k, mwlwifi and mt76)"));
-							o.value('', _('Disabled'));
+							o.value(hwtype == 'qcawificfg80211' ? '0' : '', _('Disabled'));
 							if (hwtype == 'qcawificfg80211') {
-								o.value('0', _('Disabled'));
+								o.default = '0';
 								o.rmempty = false;
 								o.validate = function(id, value) {
 									var e = this.section.children.filter(function(o) { return o.option == 'encryption' })[0].formvalue(id);
@@ -1840,7 +1847,7 @@ return view.extend({
 							add_dependency_permutations(o, { mode: ['ap', 'ap-wds', 'sta', 'sta-wds'], encryption: ['owe', 'psk2', 'psk-mixed', 'sae', 'sae-mixed', 'wpa2', 'wpa3', 'wpa3-mixed'] });
 
 							o.defaults = {
-								'2': [{ encryption: 'sae' }, { encryption: 'owe' }, { encryption: 'wpa3' }, { encryption: 'wpa3-mixed' }],
+								'2': [{ encryption: 'wpa3-192' }, { encryption: 'sae' }, { encryption: 'owe' }, { encryption: 'wpa3' }, { encryption: 'wpa3-mixed' }],
 								'1': [{ encryption: 'sae-mixed'}],
 								'':  []
 							};
@@ -1878,7 +1885,7 @@ return view.extend({
 				}
 
 				if (hwtype == 'qcawificfg80211') {
-					var shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'eap_type', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2' ];
+					var shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'eap_type', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2', 'subject_match', 'subject_match2', 'domain_match', 'domain_match2', 'domain_suffix_match', 'domain_suffix_match2' ];
 					ss.children.forEach(function(o) {
 						(o.deps || []).filter(function(d) { return d.encryption == 'wpa3'; }).forEach(function(d) { o.depends(Object.assign({}, d, { encryption: 'wpa3-192' })); });
 						if (shared.indexOf(o.option) < 0) return;

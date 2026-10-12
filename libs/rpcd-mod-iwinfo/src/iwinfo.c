@@ -404,12 +404,12 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_rate_entry *r)
 	blobmsg_add_u32(&buf, "rate", r->rate);
 
 	if (r->is_ht) {
-		blobmsg_add_u32(&buf, "mcs", r->mcs);
+		if (r->mcs >= 0) blobmsg_add_u32(&buf, "mcs", r->mcs);
 		blobmsg_add_u8(&buf, "40mhz", r->is_40mhz);
 		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
 	}
 	else if (r->is_vht) {
-		blobmsg_add_u32(&buf, "mcs", r->mcs);
+		if (r->mcs >= 0) blobmsg_add_u32(&buf, "mcs", r->mcs);
 		blobmsg_add_u32(&buf, "nss", r->nss);
 		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
 	}
