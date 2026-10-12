@@ -61,9 +61,9 @@ static FILE *fixture_fopen(const char *path, const char *mode)
 #undef fopen
 
 #define PORTS "[{\"num\":0,\"device\":\"eth1\",\"need_tag\":false}," \
-              "{\"num\":1,\"role\":\"port\",\"index\":1}," \
-              "{\"num\":2,\"role\":\"port\",\"index\":2}," \
-              "{\"num\":3,\"role\":\"port\",\"index\":3}]"
+              "{\"num\":1,\"role\":\"lan\",\"index\":1}," \
+              "{\"num\":2,\"role\":\"lan\",\"index\":2}," \
+              "{\"num\":3,\"role\":\"lan\",\"index\":3}]"
 #define BOARD "{\"model\":{\"id\":\"qcom,ipq5332-ap-mi01.6\"}," \
               "\"network\":{\"lan\":{\"ifname\":\"eth0\",\"protocol\":\"static\"}}"
 

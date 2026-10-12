@@ -1805,8 +1805,7 @@ rpc_luci_qsdk_switch(struct blob_buf *buf)
 			blobmsg_add_u8(buf, "need_tag", false);
 		}
 		else {
-			/* shortcut: physical jack numbering needs a live cable check; use SSDK port numbers. */
-			blobmsg_add_string(buf, "role", "port");
+			blobmsg_add_string(buf, "role", "lan");
 			blobmsg_add_u32(buf, "index", i);
 		}
 		blobmsg_close_table(buf, p);
