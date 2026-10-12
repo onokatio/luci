@@ -119,6 +119,7 @@ for file, data in libraries.items():
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
 assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua'}
+assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
 assert ('+qsdk' + main['Version']).encode() in records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/version.lua']
 
 prepare_name = 'luci-qsdk-wn7t94xr-prepare'

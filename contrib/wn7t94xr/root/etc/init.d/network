@@ -8,7 +8,7 @@ reload_service() {
 			logger -t network 'Finish the pending vendor Wireless change first'
 			return 1
 		}
-		ubus call network reload
+		/sbin/wifi reload
 	else (
 		. /rom/etc/init.d/network
 		reload_service "$@"

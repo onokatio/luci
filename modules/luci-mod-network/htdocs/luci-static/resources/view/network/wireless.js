@@ -11,7 +11,7 @@
 'require firewall';
 'require tools.widgets as widgets';
 
-var qca_shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'eap_type', 'pac_file', 'fast_provisioning', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2', 'subject_match', 'subject_match2', 'domain_match', 'domain_match2', 'domain_suffix_match', 'domain_suffix_match2' ];
+var qca_shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'preferred_assoc_link', 'eap_type', 'pac_file', 'fast_provisioning', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2', 'subject_match', 'subject_match2', 'domain_match', 'domain_match2', 'domain_suffix_match', 'domain_suffix_match2' ];
 
 function qca_members(id) {
 	var mld = uci.get('wireless', id, 'mld');
@@ -1160,7 +1160,7 @@ return view.extend({
 							[ 'mode', 'ssid', 'network', 'encryption', 'cipher', '_wpa_key' ].concat(qca_shared).forEach(function(key) {
 								var option = (this.map.lookupOption(key, id) || [])[0], widget = option && option.getUIElement(id);
 								if (widget) {
-									var value = [ 'mode', 'ssid', 'encryption', 'cipher', '_wpa_key', 'eap_type', 'r0kh', 'r1kh', 'wps_pushbutton' ].indexOf(key) >= 0 ? option.cfgvalue(member['.name']) : uci.get('wireless', member['.name'], key);
+									var value = [ 'mode', 'ssid', 'encryption', 'cipher', '_wpa_key', 'preferred_assoc_link', 'eap_type', 'r0kh', 'r1kh', 'wps_pushbutton' ].indexOf(key) >= 0 ? option.cfgvalue(member['.name']) : uci.get('wireless', member['.name'], key);
 									widget.setValue(value != null ? value : option.default != null ? option.default : '');
 									}
 								}, this);
@@ -1174,6 +1174,14 @@ return view.extend({
 					o.cfgvalue = function(id) { return uci.get('wireless', uci.get('wireless', id, 'mld'), 'allow_non_ml') || '0'; };
 					o.write = function(id, value) { var mld = uci.get('wireless', id, 'mld'); if (mld) uci.set('wireless', mld, 'allow_non_ml', value); };
 					o.remove = function() {};
+					o = ss.taboption('advanced', form.ListValue, 'preferred_assoc_link', _('Preferred association link'), _('Choose an enabled radio in this MLO Client group.'));
+					o.value('0', '2.4 GHz (wifi0)'); o.value('1', '5 GHz (wifi1)'); o.value('2', '6 GHz (wifi2)');
+					uci.sections('wireless', 'wifi-mld').map(function(s) { return s['.name']; }).concat('_new').forEach(function(mld) { o.depends({ mode: 'sta', mld: mld }); });
+					o.cfgvalue = function(id) { return uci.get('wireless', id, 'preferred_assoc_link') || uci.get('wireless', qca_members(id)[0], 'device').replace(/^wifi/, ''); };
+					o.validate = function(id, value) {
+						var mld = this.map.lookupOption('mld', id)[0].formvalue(id);
+						return uci.get('wireless', id, 'device') == 'wifi' + value || uci.sections('wireless', 'wifi-iface').some(function(s) { return s.mld == mld && s.device == 'wifi' + value; }) || _('Choose a radio included in this MLO group.');
+						};
 				}
 
 				o = ss.taboption('general', form.Value, 'mesh_id', _('Mesh Id'));
@@ -1337,6 +1345,7 @@ return view.extend({
 						if (mld && mld.isActive(section_id) && mld.formvalue(section_id) && mld.formvalue(section_id) == uci.get('wireless', section_id, 'mld')) {
 							qca_set_shared(section_id, 'mode', uci.get('wireless', section_id, 'mode'));
 							qca_set_shared(section_id, 'wds', uci.get('wireless', section_id, 'wds'));
+							uci.set('wireless', uci.get('wireless', section_id, 'mld'), 'role', uci.get('wireless', section_id, 'mode') == 'sta' ? 'Non-AP' : 'AP');
 							}
 					};
 
