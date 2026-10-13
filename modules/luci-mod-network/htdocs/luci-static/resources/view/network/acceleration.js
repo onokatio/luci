@@ -6,9 +6,34 @@
 'require fs';
 'require poll';
 
-var status = rpc.declare({ object: 'luci-rpc', method: 'getAccelerationStatus', expect: { '': {} } }),
-    set = rpc.declare({ object: 'uci', method: 'set', params: [ 'config', 'section', 'values' ] }),
-    commit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ] });
+var status = rpc.declare({ object: 'luci-rpc', method: 'getAccelerationStatus', expect: { '': {} }, reject: true }),
+    set = rpc.declare({ object: 'uci', method: 'set', params: [ 'config', 'section', 'values' ], reject: true }),
+    commit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ], reject: true });
+
+function applySettings(values, original) {
+	var attempted = false;
+	function write(v) { return set('ecm', 'global', v).then(function() { return commit('ecm'); }); }
+	function restart() { return fs.exec('/etc/init.d/qca-nss-ecm', [ 'restart' ]).then(function(r) { if (r.code !== 0) throw new Error(_('The native ECM service could not be restarted.')); }); }
+	function verify(s, v) {
+		if (!!s.loaded != (v.enabled == '1')) throw new Error(_('The ECM runtime does not match the saved configuration.'));
+		if (s.loaded && v.acceleration_engine != 'auto') {
+			var selected = v.acceleration_engine.split('-'), engines = s.engines || {};
+			[ 'ppe', 'sfe', 'nss' ].forEach(function(name) {
+				if ((selected.indexOf(name) >= 0) != !!(engines[name] && engines[name].ipv4 && engines[name].ipv4.accelerated_count != null)) throw new Error(_('The running acceleration engine does not match the saved configuration.'));
+			});
+		}
+		return s;
+	}
+	return write(values).then(function() { attempted = true; return restart(); }).then(status).then(function(s) { return verify(s, values); }).catch(function(error) {
+		return write(original).then(function() { if (attempted) return restart(); }).then(status).then(function(s) {
+			verify(s, original);
+			var restored = new Error(_('Previous settings restored: %s').format(error.message)); restored.restored = true; throw restored;
+		}).catch(function(rollback) {
+			if (rollback.restored) throw rollback;
+			throw new Error(_('Applying failed and previous settings could not be restored. Check the ECM configuration: %s').format(rollback.message));
+		});
+	});
+}
 
 function number(value) { return value != null ? String(value) : '-'; }
 
@@ -66,18 +91,16 @@ return view.extend({
 		}, 5);
 		var apply = E('button', { 'class': 'cbi-button cbi-button-apply', 'click': ui.createHandlerFn(this, function() {
 			var values = { enabled: enabled.checked ? '1' : '0', acceleration_engine: engine.value };
-			if (!choices.some(function(c) { return c[0] == values.acceleration_engine; })) throw new Error(_('Unsupported acceleration engine'));
+			if (!choices.some(function(c) { return c[0] == values.acceleration_engine; })) return ui.addNotification(null, E('p', {}, _('Unsupported acceleration engine')), 'error');
 			if (values.enabled == original.enabled && values.acceleration_engine == original.acceleration_engine) return;
 			pending = true;
-			function write(v) { return set('ecm', 'global', v).then(function() { return commit('ecm'); }); }
-			function restart() { return fs.exec('/etc/init.d/qca-nss-ecm', [ 'restart' ]).then(function(r) { if (r.code !== 0) throw new Error(_('The native ECM service could not be restarted.')); }); }
-			return write(values).then(restart).then(status).then(function(s) {
-				if (!!s.loaded != (values.enabled == '1')) throw new Error(_('The ECM runtime does not match the saved configuration.'));
+			return applySettings(values, original).then(function(s) {
 				original = values;
 				refresh(stats, s);
 				ui.addNotification(null, E('p', {}, _('Acceleration settings applied.')), 'info');
 			}).catch(function(error) {
-				return write(original).then(restart).then(function() { enabled.checked = original.enabled == '1'; engine.value = original.acceleration_engine; throw new Error(_('Previous settings restored: %s').format(error.message)); });
+				if (error.restored) { enabled.checked = original.enabled == '1'; engine.value = original.acceleration_engine; }
+				ui.addNotification(null, E('p', {}, error.message), 'error');
 			}).finally(function() { pending = false; uci.unload('ecm'); });
 		}) }, _('Apply'));
 		return E('div', { 'class': 'cbi-map' }, [
