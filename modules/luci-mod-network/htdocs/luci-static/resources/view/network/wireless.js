@@ -1602,7 +1602,7 @@ return view.extend({
 					o.value('', _('Bridge default')); o.value('0', _('Disabled')); o.value('1', _('Enabled'));
 					var bridgeNames = L.toArray(uci.get('wireless', radioNet.getName(), 'network')).filter(function(name) { return uci.get('network', name, 'type') == 'bridge'; });
 					o.cfgvalue = function() { return bridgeNames.length ? (uci.get('network', bridgeNames[0], 'igmp_snooping') || '') : ''; };
-					o.write = function(id, value) { bridgeNames.forEach(function(name) { if (value) uci.set('network', name, 'igmp_snooping', value); else uci.unset('network', name, 'igmp_snooping'); }); };
+					o.write = function(id, value) { L.toArray(uci.get('wireless', id, 'network')).filter(function(name) { return uci.get('network', name, 'type') == 'bridge'; }).forEach(function(name) { if (value) uci.set('network', name, 'igmp_snooping', value); else uci.unset('network', name, 'igmp_snooping'); }); };
 					o.remove = function(id) { this.write(id, ''); };
 					o.readonly = !bridgeNames.length;
 
