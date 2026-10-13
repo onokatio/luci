@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.6.0-1'
+VERSION = '3.6.0-2'
 SUFFIX = '+qsdk3.4.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -168,10 +168,16 @@ runtime_payload = {'etc/init.d/network': (network, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
 base = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
 base_ipk = read_archive((CACHE / base['filename']).read_bytes())
-version_file = read_archive(base_ipk['data.tar.gz'][0])['usr/lib/lua/luci/version.lua'][0]
-# Give changed Javascript a new cache key while downloading the unchanged official base.
+base_payload = read_archive(base_ipk['data.tar.gz'][0])
+version_file = base_payload['usr/lib/lua/luci/version.lua'][0]
 runtime_payload['usr/lib/lua/luci/version.lua'] = (version_file +
     ('\nluciversion = luciversion .. "+qsdk' + VERSION + '"\n').encode(), 0o644)
+# The official template bakes in the cache key used by all dynamically loaded Javascript.
+header_path = 'usr/lib/lua/luci/view/header.htm'
+header, replacements = re.subn(rb'(\?v=)[^"<>]+',
+    lambda match: match[0] + ('+qsdk' + VERSION).encode(), base_payload[header_path][0])
+assert replacements == 2 and b'/luci.js?v=' in header
+runtime_payload[header_path] = (header, 0o644)
 runtime_control = f'''Package: luci-qsdk-wn7t94xr-runtime
 Version: {VERSION}
 Architecture: {ARCH}
