@@ -18,16 +18,16 @@ function statistics(data) {
 		if (!available[name]) return;
 		[ 'ipv4', 'ipv6' ].forEach(function(family) {
 			var s = engines[name][family] || {};
-			rows.push([ name.toUpperCase(), family.toUpperCase(), number(s.accelerated_count), number(s.tcp_accelerated_count), number(s.udp_accelerated_count), number(s.pending_accel_count), number(s.pending_decel_count) ]);
+			rows.push([ name.toUpperCase(), family.toUpperCase(), number(s.accelerated_count), number(s.tcp_accelerated_count), number(s.udp_accelerated_count), number(s.non_ported_accelerated_count), number(s.pending_accel_count), number(s.pending_decel_count) ]);
 		});
 	});
-	var table = E('table', { 'class': 'table' }, E('tr', { 'class': 'tr table-titles' }, [ _('Engine'), _('Protocol'), _('Accelerated connections'), _('TCP'), _('UDP'), _('Pending acceleration'), _('Pending deceleration') ].map(function(t) { return E('th', { 'class': 'th' }, t); })));
+	var table = E('table', { 'class': 'table' }, E('tr', { 'class': 'tr table-titles' }, [ _('Engine'), _('Protocol'), _('Accelerated connections'), _('TCP'), _('UDP'), _('Other protocols'), _('Pending acceleration'), _('Pending deceleration') ].map(function(t) { return E('th', { 'class': 'th' }, t); })));
 	cbi_update_table(table, rows);
-	var nodes = [ E('p', {}, _('ECM: %s. Tracked connections: %s.').format(data.loaded ? _('running') : _('stopped'), number(data.connections))), table ];
+	var nodes = [ E('p', {}, _('ECM: %s. Tracked connections: %s.').format(data.loaded ? _('running') : _('stopped'), number(data.connections))), E('p', {}, _('IPv4 acceleration: %s. IPv6 acceleration: %s.').format(data.ipv4_stop != null ? (data.ipv4_stop == '0' ? _('enabled') : _('paused')) : '-', data.ipv6_stop != null ? (data.ipv6_stop == '0' ? _('enabled') : _('paused')) : '-')), table ];
 	[ ['ppe', _('PPE resources')], ['flows', _('PPE flow statistics')], ['tunnels', _('PPE tunnel statistics')] ].forEach(function(group) {
 		var values = data[group[0]];
 		if (!values || !Object.keys(values).length) return;
-		var t = E('table', { 'class': 'table' });
+		var t = E('table', { 'class': 'table' }, E('tr', { 'class': 'tr table-titles' }, [ _('Counter'), _('Value') ].map(function(h) { return E('th', { 'class': 'th' }, h); })));
 		cbi_update_table(t, Object.keys(values).map(function(key) { return [ key, number(values[key]) ]; }));
 		nodes.push(E('details', {}, [ E('summary', {}, group[1]), t ]));
 	});
@@ -38,6 +38,12 @@ function statistics(data) {
 		nodes.push(t);
 	}
 	return nodes;
+}
+
+function refresh(container, data) {
+	var expanded = Array.from(container.querySelectorAll('details[open]')).map(function(d) { return d.firstElementChild.textContent; }), nodes = statistics(data);
+	nodes.forEach(function(n) { if (n.localName == 'details') n.open = expanded.indexOf(n.firstElementChild.textContent) >= 0; });
+	container.replaceChildren.apply(container, nodes);
 }
 
 return view.extend({
@@ -56,7 +62,7 @@ return view.extend({
 		var stats = E('div', {}, statistics(data[1])), pending = false;
 		poll.add(function() {
 			if (pending) return;
-			return status().then(function(s) { stats.replaceChildren.apply(stats, statistics(s)); }).catch(function() { stats.replaceChildren(E('p', {}, _('Acceleration statistics are unavailable.'))); });
+			return status().then(function(s) { refresh(stats, s); }).catch(function() { stats.replaceChildren(E('p', {}, _('Acceleration statistics are unavailable.'))); });
 		}, 5);
 		var apply = E('button', { 'class': 'cbi-button cbi-button-apply', 'click': ui.createHandlerFn(this, function() {
 			var values = { enabled: enabled.checked ? '1' : '0', acceleration_engine: engine.value };
@@ -68,10 +74,10 @@ return view.extend({
 			return write(values).then(restart).then(status).then(function(s) {
 				if (!!s.loaded != (values.enabled == '1')) throw new Error(_('The ECM runtime does not match the saved configuration.'));
 				original = values;
-				stats.replaceChildren.apply(stats, statistics(s));
+				refresh(stats, s);
 				ui.addNotification(null, E('p', {}, _('Acceleration settings applied.')), 'info');
 			}).catch(function(error) {
-				return write(original).then(restart).then(function() { throw new Error(_('Previous settings restored: %s').format(error.message)); });
+				return write(original).then(restart).then(function() { enabled.checked = original.enabled == '1'; engine.value = original.acceleration_engine; throw new Error(_('Previous settings restored: %s').format(error.message)); });
 			}).finally(function() { pending = false; uci.unload('ecm'); });
 		}) }, _('Apply'));
 		return E('div', { 'class': 'cbi-map' }, [
