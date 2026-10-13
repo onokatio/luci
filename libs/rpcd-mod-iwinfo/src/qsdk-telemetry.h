@@ -111,10 +111,12 @@ static bool qsdk_telemetry_capture(const char *program, const char *level, const
 	fcntl(pipefd[1], F_SETFD, FD_CLOEXEC);
 	child = fork();
 	if (!child) {
+		close(pipefd[0]);
+		if (dup2(pipefd[1], STDOUT_FILENO) < 0) _exit(127);
+		fcntl(STDOUT_FILENO, F_SETFD, 0);
+		if (pipefd[1] != STDOUT_FILENO) close(pipefd[1]);
 		int nullfd = open("/dev/null", O_WRONLY);
-		dup2(pipefd[1], STDOUT_FILENO);
 		if (nullfd >= 0) dup2(nullfd, STDERR_FILENO);
-		close(pipefd[0]); close(pipefd[1]);
 		if (nullfd > STDERR_FILENO) close(nullfd);
 		execl(program, program, level, "-s", "-m", mac, "-f", "TX,RX", (char *)NULL);
 		_exit(127);
