@@ -486,7 +486,8 @@ rpc_iwinfo_add_usage(const struct qsdk_usage *usage)
 		for (mode = 0; mode < 4; mode++) {
 			array = blobmsg_open_array(&buf, modes[mode]);
 			for (index = 0; index < QSDK_MCS_COUNT; index++)
-				blobmsg_add_u32(&buf, NULL, usage->modes[mode].mcs[index]);
+				if (usage->modes[mode].present & (1U << index)) blobmsg_add_u32(&buf, NULL, usage->modes[mode].mcs[index]);
+				else blobmsg_add_field(&buf, BLOBMSG_TYPE_UNSPEC, NULL, NULL, 0);
 			blobmsg_close_array(&buf, array);
 		}
 		blobmsg_close_table(&buf, table);

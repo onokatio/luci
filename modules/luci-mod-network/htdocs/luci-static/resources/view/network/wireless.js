@@ -376,7 +376,7 @@ function render_station_usage(bss) {
 			if (receive[i] > 0 || transmit[i] > 0)
 				mcsRows.push(row(mode.toUpperCase() + ' MCS ' + (i == 16 ? _('Unknown') : i), receive[i], transmit[i]));
 	});
-	[ '0.8 µs', '0.4 µs', '1.6 µs', '3.2 µs', _('Unknown') ].forEach(function(gi, i) {
+	[ '0.8 µs', '0.4 µs', '1.6 µs', '3.2 µs' ].forEach(function(gi, i) {
 		if ((rx.gi_usage || [])[i] > 0 || (tx.gi_usage || [])[i] > 0)
 			giRows.push(row(gi, (rx.gi_usage || [])[i], (tx.gi_usage || [])[i]));
 	});

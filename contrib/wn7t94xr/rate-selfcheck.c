@@ -45,6 +45,7 @@ int main(void)
 	assert(!qsdk_telemetry_read("ath1;id", "00:11:22:33:44:55", &telemetry));
 	telemetry.rx.has_mcs = true;
 	telemetry.rx.modes[2].mcs[11] = 42;
+	telemetry.rx.modes[2].present = 1U << 11;
 	telemetry.rx.has_gi = true;
 	telemetry.rx.gi[2] = 24;
 	blob_buf_init(&buf, 0);
@@ -64,8 +65,10 @@ int main(void)
 	for (field = 0; field < 2; field++) {
 		index = 0;
 		blobmsg_for_each_attr(item, arrays[field], remaining) {
-			assert(blobmsg_type(item) == BLOBMSG_TYPE_INT32);
-			assert(blobmsg_get_u32(item) == (index == (field ? 2 : 11) ? (field ? 24 : 42) : 0));
+			if (field || index == 11) {
+				assert(blobmsg_type(item) == BLOBMSG_TYPE_INT32);
+				assert(blobmsg_get_u32(item) == (index == (field ? 2 : 11) ? (field ? 24 : 42) : 0));
+			} else assert(blobmsg_type(item) == BLOBMSG_TYPE_UNSPEC);
 			index++;
 		}
 		assert(index == (field ? QSDK_GI_COUNT : QSDK_MCS_COUNT));

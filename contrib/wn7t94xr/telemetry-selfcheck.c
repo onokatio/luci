@@ -1,4 +1,4 @@
-/* Test-only ABI probe; never included in an IPK. */
+/* Test-only probe; never included in an IPK. */
 #include <assert.h>
 #include "qsdk-hostapd-control.h"
 #include "qsdk-telemetry.h"
@@ -12,7 +12,11 @@ static void print_usage(const struct qsdk_usage *usage)
 	printf("],\"mcs_usage\":{");
 	for (mode = 0; mode < 4; mode++) {
 		printf("%s\"%s\":[", mode ? "," : "", modes[mode]);
-		for (i = 0; i < QSDK_MCS_COUNT; i++) printf("%s%u", i ? "," : "", usage->modes[mode].mcs[i]);
+		for (i = 0; i < QSDK_MCS_COUNT; i++) {
+			if (i) putchar(',');
+			if (usage->modes[mode].present & (1U << i)) printf("%u", usage->modes[mode].mcs[i]);
+			else printf("null");
+		}
 		printf("]");
 	}
 	printf("}}");
@@ -20,11 +24,15 @@ static void print_usage(const struct qsdk_usage *usage)
 
 int main(int argc, char **argv)
 {
-	struct qsdk_telemetry result;
+	struct qsdk_telemetry result = { 0 };
 	assert(qsdk_hostapd_request("", "", NULL, 1) == -1);
+	if (argc == 7) {
+		if (!strcmp(argv[1], "hang")) sleep(5);
+		else if (!strcmp(argv[1], "large")) for (int i = 0; i < 1000; i++) puts("large output");
+		else puts("test output");
+		return 0;
+	}
 	if (argc == 3) {
-		/* Reproduce RPCd's global libnl-tiny symbols before loading the native libnl-3 client. */
-		assert(dlopen("libnl-tiny.so", RTLD_NOW | RTLD_GLOBAL));
 		bool available = qsdk_telemetry_read(argv[1], argv[2], &result);
 		printf("{\"available\":%s,\"rx\":", available ? "true" : "false");
 		print_usage(&result.rx);
@@ -34,36 +42,32 @@ int main(int argc, char **argv)
 		return available ? 0 : 1;
 	}
 	assert(argc == 1);
-	uint8_t mac[6] = { 0, 0x11, 0x22, 0x33, 0x44, 0x55 };
-	struct qsdk_advance_tx tx = { .gi = { 10, 0, 3, 0, 1 } };
-	struct qsdk_advance_rx rx = { .gi = { 20, 1, 4, 0, 0 } };
-	struct qsdk_stats_data data = { &tx, &rx };
-	struct qsdk_stats_obj object = { .level = 1, .parent_ifname = "ath1", .stats = &data };
-	memcpy(object.id.mac, mac, sizeof(mac));
-	memset(&result, 0, sizeof(result));
-	assert(qsdk_telemetry_copy(&object, 1, "ath1", mac, &result));
+	const char *mac = "00:11:22:33:44:55";
+	char advance[] = "Advance Data STATS For STA 00:11:22:33:44:55 (Parent ath1)\nTx Stats\n\tTx SGI = 0.8us 10, 0.4us 0, 1.6us 3, 3.2us 0\nRx Stats\n\tRx SGI = 0.8us 20, 0.4us 1, 1.6us 4, 3.2us 0\n";
+	char debug[] = "Debug Data STATS For STA 00:11:22:33:44:55 (Parent ath1)\nTx Stats\n HE MCS 11 (1024-QAM 5/6) = 42\n HT MCS 0 (BPSK 1/2) = 0\nRx Stats\n EHT MCS 13 (4096-QAM 5/6) = 7\n HE MCS 1 (QPSK 1/2) = 4294967296\n HE MCS 2 (QPSK 3/4) = -1\n HE MCS 3 (16-QAM 1/2) = 8junk\n HE MCS 17 (invalid) = 8\n";
+	qsdk_telemetry_parse(advance, "ath1", mac, false, &result);
 	assert(result.rx.has_gi && result.tx.has_gi && !result.rx.has_mcs);
-	assert(result.rx.gi[2] == 4 && result.tx.gi[4] == 1);
-	assert(!qsdk_telemetry_copy(&object, 1, "ath2", mac, &result));
-	assert(!qsdk_telemetry_copy(&object, 2, "ath1", mac, &result));
-	mac[5]++;
-	assert(!qsdk_telemetry_copy(&object, 1, "ath1", mac, &result));
-	mac[5]--;
-	struct qsdk_debug_tx debug_tx = { 0 };
-	struct qsdk_debug_rx debug_rx = { 0 };
-	debug_tx.modes[4].mcs[11] = 42;
-	debug_rx.modes[5].mcs[13] = 7;
-	data.tx = &debug_tx;
-	data.rx = &debug_rx;
-	object.level = 2;
-	assert(qsdk_telemetry_copy(&object, 2, "ath1", mac, &result));
+	assert(result.rx.gi[2] == 4 && result.tx.gi[0] == 10);
+	qsdk_telemetry_parse(debug, "ath1", mac, true, &result);
 	assert(result.tx.has_mcs && result.tx.modes[2].mcs[11] == 42);
+	assert(result.tx.modes[0].present == 1 && result.tx.modes[0].mcs[0] == 0);
 	assert(result.rx.has_mcs && result.rx.modes[3].mcs[13] == 7 && result.rx.gi[2] == 4);
-	object.type = 1;
-	assert(!qsdk_telemetry_copy(&object, 2, "ath1", mac, &result));
-	assert(!qsdk_telemetry_read("ath1;id", "00:11:22:33:44:55", &result));
+	assert(!result.rx.modes[2].present);
+	char wrong[] = "Advance Data STATS For STA 00:11:22:33:44:56 (Parent ath1)\nRx Stats\nRx SGI = 0.8us 999, 0.4us 0, 1.6us 0, 3.2us 0\n";
+	qsdk_telemetry_parse(wrong, "ath1", mac, false, &result);
+	assert(result.rx.gi[0] == 20);
+	char wrong_vif[] = "Debug Data STATS For STA 00:11:22:33:44:55 (Parent ath2)\nTx Stats\n HE MCS 11 (1024-QAM 5/6) = 999\n";
+	qsdk_telemetry_parse(wrong_vif, "ath1", mac, true, &result);
+	assert(result.tx.modes[2].mcs[11] == 42);
+	assert(!qsdk_telemetry_read("ath1;id", mac, &result));
 	assert(!qsdk_telemetry_read("ath1", "ff:ff:ff:ff:ff:ff", &result));
-	if (sizeof(void *) != 4) assert(!qsdk_telemetry_read("ath1", "00:11:22:33:44:55", &result));
-	puts("QSDK telemetry selfcheck passed: ABI, counters, identity, and unsupported provider");
+	char text[128];
+	assert(qsdk_telemetry_capture(argv[0], "ok", mac, text, sizeof(text)) && !strcmp(text, "test output\n"));
+	assert(!qsdk_telemetry_capture(argv[0], "large", mac, text, sizeof(text)));
+	int64_t start = qsdk_telemetry_millis();
+	assert(!qsdk_telemetry_capture(argv[0], "hang", mac, text, sizeof(text)));
+	assert(qsdk_telemetry_millis() - start < 2500);
+	assert(!qsdk_telemetry_capture("/nonexistent/wifitelemetry", "-A", mac, text, sizeof(text)));
+	puts("QSDK telemetry selfcheck passed: counters, missing values, identity, validation, truncation and deadline");
 	return 0;
 }

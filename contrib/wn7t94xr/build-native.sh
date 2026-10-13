@@ -25,7 +25,7 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/luci.so"
 "$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
 	-I"$iwinfo/include" -I"$(dirname "$rpcd_source")/include" "$luci/libs/rpcd-mod-iwinfo/src/iwinfo.c" \
-	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -ldl -o "$output/usr/lib/rpcd/iwinfo.so"
+	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
 python3 - "$iwinfo" "$output" <<'RATE'
@@ -63,11 +63,11 @@ cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luc
 /tmp/qsdk-hostapd-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
-	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -ldl -o /tmp/qsdk-rate-selfcheck
+	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
 /tmp/qsdk-rate-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
-	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -ldl -o /tmp/qsdk-telemetry-selfcheck
+	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o /tmp/qsdk-telemetry-selfcheck
 /tmp/qsdk-telemetry-selfcheck
 "$cc" -D_GNU_SOURCE -Os -std=gnu99 -Wall -Werror -mfloat-abi=hard \
 	-I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
-	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -ldl -o "$output/telemetry-selfcheck"
+	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o "$output/telemetry-selfcheck"
