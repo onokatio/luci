@@ -337,6 +337,7 @@ function render_modal_status(node, radioNet) {
 }
 
 function format_wifirate(rate) {
+	if (!rate || rate.rate == null) return '-';
 	var s = '%.1f\xa0%s'.format(rate.rate / 1000, _('Mbit/s')) + (rate.mhz > 0 ? ', %d\xa0%s'.format(rate.mhz, _('MHz')) : ''),
 	    ht = rate.ht, vht = rate.vht,
 	    mhz = rate.mhz, nss = rate.nss,
@@ -356,6 +357,48 @@ function format_wifirate(rate) {
 	}
 
 	return s;
+}
+
+function render_station_details(bss) {
+	var rx = bss.rx || {}, tx = bss.tx || {};
+	var yesno = function(value) { return value == null ? '-' : value ? _('Yes') : _('No'); };
+	var count = function(value) { return value == null ? '-' : String(value); };
+	var bytes = function(value) { return value == null ? '-' : '%1024.2mB'.format(value); };
+	var mcs = function(rate) { return rate.mcs == null || rate.mcs < 0 ? '-' : String(rate.mcs); };
+	var connection = [
+		[_('MAC-Address'), bss.mac],
+		[_('Network'), bss.network.getShortName() + ' (' + bss.network.getIfname() + ')'],
+		[_('Connected time'), bss.connected_time == null ? '-' : '%t'.format(bss.connected_time)],
+		[_('Inactive'), bss.inactive == null ? '-' : '%.3f s'.format(bss.inactive / 1000)],
+		[_('Signal / Noise'), '%s / %s dBm'.format(count(bss.signal), bss.noise || '-')],
+		[_('Average signal'), bss.signal_avg ? '%d dBm'.format(bss.signal_avg) : '-'],
+		[_('Authenticated'), yesno(bss.authenticated)],
+		[_('Authorized'), yesno(bss.authorized)],
+		[_('WMM'), yesno(bss.wme)],
+		[_('Management Frame Protection'), yesno(bss.mfp)]
+	];
+	var traffic = [
+		[_('Rate'), format_wifirate(rx), format_wifirate(tx)],
+		['MCS', mcs(rx), mcs(tx)],
+		['NSS', count(rx.nss), count(tx.nss)],
+		[_('Packets'), count(rx.packets), count(tx.packets)],
+		[_('Bytes'), bytes(rx.bytes), bytes(tx.bytes)],
+		[_('Retries'), '-', count(tx.retries)],
+		[_('Failed'), '-', count(tx.failed)],
+		[_('Dropped'), count(rx.drop_misc), '-']
+	];
+	return E('div', {}, [
+		E('div', { 'class': 'table' }, connection.map(function(row) {
+			return E('div', { 'class': 'tr' }, [ E('div', { 'class': 'td' }, row[0]), E('div', { 'class': 'td' }, row[1]) ]);
+		})),
+		E('div', { 'class': 'table' }, [
+			E('div', { 'class': 'tr' }, [E('div', { 'class': 'th' }), E('div', { 'class': 'th' }, _('Receive')), E('div', { 'class': 'th' }, _('Transmit'))])
+		].concat(traffic.map(function(row) {
+			return E('div', { 'class': 'tr' }, row.map(function(value) { return E('div', { 'class': 'td' }, value); }));
+		}))),
+		E('p', {}, _('Receive is traffic from this station to the router. Counters are reported by the driver.')),
+		(rx.ht || rx.vht || rx.he || rx.eht || tx.ht || tx.vht || tx.he || tx.eht) && mcs(rx) == '-' && mcs(tx) == '-' ? E('p', {}, _('The driver did not report MCS values for this station.')) : ''
+	]);
 }
 
 function radio_restart(id, ev) {
@@ -843,11 +886,19 @@ return view.extend({
 				])
 			];
 
+			if (table.firstElementChild.childNodes.length < 6)
+				table.firstElementChild.appendChild(E('div', { 'class': 'th cbi-section-actions'}));
+			var actions = [ E('button', {
+				'class': 'cbi-button cbi-button-neutral',
+				'click': L.bind(function(peer) {
+					ui.showModal(_('Station details'), [
+						E('div', { 'data-station-mac': peer.mac, 'data-station-network': peer.network.getName() }, render_station_details(peer)),
+						E('div', { 'class': 'right' }, E('button', { 'class': 'cbi-button', 'click': ui.hideModal }, _('Dismiss')))
+					]);
+				}, this, bss)
+			}, _('Details')) ];
 			if (bss.network.isClientDisconnectSupported()) {
-				if (table.firstElementChild.childNodes.length < 6)
-					table.firstElementChild.appendChild(E('div', { 'class': 'th cbi-section-actions'}));
-
-				row.push(E('button', {
+				actions.push(E('button', {
 					'class': 'cbi-button cbi-button-remove',
 					'click': L.bind(function(net, mac, ev) {
 						dom.parent(ev.currentTarget, '.tr').style.opacity = 0.5;
@@ -859,14 +910,20 @@ return view.extend({
 					}, this, bss.network, bss.mac)
 				}, [ _('Disconnect') ]));
 			}
-			else {
-				row.push('-');
-			}
+			row.push(E('div', { 'class': 'nowrap' }, actions));
 
 			trows.push(row);
 		}
 
 		cbi_update_table(table, trows, E('em', _('No information available')));
+
+		var details = document.querySelector('[data-station-mac]');
+		if (details) {
+			var peer = data[3].filter(function(station) {
+				return station.mac == details.getAttribute('data-station-mac') && station.network.getName() == details.getAttribute('data-station-network');
+			})[0];
+			dom.content(details, peer ? render_station_details(peer) : E('em', _('Station is no longer connected.')));
+		}
 
 		var stat = document.querySelector('.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large');
 
@@ -1399,15 +1456,16 @@ return view.extend({
 
 
 				if (hwtype == 'qcawificfg80211') {
-					[ ['bintval', _('Beacon Interval'), 'range(15,65535)', 100], ['rts', _('RTS/CTS Threshold'), 'or(range(0,2347),"off")', 'off'], ['frag', _('Fragmentation Threshold'), 'range(256,2346)', 2346] ].forEach(function(p) {
+					[ ['bintval', _('Beacon Interval'), 'range(15,65535)', 100], ['rts', _('RTS/CTS Threshold'), 'or(range(0,2347),"off")', 'off'], ['frag', _('Fragmentation Threshold'), 'and(uinteger,range(256,2346))', 2346] ].forEach(function(p) {
 						o = ss.taboption('advanced', form.Value, p[0], p[1]);
 						o.datatype = p[2]; o.placeholder = p[3]; o.optional = true;
 						o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
 						if (p[0] == 'frag') {
-							o.description = _('The native driver supports fragmentation thresholds in legacy modes only.');
+							o.description = _('Even values from 256 to 2346 bytes are applied to this interface in legacy modes. Clear the value to disable fragmentation. N, AC, AX and BE modes are not supported by the native driver.');
 							o.validate = function(id, value) {
 								var radio = radioNet.getWifiDeviceName(), frequency = this.map.lookupOption('_freq', radio)[0];
 								var hwmode = frequency ? frequency.formvalue(radio)[1] : uci.get('wireless', radio, 'hwmode');
+								if (value && value % 2) return _('Use an even fragmentation threshold.');
 								return !value || /^11[abg]$/.test(hwmode) || _('Clear the fragmentation threshold before selecting N, AC, AX or BE mode.');
 								};
 							}

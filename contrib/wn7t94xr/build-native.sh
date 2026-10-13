@@ -28,7 +28,14 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$iwinfo/include" \
+python3 - "$iwinfo" "$output" <<'RATE'
+import pathlib, sys
+source = (pathlib.Path(sys.argv[1]) / 'iwinfo_nl80211.c').read_text()
+start = source.index('static void nl80211_parse_rateinfo(')
+end = source.index('static int nl80211_get_survey_cb(', start)
+(pathlib.Path(sys.argv[2]) / 'qsdk-nl-rate.inc').write_text(source[start:end])
+RATE
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$output" -I"$iwinfo/include" \
 	"$iwinfo/tests/qsdk-selfcheck.c" -o /tmp/qsdk-iwinfo-selfcheck
 /tmp/qsdk-iwinfo-selfcheck
 python3 - "$luci/libs/rpcd-mod-luci/src/luci.c" "$output/qsdk-switch.inc" <<'PY'
@@ -51,10 +58,10 @@ control = (luci / 'libs/rpcd-mod-luci/src/qsdk-hostapd.h').read_text()
 rpc = (luci / 'libs/rpcd-mod-iwinfo/src/iwinfo.c').read_text()
 (output / 'qsdk-rate.inc').write_text(rpc[rpc.index('static void\nrpc_iwinfo_add_rateinfo('):rpc.index('static int\nrpc_iwinfo_assoclist(')])
 PY
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" \
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luci/src" \
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
 /tmp/qsdk-hostapd-selfcheck
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
 /tmp/qsdk-rate-selfcheck
