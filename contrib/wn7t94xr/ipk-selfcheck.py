@@ -83,9 +83,13 @@ for original in LOCK['base_packages']:
     if name != 'luci-mod-network':
         assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
     else:
-        assert fields['Version'] == original['version'] + '+qsdk3.4.0'
+        assert fields['Version'] == original['version'] + '+qsdk3.8.0'
         assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
         assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
+        assert b'getAccelerationStatus' in payload['www/luci-static/resources/view/network/acceleration.js']
+        acl = json.loads(payload['usr/share/rpcd/acl.d/luci-qsdk-acceleration.json'])
+        assert acl['luci-qsdk-acceleration']['write']['file'] == {'/etc/init.d/qca-nss-ecm restart': ['exec']}
+        assert b'network/acceleration' in payload['usr/lib/lua/luci/controller/admin/network.lua']
 
 main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',

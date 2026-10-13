@@ -15,6 +15,10 @@ function index()
 		page.uci_depends = { wireless = { ["@wifi-device[0]"] = "wifi-device" } }
 		page.leaf = true
 
+		page = entry({"admin", "network", "acceleration"}, view("network/acceleration"), _("Acceleration"), 25)
+		page.uci_depends = { ecm = true }
+		page.leaf = true
+
 		page = entry({"admin", "network", "network"}, view("network/interfaces"), _("Interfaces"), 10)
 		page.leaf   = true
 		page.subindex = true

@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.7.0-1'
-SUFFIX = '+qsdk3.4.0'
+VERSION = '3.8.0-2'
+SUFFIX = '+qsdk3.8.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -99,6 +99,9 @@ mapping = {
     'luci-mod-network': {
         'www/luci-static/resources/view/network/wireless.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js',
         'www/luci-static/resources/view/network/switch.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js',
+        'www/luci-static/resources/view/network/acceleration.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js',
+        'usr/lib/lua/luci/controller/admin/network.lua': 'modules/luci-mod-network/luasrc/controller/admin/network.lua',
+        'usr/share/rpcd/acl.d/luci-qsdk-acceleration.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-acceleration.json',
     },
 }
 for package in LOCK['base_packages']:
@@ -110,11 +113,10 @@ for package in LOCK['base_packages']:
         record(original, payload, hooks['control'][0].decode())
         continue
     for dest, source in mapping[package['name']].items():
-        assert dest in payload
         data = (LUCI / source).read_bytes()
         if dest.endswith('.js'):
             data = subprocess.check_output([str(jsmin.resolve())], input=data)
-        payload[dest] = (data, payload[dest][1])
+        payload[dest] = (data, payload.get(dest, (None, 0o644))[1])
     version = package['version'] + SUFFIX
     control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
     hooks['control'] = (control.encode(), 0o644)

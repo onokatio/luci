@@ -254,9 +254,39 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	frequency.qca = null;
 	frequency.write('wifi1', ['VHT80', '11a', '36']);
 	assert.equal(data.wifi1.hwmode, '11a');
-	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js'])
+	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'])
 		new Function(fs.readFileSync(path.join(root, file), 'utf8'));
 	assert(!wireless.includes('require tools.qca'));
+	const acceleration = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'), 'utf8');
+	async function checkApply(failure) {
+		const original = { enabled: '1', acceleration_engine: 'auto' }, wanted = { enabled: '1', acceleration_engine: 'sfe' };
+		let stored = original, staged = original, sets = 0, commits = 0, restarts = 0, reads = 0;
+		const mockRpc = { declare(options) { return async function(...args) {
+			assert.equal(options.reject, true);
+			if (options.method == 'set') {
+				if (++sets == 1 && failure == 'set') throw Error('set failed');
+				staged = args[2];
+			}
+			else if (options.method == 'commit') {
+				if (++commits == 2 && failure == 'rollback') throw Error('rollback failed');
+				stored = staged;
+			}
+			else {
+				reads++;
+				const engine = failure == 'mismatch' && reads == 1 ? 'ppe' : stored.acceleration_engine == 'sfe' ? 'sfe' : 'ppe';
+				return { loaded: stored.enabled == '1', engines: { [engine]: { ipv4: { accelerated_count: '0' } } } };
+			}
+		}; } };
+		const mockFs = { exec: async () => ({ code: ++restarts == 1 && ['restart', 'rollback'].includes(failure) ? 1 : 0 }) };
+		const apply = new Function('rpc', 'fs', '_', acceleration.slice(acceleration.indexOf('var status'), acceleration.indexOf('function number')) + 'return applySettings;')(mockRpc, mockFs, s => s);
+		if (!failure) { await apply(wanted, original); assert.deepEqual(stored, wanted); assert.equal(restarts, 1); }
+		else {
+			await assert.rejects(apply(wanted, original), e => failure == 'rollback' ? !e.restored && e.message.includes('could not be restored') : e.restored === true);
+			if (failure != 'rollback') assert.deepEqual(stored, original);
+			assert.equal(restarts, failure == 'set' ? 0 : failure == 'rollback' ? 1 : 2);
+		}
+	}
+	for (const failure of ['', 'set', 'restart', 'mismatch', 'rollback']) await checkApply(failure);
 	assert(wireless.includes("if (hwtype != 'qcawificfg80211') o.value('fast', 'FAST');"));
 	console.log('Core Wireless selfcheck passed: AP lifecycle, standard iwinfo frequency routing, failed-save cancellation, MLO, validation and JS syntax');
 })().catch(e => { console.error(e); process.exitCode = 1; });
