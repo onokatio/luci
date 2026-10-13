@@ -96,14 +96,26 @@ fragmentMode = '11g';
 assert.equal(fragment.validate('ap', '512'), true);
 assert.notEqual(fragment.validate('ap', '513'), true);
 
-const detailCode = wireless.slice(wireless.indexOf('function render_station_details'), wireless.indexOf('function radio_restart'));
+const detailCode = wireless.slice(wireless.indexOf('function render_station_usage'), wireless.indexOf('function radio_restart'));
 const detail = new Function('E', '_', 'format_wifirate', detailCode + '\nreturn render_station_details;')(
 	(tag, attrs, children) => ({ tag, attrs, children }), value => value, rate);
 const info = JSON.stringify(detail({ mac: '00:11:22:33:44:55', network: { getShortName: () => '<untrusted>', getIfname: () => 'ath1' }, rx: { he: true, packets: 0 }, tx: {}, authenticated: true }));
-assert(info.includes('The driver did not report MCS') && !info.includes('undefined'));
+assert(info.includes('The driver did not report the MCS of the latest packet.') && !info.includes('undefined'));
 assert(info.includes('Authenticated') && info.includes('Yes'));
 assert(info.includes('Authorized') && info.includes('"-"'));
 assert(info.includes('"0"') && info.includes('<untrusted>'));
+const station = { network: { getShortName: () => 'test', getIfname: () => 'ath1' }, telemetry: { available: true },
+	rx: { he: true, mcs_usage: { he: Array.from({ length: 17 }, (_, i) => i == 11 ? 42 : 0) }, gi_usage: [100, 0, 24, 0, 0] },
+	tx: { gi_usage: [200, 0, 0, 0, 0] } };
+const usage = JSON.stringify(detail(station));
+assert(usage.includes('HE MCS 11') && usage.includes('"42"') && usage.includes('"24"'));
+assert(usage.includes('0.8 µs') && usage.includes('1.6 µs') && !usage.includes('0.4 µs'));
+assert(usage.includes('latest packet') && !usage.includes('HE-MCS'));
+station.telemetry.available = false;
+assert(JSON.stringify(detail(station)).includes('usage statistics are unavailable'));
+station.telemetry.available = true;
+station.rx = {}; station.tx = {};
+assert(JSON.stringify(detail(station)).includes('No usage samples reported.'));
 const cell = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const child = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const button = { blur() {}, classList: { add() {} } };

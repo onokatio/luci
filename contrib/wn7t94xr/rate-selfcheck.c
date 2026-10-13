@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "qsdk-hostapd-control.h"
+#include "qsdk-telemetry.h"
 #include <libubox/blobmsg_json.h>
 #include <iwinfo.h>
 static struct blob_buf buf;
@@ -39,6 +40,18 @@ int main(void)
 	assert(tb[0] && blobmsg_get_u32(tb[0]) == 320);
 	assert(tb[1] && blobmsg_get_bool(tb[1]));
 	assert(!tb[2] && tb[3] && blobmsg_get_u32(tb[3]) == 2);
+	blob_buf_free(&buf);
+	struct qsdk_telemetry telemetry;
+	assert(!qsdk_telemetry_read("ath1;id", "00:11:22:33:44:55", &telemetry));
+	telemetry.rx.has_mcs = true;
+	telemetry.rx.modes[2].mcs[11] = 42;
+	telemetry.rx.has_gi = true;
+	telemetry.rx.gi[2] = 24;
+	blob_buf_init(&buf, 0);
+	rpc_iwinfo_add_usage(&telemetry.rx);
+	char *json = blobmsg_format_json(buf.head, true);
+	assert(strstr(json, "\"mcs_usage\"") && strstr(json, "42") && strstr(json, "\"gi_usage\": [ 0, 0, 24, 0, 0 ]"));
+	free(json);
 	blob_buf_free(&buf);
 	puts("QSDK rate selfcheck passed: 320 MHz, NSS, and unknown MCS");
 	return 0;

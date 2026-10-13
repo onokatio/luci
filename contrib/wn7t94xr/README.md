@@ -30,7 +30,7 @@ MLOを含む設定変更は、純正の制御処理でラジオ全体に適用�
 
 純正ドライバーが公開しないAd-Hoc、802.11s、Distance Optimizationは表示しません。802.11rの実際のローミング、RADIUSサーバーとの認証、WDSのブリッジ通信には、対応する別のAPや認証サーバーが必要です。設定の反映・サービスの起動確認と、これらの相互接続確認は区別します。
 
-Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を指定したnl80211のGET_STATIONを合わせて取得します。一覧の取得が空でも、端末別のバイト数・パケット数・接続時間・認証状態を返せます。HE/EHT・帯域幅・NSSは純正の端末情報から取得します。接続モードの情報で、パケットごとの変動は表しません。送受信速度は、nl80211が不自然な値を返すため、純正一覧のMbps単位の値を使います。取得できないMCSやGIは推測して表示しません。独立した取得スクリプトやデーモンは追加しません。
+Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を指定したnl80211のGET_STATIONを合わせて取得します。一覧の取得が空でも、端末別のバイト数・パケット数・接続時間・認証状態を返せます。HE/EHT・帯域幅・NSSは純正の端末情報から取得します。接続モードの情報で、パケットごとの変動は表しません。送受信速度は、nl80211が不自然な値を返すため、純正一覧のMbps単位の値を使います。最新パケットのMCSやGIを取得できない場合は推測して表示しません。独立した取得スクリプトやデーモンは追加しません。
 
 ## Switch構成情報
 
@@ -47,6 +47,10 @@ Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を�
 Associated StationsのDetailsでは、接続時間、無通信時間、信号、RX/TXの速度・帯域幅・HE/EHT・MCS/NSS、通信量、パケット数、再送・失敗・破棄、認証・WMM・PMFの状態を表示します。RXは端末からルーターへの通信です。統計は純正ドライバーの報告値を使い、詳細画面も5秒間隔で更新します。切断された場合は、その状態を表示します。
 
 QSDKが標準APIへ返さない認証状態と64ビットの通信量は、純正hostapdの制御ソケットから補います。MCSは標準のHE/EHT属性がある場合だけ表示し、速度から推定しません。ドライバーが報告しない項目は未取得として表示します。
+
+Detailsを開いた端末では、純正 `/usr/lib/libstats_lib.so` のTelemetry APIから、RX/TX別のHT・VHT・HE・EHTのMCS使用回数とGI使用回数を取得します。GIは0.8・0.4・1.6・3.2 µsの分類です。使用分布は累積カウンターであり、最新パケットのMCS・GIを示しません。通常の接続一覧では、この追加取得を行いません。
+
+純正v2.5.1のライブラリで確認したC ABIを使い、ライブラリの識別値が一致する場合だけ読み込みます。異なるライブラリや取得失敗では、使用分布を未取得として表示し、既存の端末情報を維持します。ライブラリ自体はIPKに含めず、本体のものを使います。検証用の `telemetry-selfcheck` もIPKには含めません。
 
 QSDKランタイムのバージョンごとにJavaScriptのキャッシュキーを更新するため、更新後は通常の再読み込みで新しい画面を取得できます。
 
@@ -107,8 +111,8 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.6.0-2
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.6.0-2_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.7.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.7.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -120,7 +124,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v3.6.0-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v3.7.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

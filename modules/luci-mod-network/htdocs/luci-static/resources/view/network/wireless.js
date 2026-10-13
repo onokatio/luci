@@ -11,6 +11,10 @@
 'require firewall';
 'require tools.widgets as widgets';
 
+var callStationStatistics = rpc.declare({
+	object: 'iwinfo', method: 'assoclist', params: [ 'device', 'mac', 'statistics' ]
+});
+
 var qca_shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'eap_type', 'pac_file', 'fast_provisioning', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2', 'subject_match', 'subject_match2', 'domain_match', 'domain_match2', 'domain_suffix_match', 'domain_suffix_match2' ];
 
 function qca_members(id) {
@@ -359,6 +363,49 @@ function format_wifirate(rate) {
 	return s;
 }
 
+function render_station_usage(bss) {
+	if (!bss.telemetry.available)
+		return E('p', {}, _('MCS/GI usage statistics are unavailable.'));
+	var rx = bss.rx || {}, tx = bss.tx || {}, mcsRows = [], giRows = [];
+	var row = function(name, receive, transmit) {
+		return [ name, receive == null ? '-' : String(receive), transmit == null ? '-' : String(transmit) ];
+	};
+	[ 'ht', 'vht', 'he', 'eht' ].forEach(function(mode) {
+		var receive = (rx.mcs_usage || {})[mode] || [], transmit = (tx.mcs_usage || {})[mode] || [];
+		for (var i = 0; i < 17; i++)
+			if (receive[i] > 0 || transmit[i] > 0)
+				mcsRows.push(row(mode.toUpperCase() + ' MCS ' + (i == 16 ? _('Unknown') : i), receive[i], transmit[i]));
+	});
+	[ '0.8 µs', '0.4 µs', '1.6 µs', '3.2 µs', _('Unknown') ].forEach(function(gi, i) {
+		if ((rx.gi_usage || [])[i] > 0 || (tx.gi_usage || [])[i] > 0)
+			giRows.push(row(gi, (rx.gi_usage || [])[i], (tx.gi_usage || [])[i]));
+	});
+	var table = function(title, rows) {
+		return E('div', {}, [ E('h4', {}, title), rows.length ? E('div', { 'class': 'table' }, [
+			E('div', { 'class': 'tr' }, [ E('div', { 'class': 'th' }), E('div', { 'class': 'th' }, _('Receive')), E('div', { 'class': 'th' }, _('Transmit')) ])
+		].concat(rows.map(function(values) {
+			return E('div', { 'class': 'tr' }, values.map(function(value) { return E('div', { 'class': 'td' }, value); }));
+		}))) : E('p', {}, _('No usage samples reported.')) ]);
+	};
+	return E('div', {}, [
+		table(_('MCS usage counters'), mcsRows), table(_('Guard interval usage counters'), giRows),
+		E('p', {}, _('Driver usage counters do not identify the rate of the latest packet.'))
+	]);
+}
+
+function update_station_details(node, peer) {
+	if (uci.get('wireless', peer.radio.getName(), 'type') != 'qcawificfg80211') {
+		dom.content(node, render_station_details(peer));
+		return Promise.resolve();
+	}
+	return callStationStatistics(peer.network.getIfname(), peer.mac, true).catch(function() {
+		return { telemetry: { available: false } };
+	}).then(function(stats) {
+		if (node.isConnected)
+			dom.content(node, render_station_details(Object.assign({}, peer, stats)));
+	});
+}
+
 function render_station_details(bss) {
 	var rx = bss.rx || {}, tx = bss.tx || {};
 	var yesno = function(value) { return value == null ? '-' : value ? _('Yes') : _('No'); };
@@ -397,7 +444,8 @@ function render_station_details(bss) {
 			return E('div', { 'class': 'tr' }, row.map(function(value) { return E('div', { 'class': 'td' }, value); }));
 		}))),
 		E('p', {}, _('Receive is traffic from this station to the router. Counters are reported by the driver.')),
-		(rx.ht || rx.vht || rx.he || rx.eht || tx.ht || tx.vht || tx.he || tx.eht) && mcs(rx) == '-' && mcs(tx) == '-' ? E('p', {}, _('The driver did not report MCS values for this station.')) : ''
+		(rx.ht || rx.vht || rx.he || rx.eht || tx.ht || tx.vht || tx.he || tx.eht) && mcs(rx) == '-' && mcs(tx) == '-' ? E('p', {}, _('The driver did not report the MCS of the latest packet.')) : '',
+		bss.telemetry ? render_station_usage(bss) : ''
 	]);
 }
 
@@ -891,10 +939,12 @@ return view.extend({
 			var actions = [ E('button', {
 				'class': 'cbi-button cbi-button-neutral',
 				'click': L.bind(function(peer) {
+					var details = E('div', { 'data-station-mac': peer.mac, 'data-station-network': peer.network.getName() }, render_station_details(peer));
 					ui.showModal(_('Station details'), [
-						E('div', { 'data-station-mac': peer.mac, 'data-station-network': peer.network.getName() }, render_station_details(peer)),
+						details,
 						E('div', { 'class': 'right' }, E('button', { 'class': 'cbi-button', 'click': ui.hideModal }, _('Dismiss')))
 					]);
+					return update_station_details(details, peer);
 				}, this, bss)
 			}, _('Details')) ];
 			if (bss.network.isClientDisconnectSupported()) {
@@ -917,12 +967,13 @@ return view.extend({
 
 		cbi_update_table(table, trows, E('em', _('No information available')));
 
-		var details = document.querySelector('[data-station-mac]');
+		var details = document.querySelector('[data-station-mac]'), detailsTask = Promise.resolve();
 		if (details) {
 			var peer = data[3].filter(function(station) {
 				return station.mac == details.getAttribute('data-station-mac') && station.network.getName() == details.getAttribute('data-station-network');
 			})[0];
-			dom.content(details, peer ? render_station_details(peer) : E('em', _('Station is no longer connected.')));
+			if (peer) detailsTask = update_station_details(details, peer);
+			else dom.content(details, E('em', _('Station is no longer connected.')));
 		}
 
 		var stat = document.querySelector('.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large');
@@ -930,7 +981,7 @@ return view.extend({
 		if (stat)
 			render_modal_status(stat, data[2].filter(function(n) { return n.getName() == stat.getAttribute('data-network') })[0]);
 
-		return network.flushCache();
+		return detailsTask.then(function() { return network.flushCache(); });
 	},
 
 	load: function() {
