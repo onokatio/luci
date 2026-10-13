@@ -29,6 +29,7 @@ sqm_running() {
 
 restore_acceleration() {
 	[ -f "$saved" ] || return 0
+	! sqm_running || return 1
 	[ ! -L "$saved" ] && [ "$(cat "$saved")" = 1 ] || return 1
 	uci -q set ecm.global.enabled=1 && uci -q commit ecm || return 1
 	/etc/init.d/qca-nss-ecm restart || return 1
@@ -45,7 +46,6 @@ start_service() (
 		return $?
 	fi
 	if [ ! -x /usr/lib/sqm/run.sh ]; then
-		! sqm_running || return 1
 		restore_acceleration || return 1
 		logger -t sqm 'SQM runtime unavailable; restored native acceleration'
 		return 1

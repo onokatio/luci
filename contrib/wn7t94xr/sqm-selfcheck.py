@@ -41,6 +41,10 @@ mkdir "$probe/module"
 queue_active=1
 start_service || exit 10
 [ "$(cat "$probe/enabled")" = 0 ] && [ -f "$probe/saved" ] && [ ! -d "$probe/module" ] && [ -f "$probe/queue" ] || exit 11
+queue_active=0
+! start_service || exit 31
+[ "$(cat "$probe/enabled")" = 0 ] && [ -f "$probe/states/eth0.state" ] || exit 32
+queue_active=1
 start_service br-lan || exit 26
 stop_service br-lan || exit 27
 [ "$(cat "$probe/enabled")" = 0 ] && [ -f "$probe/queue" ] || exit 28
