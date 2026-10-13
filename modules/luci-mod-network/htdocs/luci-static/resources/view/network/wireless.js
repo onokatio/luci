@@ -380,15 +380,16 @@ function render_station_usage(bss) {
 		if ((rx.gi_usage || [])[i] > 0 || (tx.gi_usage || [])[i] > 0)
 			giRows.push(row(gi, (rx.gi_usage || [])[i], (tx.gi_usage || [])[i]));
 	});
-	var table = function(title, rows) {
+	var table = function(title, rows, available) {
 		return E('div', {}, [ E('h4', {}, title), rows.length ? E('div', { 'class': 'table' }, [
 			E('div', { 'class': 'tr' }, [ E('div', { 'class': 'th' }), E('div', { 'class': 'th' }, _('Receive')), E('div', { 'class': 'th' }, _('Transmit')) ])
 		].concat(rows.map(function(values) {
 			return E('div', { 'class': 'tr' }, values.map(function(value) { return E('div', { 'class': 'td' }, value); }));
-		}))) : E('p', {}, _('No usage samples reported.')) ]);
+		}))) : E('p', {}, available ? _('No usage samples reported.') : _('Usage statistics are unavailable.')) ]);
 	};
 	return E('div', {}, [
-		table(_('MCS usage counters'), mcsRows), table(_('Guard interval usage counters'), giRows),
+		table(_('MCS usage counters'), mcsRows, rx.mcs_usage || tx.mcs_usage),
+		table(_('Guard interval usage counters'), giRows, rx.gi_usage || tx.gi_usage),
 		E('p', {}, _('Driver usage counters do not identify the rate of the latest packet.'))
 	]);
 }
