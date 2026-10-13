@@ -45,7 +45,7 @@ static void qsdk_accel_ppe(struct blob_buf *b)
 	void *group = NULL;
 	FILE *f = fopen("/sys/kernel/debug/qca-nss-ppe/stats/common_stats", "r");
 	if (!f) return;
-	while (fgets(line, sizeof(line), f) && ++lines <= 256 && (bytes += strlen(line)) <= 16384) {
+	while (fgets(line, sizeof(line), f) && ++lines <= 512 && (bytes += strlen(line)) <= 32768) {
 		if (!strcmp(line, "PPE stats:\n") || !strcmp(line, "PPE flow stats:\n") || !strcmp(line, "PPE tunnel stats:\n")) {
 			if (group) blobmsg_close_table(b, group);
 			group = blobmsg_open_table(b, !strcmp(line, "PPE stats:\n") ? "ppe" : !strcmp(line, "PPE flow stats:\n") ? "flows" : "tunnels");

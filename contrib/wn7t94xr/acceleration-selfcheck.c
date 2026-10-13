@@ -18,7 +18,14 @@ static int ubus_send_reply(struct ubus_context *ctx, struct ubus_request_data *r
 static FILE *fixture(const char *path, const char *mode)
 {
 	const char *text = NULL;
-	if (strstr(path, "common_stats")) text = "PPE stats:\n [v4_l2_flows]: 26\n [invalid]: -1\n [overflow]: 18446744073709551616\nPPE flow stats:\n [v4_create_req]: 18446744073709551615\n";
+	static char ppe[4096];
+	if (strstr(path, "common_stats")) {
+		strcpy(ppe, "PPE stats:\n [v4_l2_flows]: 26\n [invalid]: -1\n [overflow]: 18446744073709551616\nPPE flow stats:\n [v4_create_req]: 18446744073709551615\n");
+		/* The stock dump has 271 lines, including tunnel counters near its end. */
+		for (unsigned i = 0; i < 260; i++) strcat(ppe, "\n");
+		strcat(ppe, "PPE tunnel stats:\n [late_counter]: 3\n");
+		text = ppe;
+	}
 	else if (strstr(path, "ppe_ds_node_stats")) text = "Node 0\nTx pkts 123\nRx pkts 456\nNode 17\nTx pkts 99\n";
 	else if (strstr(path, "ecm_ppe_ipv4/accelerated_count")) text = "13\n";
 	else if (strstr(path, "ecm_ppe_ipv6/accelerated_count")) text = "0\n";
@@ -44,6 +51,7 @@ int main(void)
 	assert(strstr(json, "\"v4_create_req\":\"18446744073709551615\""));
 	assert(!strstr(json, "\"invalid\""));
 	assert(!strstr(json, "\"overflow\""));
+	assert(strstr(json, "\"late_counter\":\"3\""));
 	assert(strstr(json, "\"tx_packets\":\"123\""));
 	assert(strstr(json, "\"rx_packets\":\"456\""));
 	assert(!strstr(json, "\"tx_packets\":\"99\""));
