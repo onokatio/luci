@@ -49,9 +49,27 @@ int main(void)
 	telemetry.rx.gi[2] = 24;
 	blob_buf_init(&buf, 0);
 	rpc_iwinfo_add_usage(&telemetry.rx);
-	char *json = blobmsg_format_json(buf.head, true);
-	assert(strstr(json, "\"mcs_usage\"") && strstr(json, "42") && strstr(json, "\"gi_usage\": [ 0, 0, 24, 0, 0 ]"));
-	free(json);
+	const struct blobmsg_policy usage_policy[] = {
+		{ .name = "mcs_usage", .type = BLOBMSG_TYPE_TABLE },
+		{ .name = "gi_usage", .type = BLOBMSG_TYPE_ARRAY },
+	};
+	const struct blobmsg_policy he_policy = { .name = "he", .type = BLOBMSG_TYPE_ARRAY };
+	struct blob_attr *usage[2], *arrays[2], *item;
+	int remaining, index, field;
+	blobmsg_parse(usage_policy, 2, usage, blob_data(buf.head), blob_len(buf.head));
+	assert(usage[0] && usage[1]);
+	blobmsg_parse(&he_policy, 1, arrays, blobmsg_data(usage[0]), blobmsg_data_len(usage[0]));
+	arrays[1] = usage[1];
+	assert(arrays[0]);
+	for (field = 0; field < 2; field++) {
+		index = 0;
+		blobmsg_for_each_attr(item, arrays[field], remaining) {
+			assert(blobmsg_type(item) == BLOBMSG_TYPE_INT32);
+			assert(blobmsg_get_u32(item) == (index == (field ? 2 : 11) ? (field ? 24 : 42) : 0));
+			index++;
+		}
+		assert(index == (field ? QSDK_GI_COUNT : QSDK_MCS_COUNT));
+	}
 	blob_buf_free(&buf);
 	puts("QSDK rate selfcheck passed: 320 MHz, NSS, and unknown MCS");
 	return 0;
