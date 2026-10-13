@@ -46,6 +46,7 @@ struct qsdk_stats_command {
 	uint64_t features;
 	uint8_t mac[6];
 	struct qsdk_stats_reply *reply;
+	int peer_type;
 	void (*async_callback)(struct qsdk_stats_command *, char *);
 };
 struct qsdk_pkt_info { uint64_t packets, bytes; };
@@ -96,7 +97,8 @@ _Static_assert(offsetof(struct qsdk_stats_command, ifname) == 15, "QSDK command 
 _Static_assert(offsetof(struct qsdk_stats_command, features) == 32, "QSDK command features ABI");
 _Static_assert(offsetof(struct qsdk_stats_command, mac) == 40, "QSDK command MAC ABI");
 _Static_assert(offsetof(struct qsdk_stats_command, reply) == 48, "QSDK command reply ABI");
-_Static_assert(sizeof(struct qsdk_stats_command) == 56, "QSDK command size ABI");
+_Static_assert(offsetof(struct qsdk_stats_command, peer_type) == 52, "QSDK peer type ABI");
+_Static_assert(sizeof(struct qsdk_stats_command) == 64, "QSDK command size ABI");
 _Static_assert(offsetof(struct qsdk_stats_obj, stats) == 48, "QSDK response ABI");
 #endif
 
@@ -113,7 +115,7 @@ static bool qsdk_telemetry_library_matches(void)
 		for (i = 0; i < length; i++) fingerprint = (fingerprint ^ bytes[i]) * UINT64_C(1099511628211);
 	bool valid = !ferror(file) && fingerprint == UINT64_C(0x8ca5a81b0ecf45ce);
 	fclose(file);
-	/* This fingerprint selects the verified stock v2.5.1 C ABI; feed signatures authenticate the IPK. */
+	/* shortcut: only the stock v2.5.1 ABI; verify the layout before adding another firmware. */
 	return valid;
 }
 
@@ -162,7 +164,14 @@ static bool qsdk_telemetry_read(const char *vif, const char *mac, struct qsdk_te
 	if (!qsdk_hostapd_ifname(vif) || !qsdk_hostapd_mac(mac)) return false;
 	if (!attempted) {
 		attempted = true;
-		if (qsdk_telemetry_library_matches()) library = dlopen("/usr/lib/libstats_lib.so", RTLD_NOW | RTLD_LOCAL);
+		if (qsdk_telemetry_library_matches()) {
+			/* Native libraries leave these symbols to their executable instead of declaring dependencies. */
+			const char *dependencies[] = { "libnl-3.so.200", "libnl-genl-3.so.200", "libqca_tools.so", "/usr/local/lib/libqca_nl80211_wrapper.so" };
+			unsigned int i;
+			for (i = 0; i < sizeof(dependencies) / sizeof(dependencies[0]); i++)
+				if (!dlopen(dependencies[i], RTLD_NOW | RTLD_GLOBAL)) return false;
+			library = dlopen("/usr/lib/libstats_lib.so", RTLD_NOW | RTLD_LOCAL);
+		}
 		if (library) {
 			request = dlsym(library, "libstats_request_handle");
 			release = dlsym(library, "libstats_free_reply_buffer");
@@ -175,6 +184,7 @@ static bool qsdk_telemetry_read(const char *vif, const char *mac, struct qsdk_te
 		memset(&command, 0, sizeof(command));
 		memset(&reply, 0, sizeof(reply));
 		command.level = level;
+		command.peer_type = 3;
 		command.features = features(feature_names);
 		command.reply = &reply;
 		memcpy(command.ifname, vif, strlen(vif) + 1);
