@@ -86,6 +86,15 @@ assert(rate({ rate: 258000, he: true, mhz: 20, nss: 2 }).includes('NSS\xa02'));
 assert(rate({ rate: 5764000, eht: true, mhz: 320, nss: 2 }).includes('320\xa0MHz'));
 assert(!rate({ rate: 54000, mhz: 0 }).includes('0\xa0MHz'));
 const fragmentCode = wireless.match(/o\.validate = function\(id, value\) \{\n\s*var radio = radioNet.getWifiDeviceName\(\), frequency =[\s\S]*?\n\s*\};/)[0];
+const distanceCode = wireless.match(/o = ss\.taboption\('advanced', form\.Value, 'distance',[\s\S]*?o\.placeholder = [^;]+;/)[0];
+for (const hwtype of ['qcawificfg80211', 'mac80211']) {
+	let distance;
+	new Function('ss', 'form', 'hwtype', '_', 'var o; ' + distanceCode)(
+		{ taboption: (...args) => (distance = { description: args[4] }) }, { Value: {} }, hwtype, v => v);
+	assert.equal(distance.datatype, hwtype == 'qcawificfg80211' ? 'and(uinteger,range(0,21150))' : 'or(range(0,114750),"auto")');
+	assert.equal(distance.placeholder, hwtype == 'qcawificfg80211' ? '0' : 'auto');
+	if (hwtype == 'qcawificfg80211') assert.match(distance.description, /ACK timeout only.*Automatic estimation is unavailable/);
+}
 const fragment = {};
 new Function('o', 'radioNet', 'uci', '_', fragmentCode)(fragment, { getWifiDeviceName: () => 'wifi0' }, uci, v => v);
 let fragmentMode = '11axg';

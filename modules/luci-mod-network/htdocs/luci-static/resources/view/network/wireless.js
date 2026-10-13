@@ -1192,6 +1192,12 @@ return view.extend({
 
 					o = ss.taboption('advanced', CBIWifiCountryValue, 'country', _('Country Code'));
 					o.wifiNetwork = radioNet;
+
+					o = ss.taboption('advanced', form.Value, 'distance', _('Distance Optimization'), hwtype == 'qcawificfg80211'
+						? _('Distance to farthest network member in meters (0–21150). QSDK adjusts ACK timeout only, in 450 m steps. Empty or 0 restores the original timeout. Automatic estimation is unavailable; CTS and slot timing remain unchanged.')
+						: _('Distance to farthest network member in meters.'));
+					o.datatype = hwtype == 'qcawificfg80211' ? 'and(uinteger,range(0,21150))' : 'or(range(0,114750),"auto")';
+					o.placeholder = hwtype == 'qcawificfg80211' ? '0' : 'auto';
 				}
 
 				if (hwtype == 'qcawificfg80211' && /g$/.test(uci.get('wireless', radioNet.getWifiDeviceName(), 'hwmode') || '')) {
@@ -1205,10 +1211,6 @@ return view.extend({
 				if (hwtype == 'mac80211') {
 					o = ss.taboption('advanced', form.Flag, 'legacy_rates', _('Allow legacy 802.11b rates'));
 					o.default = o.enabled;
-
-					o = ss.taboption('advanced', form.Value, 'distance', _('Distance Optimization'), _('Distance to farthest network member in meters.'));
-					o.datatype = 'or(range(0,114750),"auto")';
-					o.placeholder = 'auto';
 
 					o = ss.taboption('advanced', form.Value, 'frag', _('Fragmentation Threshold'));
 					o.datatype = 'min(256)';
