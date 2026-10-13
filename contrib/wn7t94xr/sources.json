@@ -1,6 +1,6 @@
 {
   "forks": {
-    "netifd": "2e3f186c00486c79fc98e7ce9714daaf1298936a",
+    "netifd": "48049349437f29d58198f4e3132292def20cb6f6",
     "iwinfo": "04aa42fadd438d32d97282d54d32bad693b7b65c"
   },
   "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
@@ -112,6 +112,33 @@
       "sha256": "936c8888d1b9c3375fe135a14fc6d9a1742a41e2e3028857a8277b48d9fb50be",
       "depends": "libc, uhttpd, libubus20210603, libblobmsg-json",
       "license": "ISC"
+    },
+    {
+      "name": "sqm-scripts",
+      "feed": "packages",
+      "version": "1.4.0-2",
+      "filename": "sqm-scripts_1.4.0-2_all.ipk",
+      "sha256": "8ca4cfe83c098f395ba8c692708601b6263effa52f951d32ce4827d10a55e43b",
+      "depends": "libc, tc, kmod-sched-core, kmod-sched-cake, kmod-ifb, iptables, iptables-mod-ipopt, iptables-mod-conntrack-extra",
+      "license": "GPLv2"
+    },
+    {
+      "name": "luci-app-sqm",
+      "feed": "packages",
+      "version": "1.4.0-2",
+      "filename": "luci-app-sqm_1.4.0-2_all.ipk",
+      "sha256": "d0d31c0a9dd8b9ba238d90b2f537da5518a6c7f90d5d11ff4efa3fa0598c75d7",
+      "depends": "libc, lua, luci-base, luci-compat, sqm-scripts",
+      "license": "GPLv2"
+    },
+    {
+      "name": "luci-compat",
+      "feed": "luci",
+      "version": "git-22.115.68448-712bc8e-1",
+      "filename": "luci-compat_git-22.115.68448-712bc8e-1_all.ipk",
+      "sha256": "fb0f611eb9b0afdb1f3851268ce57e1c51fc47bedec0466deb6d9fb250b04eaa",
+      "depends": "libc, luci-base",
+      "license": ""
     }
   ],
   "rom_packages": {
@@ -130,6 +157,12 @@
     "rpcd-mod-file": "2020-05-26-67c8a3fd-1",
     "rpcd-mod-rrdns": "20170710",
     "uci": "2019-09-01-415f9e48-4",
-    "usign": "2020-05-23-f1f65026-1"
+    "usign": "2020-05-23-f1f65026-1",
+    "tc": "5.0.0-2.1",
+    "iptables": "1.8.3-1",
+    "iptables-mod-ipopt": "1.8.3-1",
+    "iptables-mod-conntrack-extra": "1.8.3-1",
+    "kmod-sched-core": "5.4.213-1",
+    "kmod-ifb": "5.4.213-1"
   }
 }

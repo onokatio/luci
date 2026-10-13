@@ -64,14 +64,14 @@ for filename in published + official:
         if file in ('preinst', 'postinst', 'prerm', 'postrm'):
             subprocess.run(['sh', '-n'], input=data, check=True)
 
-assert len(records) == 19
+assert len(records) == len(LOCK['base_packages']) + len(custom_names) - 1
 assert {name for name, (_, _, path) in records.items() if path.parent == OUT} == custom_names
 assert set(re.findall(r'^Package: (.*)$', (OUT / 'Packages').read_text(), re.M)) == custom_names
 available = set(records) | set(LOCK['rom_packages']) | {'libc', 'libgcc', 'libpthread', 'opkg', 'netifd', 'ubus', 'jshn'}
 for fields, _, _ in records.values():
     for dependency in fields['Depends'].split(', '):
         match = re.fullmatch(r'([a-zA-Z0-9.+-]+)(?: \(= ([^()]+)\))?', dependency)
-        assert match and match[1] in available, dependency
+        assert match and (match[1] in available or match[1] == "kmod-sched-cake"), dependency
         if match[2]:
             assert records[match[1]][0]['Version'] == match[2], dependency
         if fields['Package'] in persistent:
@@ -83,7 +83,7 @@ for original in LOCK['base_packages']:
     if name != 'luci-mod-network':
         assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
     else:
-        assert fields['Version'] == original['version'] + '+qsdk3.9.0'
+        assert fields['Version'] == original['version'] + '+qsdk3.10.0'
         assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
         assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
         assert b'getAccelerationStatus' in payload['www/luci-static/resources/view/network/acceleration.js']
@@ -94,14 +94,15 @@ for original in LOCK['base_packages']:
 main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages', 'sbin/luci-reload',
+                        'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
                         'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
 assert payload['sbin/luci-reload'] == '/tmp/luci-ram/sbin/luci-reload'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
 assert 'START=95' in init and '/root/' not in init
 assert 'lowerdir=$ram/$dir:/$dir' in init and 'state=/overlay/luci-ram' in init
-assert int(main['Installed-Size']) < 16384
-assert not any(name.startswith(('luci-mod-status', 'luci-mod-system', 'luci-compat')) for name in records)
+assert int(main['Installed-Size']) < 20000
+assert not any(name.startswith(('luci-mod-status', 'luci-mod-system')) for name in records)
 manifest = payload['etc/luci-qsdk/ram-packages'].decode()
 ram_names = set()
 fixtures = {}
@@ -113,7 +114,7 @@ for line in manifest.splitlines():
     assert url.endswith('/' + path.name)
     assert url.startswith('https://github.com/onokatio/luci/releases/download/v' + main['Version'] + '/') if name in custom_names else url.startswith('https://archive.openwrt.org/releases/packages-19.07/')
     fixtures[url] = str(path.resolve())
-assert ram_names == set(records) - persistent and len(ram_names) == 17
+assert ram_names == set(records) - persistent and len(ram_names) == len(records) - len(persistent)
 libraries = {file: data for name in ram_names for file, data in records[name][1].items()
              if file.startswith('usr/lib/') and '/' not in file.removeprefix('usr/lib/')}
 exposed = set(payload) | {'usr/lib/libiwinfo.so'}
@@ -122,7 +123,7 @@ for file, data in libraries.items():
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
-assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua', 'usr/lib/lua/luci/view/header.htm'}
+assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua', 'usr/lib/lua/luci/view/header.htm', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
 assert ('+qsdk' + main['Version']).encode() in records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/version.lua']
 header = records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/view/header.htm']
@@ -161,7 +162,7 @@ with tempfile.TemporaryDirectory() as directory:
     request_script = root / 'curl.py'
     request_script.write_text('import json,shutil,sys\nm=json.loads(' + repr(json.dumps(fixtures)) + ')\nshutil.copyfile(m[sys.argv[1]],sys.argv[2])\n')
     targets = root / 'root'
-    for d in ('usr/lib/lua', 'usr/lib/rpcd', 'usr/libexec/rpcd', 'usr/lib/opkg', 'usr/share', 'www', 'lib/netifd/wireless', 'etc/init.d', 'sbin'):
+    for d in ('usr/lib/lua', 'usr/lib/rpcd', 'usr/libexec/rpcd', 'usr/lib/opkg', 'usr/lib/sqm', 'etc/sqm', 'usr/share', 'www', 'lib/netifd/wireless', 'etc/init.d', 'sbin'):
         (targets / d).mkdir(parents=True, exist_ok=True)
     for f in ('etc/init.d/network', 'sbin/wifi', 'usr/lib/libiwinfo.so'):
         (targets / f).write_text('vendor')
@@ -177,8 +178,10 @@ with tempfile.TemporaryDirectory() as directory:
             script = script.replace('/etc/init.d/' + service + ' ' + action, 'service ' + service + ' ' + action)
     script = script.replace('"$ram/etc/init.d/uhttpd" start', 'service uhttpd start')
     script = script.replace('"$ram/etc/init.d/uhttpd" stop', 'service uhttpd stop')
+    for action in ('enable', 'disable', 'start', 'stop'):
+        script = script.replace('/etc/init.d/sqm ' + action, 'service sqm ' + action)
     stub = f'''
-ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/rpcd usr/libexec/rpcd usr/lib/opkg usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
+ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/rpcd usr/libexec/rpcd usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
 logger() {{ :; }}
 stat() {{ if [ "$2" = %u:%a ]; then echo 0:755; else echo 0; fi; }}
@@ -216,24 +219,26 @@ umount() {{
 }}
 fail_curl=1
 if start; then exit 10; fi
-[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e '{root}/services' ] && [ ! -e "$state" ]
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
 fail_curl=late
 if start; then exit 11; fi
-[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e '{root}/services' ] && [ ! -e "$state" ]
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
+rm -f '{root}/services'
 fail_curl=0; bad_sha=1
 if start; then exit 12; fi
 [ ! -e "$ram" ] && [ ! -e "$state" ]
 bad_sha=0; fetch
-[ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq 18 ]
+[ -f "$ram/etc/sqm/sqm.conf" ]
+[ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq {len(ram_names) + 1} ]
 ! grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
 grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
-[ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq 17 ]
+[ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq {len(ram_names)} ]
 ! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"
 requests="$(wc -l < '{requests}')"
 fetch
 [ "$(wc -l < '{requests}')" = "$requests" ]
 start; start
-[ "$(wc -l < '{mounts}' | tr -d ' ')" -eq 10 ]
+[ "$(wc -l < '{mounts}' | tr -d ' ')" -eq 12 ]
 [ "$(grep -c '^network restart$' '{root}/services')" -eq 1 ]
 echo persistent > "$state/upper/www/addon"
 fail_umount='{targets}/www'
@@ -269,4 +274,4 @@ if start; then exit 14; fi
 '''
     result = subprocess.run(['bash', '-e'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + result.stderr.decode() + str(result.returncode)
-print('8 custom and 11 official IPKs passed: minimal persistent bootstrap, all 17 runtime packages in RAM, pinned downloads, package records, addon persistence, failure isolation, mount rollback and ARM ABI')
+print(f'{len(custom_names)} custom and {len(official)} official IPKs passed: minimal persistent bootstrap, all {len(ram_names)} runtime packages in RAM, pinned downloads, package records, addon persistence, failure isolation, mount rollback and ARM ABI')

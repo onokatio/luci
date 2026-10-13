@@ -8,7 +8,7 @@ EXTRA_HELP="fetch  Download and verify the complete LuCI runtime into RAM"
 ram=/tmp/luci-ram
 state=/overlay/luci-ram
 manifest=/etc/luci-qsdk/ram-packages
-dirs='usr/lib/lua usr/lib/rpcd usr/libexec/rpcd usr/lib/opkg usr/share www lib/netifd/wireless'
+dirs='usr/lib/lua usr/lib/rpcd usr/libexec/rpcd usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'
 bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
 
 fetch() {
@@ -69,7 +69,7 @@ owns_mount() {
 
 start() {
 	# Finish every download before changing the vendor service or filesystem view.
-	fetch || return 1
+	fetch || { /etc/init.d/sqm start; return 1; }
 	[ ! -L "$state" ] || return 1
 	for dir in $dirs; do
 		owns_mount "$dir" && continue
@@ -101,6 +101,10 @@ start() {
 		"$ram/etc/init.d/uhttpd" start || { stop; return 1; }
 		touch "$ram/.started"
 	fi
+	if [ -x /etc/init.d/sqm ]; then
+		/etc/init.d/sqm enable || return 1
+		/etc/init.d/sqm start || logger -t luci-ram 'SQM did not start; inspect its configuration and log'
+	fi
 }
 
 stop() {
@@ -109,13 +113,15 @@ stop() {
 	for file in $bindings; do [ "/$file" -ef "$ram/$file" ] && mounted=1; done
 	[ "$mounted" = 1 ] || return 0
 	rm -f "$ram/.started"
+	[ ! -x /etc/init.d/sqm ] || SQM_QSDK_RELEASE_ACCEL=1 /etc/init.d/sqm stop || return 1
+	[ ! -x /etc/init.d/sqm ] || /etc/init.d/sqm disable || return 1
 	[ ! -x "$ram/etc/init.d/uhttpd" ] || "$ram/etc/init.d/uhttpd" stop
 	/etc/init.d/rpcd stop
 	# Keep routing active if a busy mount prevents restoring the vendor view.
 	for file in usr/lib/libiwinfo.so sbin/wifi etc/init.d/network; do
 		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || result=1
 	done
-	for dir in lib/netifd/wireless www usr/share usr/lib/opkg usr/libexec/rpcd usr/lib/rpcd usr/lib/lua; do
+	for dir in lib/netifd/wireless www usr/share etc/sqm usr/lib/sqm usr/lib/opkg usr/libexec/rpcd usr/lib/rpcd usr/lib/lua; do
 		owns_mount "$dir" || continue
 		if ! umount "/$dir"; then
 			# netifd retains a directory fd until the network restart below.

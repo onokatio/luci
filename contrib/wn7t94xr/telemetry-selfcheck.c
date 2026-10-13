@@ -62,11 +62,13 @@ int main(int argc, char **argv)
 	assert(!qsdk_telemetry_read("ath1;id", mac, &result));
 	assert(!qsdk_telemetry_read("ath1", "ff:ff:ff:ff:ff:ff", &result));
 	char text[128];
+	const char *stderr_args[] = { "/bin/sh", "-c", "printf native-table >&2", NULL };
+	assert(qsdk_exec_capture(stderr_args, text, sizeof(text), 250, true) && !strcmp(text, "native-table"));
 	assert(qsdk_telemetry_capture(argv[0], "ok", mac, text, sizeof(text)) && !strcmp(text, "test output\n"));
 	assert(!qsdk_telemetry_capture(argv[0], "large", mac, text, sizeof(text)));
-	int64_t start = qsdk_telemetry_millis();
+	int64_t start = qsdk_exec_millis();
 	assert(!qsdk_telemetry_capture(argv[0], "hang", mac, text, sizeof(text)));
-	assert(qsdk_telemetry_millis() - start < 2500);
+	assert(qsdk_exec_millis() - start < 2500);
 	assert(!qsdk_telemetry_capture("/nonexistent/wifitelemetry", "-A", mac, text, sizeof(text)));
 	puts("QSDK telemetry selfcheck passed: counters, missing values, identity, validation, truncation and deadline");
 	return 0;

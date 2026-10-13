@@ -11,6 +11,8 @@ var status = rpc.declare({ object: 'luci-rpc', method: 'getAccelerationStatus', 
     commit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ], reject: true });
 
 function applySettings(values, original) {
+	if (values.enabled == '1' && uci.sections('sqm', 'queue').some(function(q) { return q.enabled == '1'; }))
+		return Promise.reject(new Error(_('Disable SQM before enabling acceleration.')));
 	var attempted = false;
 	function write(v) { return set('ecm', 'global', v).then(function() { return commit('ecm'); }); }
 	function restart() { return fs.exec('/etc/init.d/qca-nss-ecm', [ 'restart' ]).then(function(r) { if (r.code !== 0) throw new Error(_('The native ECM service could not be restarted.')); }); }
@@ -72,7 +74,7 @@ function refresh(container, data) {
 }
 
 return view.extend({
-	load: function() { return Promise.all([ uci.load('ecm'), status() ]); },
+	load: function() { return Promise.all([ uci.load('ecm'), status(), uci.load('sqm') ]); },
 	render: function(data) {
 		var available = data[1].available || {}, original = { enabled: uci.get('ecm', 'global', 'enabled') || '0', acceleration_engine: uci.get('ecm', 'global', 'acceleration_engine') || 'auto' },
 		    enabled = E('input', { 'id': 'ecm-enabled', 'type': 'checkbox', 'checked': original.enabled == '1' ? '' : null }),
@@ -94,7 +96,8 @@ return view.extend({
 			if (!choices.some(function(c) { return c[0] == values.acceleration_engine; })) return ui.addNotification(null, E('p', {}, _('Unsupported acceleration engine')), 'error');
 			if (values.enabled == original.enabled && values.acceleration_engine == original.acceleration_engine) return;
 			pending = true;
-			return applySettings(values, original).then(function(s) {
+			uci.unload('sqm');
+			return uci.load('sqm').then(function() { return applySettings(values, original); }).then(function(s) {
 				original = values;
 				refresh(stats, s);
 				ui.addNotification(null, E('p', {}, _('Acceleration settings applied.')), 'info');
