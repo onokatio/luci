@@ -11,8 +11,8 @@ static int rpc_luci_get_wireless_settings(struct ubus_context *ctx, struct ubus_
 	static const char *const getters[][2] = {
 		{ "he_dl_ofdma", "get_he_dl_ofdma" }, { "he_ul_ofdma", "get_he_ul_ofdma" },
 		{ "he_ul_mimo", "get_he_ul_mimo" }, { "he_mubfer", "g_he_mubfer" },
-		{ "he_subfer", "g_he_subfer" }, { "twt_responder", "get_twt_responder" },
-		{ "mcastenhance", "g_mcastenhance" }, { "igmpmcasten", "g_igmpmcasten" },
+		{ "he_subfer", "g_he_subfer" }, { "vhtmubfer", "get_vhtmubfer" }, { "vhtsubfer", "get_vhtsubfer" }, { "twt_responder", "get_twt_responder" },
+		{ "mcastenhance", "g_mcastenhance" },
 		{ "maxsta", "get_maxsta" }, { "commitatf", "get_commitatf" },
 		{ "rrm", "get_rrm" }, { "wnm", "get_wnm" },
 		{ "set_eht_ulofdma", "get_eht_ulofdma" }, { "set_eht_ulmumimo", "get_eht_ulmumimo" },

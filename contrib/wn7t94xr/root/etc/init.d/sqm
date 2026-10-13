@@ -8,15 +8,23 @@ saved=/etc/luci-qsdk/sqm-ecm-enabled
 service_triggers() { procd_add_reload_trigger "sqm"; }
 
 sqm_configured() {
-	local active=0
+	local active=0 target="$1"
 	check_queue() {
-		local enabled
+		local enabled interface
+		config_get interface "$1" interface
+		[ -z "$target" ] || [ "$interface" = "$target" ] || return 0
 		config_get_bool enabled "$1" enabled 0
 		[ "$enabled" != 1 ] || active=1
 	}
 	config_load sqm || return 1
 	config_foreach check_queue queue
 	[ "$active" = 1 ]
+}
+
+sqm_running() {
+	local state
+	for state in /var/run/sqm/*.state; do [ ! -f "$state" ] || return 0; done
+	return 1
 }
 
 restore_acceleration() {
@@ -28,10 +36,16 @@ restore_acceleration() {
 	rm -f "$saved"
 }
 
-start_service() {
+start_service() (
+	exec 9>/var/run/qsdk-sqm.lock
+	busybox flock -x 9 || return 1
 	local previous temporary
-	sqm_configured || { restore_acceleration; return $?; }
+	if ! sqm_configured "$1"; then
+		sqm_configured || restore_acceleration
+		return $?
+	fi
 	if [ ! -x /usr/lib/sqm/run.sh ]; then
+		! sqm_running || return 1
 		restore_acceleration || return 1
 		logger -t sqm 'SQM runtime unavailable; restored native acceleration'
 		return 1
@@ -56,18 +70,24 @@ start_service() {
 		fi
 	fi
 	if ! /usr/lib/sqm/run.sh start "$@"; then
-		/usr/lib/sqm/run.sh stop "$@"
+		# Restore acceleration only after every software queue has stopped.
+		if sqm_running; then /usr/lib/sqm/run.sh stop && ! sqm_running || return 1; fi
 		if restore_acceleration; then logger -t sqm 'SQM failed; removed its queues and restored acceleration'
 		else logger -t sqm 'SQM failed and native acceleration could not be restored'; fi
 		return 1
 	fi
-}
+)
 
-stop_service() {
-	[ ! -x /usr/lib/sqm/run.sh ] || /usr/lib/sqm/run.sh stop "$@" || return 1
+stop_service() (
+	exec 9>/var/run/qsdk-sqm.lock
+	busybox flock -x 9 || return 1
+	[ -z "$1" ] || [ -f "/var/run/sqm/$1.state" ] || return 0
+	if sqm_running; then
+		[ -x /usr/lib/sqm/run.sh ] && /usr/lib/sqm/run.sh stop "$@" || return 1
+	fi
 	# During reload the enabled configuration still owns acceleration.
 	if ! sqm_configured || [ "${SQM_QSDK_RELEASE_ACCEL:-0}" = 1 ]; then restore_acceleration; fi
-}
+)
 
 reload_service() { stop "$@" && start "$@"; }
 boot() { start "$@"; }

@@ -1582,7 +1582,7 @@ return view.extend({
 
 				if (hwtype == 'qcawificfg80211') {
 					[ ['he_dl_ofdma', _('Downlink OFDMA')], ['he_ul_ofdma', _('Uplink OFDMA')],
-					  ['he_ul_mimo', _('Uplink MU-MIMO')], ['he_mubfer', _('HE MU beamforming')], ['he_subfer', _('HE SU beamforming')],
+					  ['he_ul_mimo', _('Uplink MU-MIMO')], ['vhtmubfer', _('VHT MU beamforming')], ['vhtsubfer', _('VHT SU beamforming')], ['he_mubfer', _('HE MU beamforming')], ['he_subfer', _('HE SU beamforming')],
 					  ['set_eht_ulofdma', _('EHT uplink OFDMA')],
 					  ['set_eht_mu_bfmr', _('EHT MU beamforming')], ['set_eht_su_bfmr', _('EHT SU beamforming')],
 					  ['twt_responder', _('TWT responder')] ].forEach(function(item) {
