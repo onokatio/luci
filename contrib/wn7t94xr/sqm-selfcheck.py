@@ -51,6 +51,12 @@ touch "$probe/fail-stop"
 ! start_service || exit 21
 [ "$(cat "$probe/enabled")" = 1 ] && [ ! -e "$probe/saved" ] && [ -d "$probe/module" ] || exit 22
 rm "$probe/fail-stop"
+start_service || exit 23
+chmod 644 "$probe/run.sh"
+! start_service || exit 24
+[ "$(cat "$probe/enabled")" = 1 ] && [ ! -e "$probe/saved" ] && [ -d "$probe/module" ] || exit 25
+chmod 755 "$probe/run.sh"
+rm -f "$probe/queue"
 echo 0 > "$probe/enabled"
 rmdir "$probe/module"
 start_service || exit 18

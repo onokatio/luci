@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.10.0-1'
+VERSION = '3.10.0-2'
 SUFFIX = '+qsdk3.10.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -169,7 +169,6 @@ driver = (NETIFD / 'examples/wireless/qcawificfg80211.sh').read_bytes()
 runtime_payload = {'etc/init.d/network': (network, 0o755),
                    'sbin/wifi': (wifi, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
-runtime_payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
 runtime_payload['etc/hotplug.d/iface/11-sqm'] = ((HERE / 'root/etc/hotplug.d/iface/11-sqm').read_bytes(), 0o755)
 runtime_payload['usr/lib/lua/luci/model/cbi/sqm.lua'] = ((LUCI / 'applications/luci-app-sqm/luasrc/model/cbi/sqm.lua').read_bytes(), 0o644)
 base = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
@@ -215,7 +214,7 @@ payload['etc/config/uhttpd'] = http['etc/config/uhttpd']
 payload['etc/init.d/luci-ram'] = ((HERE / 'root/etc/init.d/luci-ram').read_bytes(), 0o755)
 payload['etc/luci-qsdk/ram-packages'] = (manifest, 0o644)
 payload['sbin/luci-reload'] = ('/tmp/luci-ram/sbin/luci-reload', 0o755)
-payload['etc/init.d/sqm'] = ('/tmp/luci-ram/etc/init.d/sqm', 0o755)
+payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
 payload['etc/hotplug.d/iface/11-sqm'] = ('/tmp/luci-ram/etc/hotplug.d/iface/11-sqm', 0o755)
 payload['etc/config/sqm'] = (b"config queue 'uplink'\n\toption enabled '0'\n\toption interface 'eth0'\n\toption download '85000'\n\toption upload '10000'\n\toption qdisc 'cake'\n\toption script 'piece_of_cake.qos'\n\toption linklayer 'none'\n", 0o644)
 for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
@@ -313,6 +312,7 @@ if ! uci -q show ucitrack | grep -q '=sqm$'; then
  uci commit ucitrack
 fi
 /etc/init.d/luci-ram enable
+/etc/init.d/sqm enable
 sync
 echo 'Installed the all-RAM LuCI bootstrap. Reboot or run /etc/init.d/luci-ram start.'
 '''

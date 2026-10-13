@@ -69,7 +69,7 @@ owns_mount() {
 
 start() {
 	# Finish every download before changing the vendor service or filesystem view.
-	fetch || return 1
+	fetch || { /etc/init.d/sqm start; return 1; }
 	[ ! -L "$state" ] || return 1
 	for dir in $dirs; do
 		owns_mount "$dir" && continue
@@ -101,9 +101,9 @@ start() {
 		"$ram/etc/init.d/uhttpd" start || { stop; return 1; }
 		touch "$ram/.started"
 	fi
-	if [ -x "$ram/etc/init.d/sqm" ]; then
-		"$ram/etc/init.d/sqm" enable || return 1
-		"$ram/etc/init.d/sqm" start || logger -t luci-ram 'SQM did not start; inspect its configuration and log'
+	if [ -x /etc/init.d/sqm ]; then
+		/etc/init.d/sqm enable || return 1
+		/etc/init.d/sqm start || logger -t luci-ram 'SQM did not start; inspect its configuration and log'
 	fi
 }
 
@@ -113,8 +113,8 @@ stop() {
 	for file in $bindings; do [ "/$file" -ef "$ram/$file" ] && mounted=1; done
 	[ "$mounted" = 1 ] || return 0
 	rm -f "$ram/.started"
-	[ ! -x "$ram/etc/init.d/sqm" ] || SQM_QSDK_RELEASE_ACCEL=1 "$ram/etc/init.d/sqm" stop || return 1
-	[ ! -x "$ram/etc/init.d/sqm" ] || "$ram/etc/init.d/sqm" disable || return 1
+	[ ! -x /etc/init.d/sqm ] || SQM_QSDK_RELEASE_ACCEL=1 /etc/init.d/sqm stop || return 1
+	[ ! -x /etc/init.d/sqm ] || /etc/init.d/sqm disable || return 1
 	[ ! -x "$ram/etc/init.d/uhttpd" ] || "$ram/etc/init.d/uhttpd" stop
 	/etc/init.d/rpcd stop
 	# Keep routing active if a busy mount prevents restoring the vendor view.

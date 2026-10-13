@@ -30,8 +30,13 @@ restore_acceleration() {
 
 start_service() {
 	local previous temporary
-	sqm_configured || return 0
-	[ -x /usr/lib/sqm/run.sh ] && [ -f /lib/modules/5.4.213/sch_cake.ko ] &&
+	sqm_configured || { restore_acceleration; return $?; }
+	if [ ! -x /usr/lib/sqm/run.sh ]; then
+		restore_acceleration || return 1
+		logger -t sqm 'SQM runtime unavailable; restored native acceleration'
+		return 1
+	fi
+	[ -f /lib/modules/5.4.213/sch_cake.ko ] &&
 		[ -f /lib/modules/5.4.213/ifb.ko ] || return 1
 	previous="$(uci -q get ecm.global.enabled)"
 	case "$previous" in 0) ;; 1)
@@ -59,7 +64,7 @@ start_service() {
 }
 
 stop_service() {
-	/usr/lib/sqm/run.sh stop "$@" || return 1
+	[ ! -x /usr/lib/sqm/run.sh ] || /usr/lib/sqm/run.sh stop "$@" || return 1
 	# During reload the enabled configuration still owns acceleration.
 	if ! sqm_configured || [ "${SQM_QSDK_RELEASE_ACCEL:-0}" = 1 ]; then restore_acceleration; fi
 }

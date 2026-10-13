@@ -123,7 +123,7 @@ for file, data in libraries.items():
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
-assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua', 'usr/lib/lua/luci/view/header.htm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
+assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua', 'usr/lib/lua/luci/view/header.htm', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
 assert ('+qsdk' + main['Version']).encode() in records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/version.lua']
 header = records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/view/header.htm']
@@ -179,7 +179,7 @@ with tempfile.TemporaryDirectory() as directory:
     script = script.replace('"$ram/etc/init.d/uhttpd" start', 'service uhttpd start')
     script = script.replace('"$ram/etc/init.d/uhttpd" stop', 'service uhttpd stop')
     for action in ('enable', 'disable', 'start', 'stop'):
-        script = script.replace('"$ram/etc/init.d/sqm" ' + action, 'service sqm ' + action)
+        script = script.replace('/etc/init.d/sqm ' + action, 'service sqm ' + action)
     stub = f'''
 ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/rpcd usr/libexec/rpcd usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
@@ -219,10 +219,11 @@ umount() {{
 }}
 fail_curl=1
 if start; then exit 10; fi
-[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e '{root}/services' ] && [ ! -e "$state" ]
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
 fail_curl=late
 if start; then exit 11; fi
-[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e '{root}/services' ] && [ ! -e "$state" ]
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
+rm -f '{root}/services'
 fail_curl=0; bad_sha=1
 if start; then exit 12; fi
 [ ! -e "$ram" ] && [ ! -e "$state" ]
