@@ -23,6 +23,8 @@ int main(int argc, char **argv)
 	struct qsdk_telemetry result;
 	assert(qsdk_hostapd_request("", "", NULL, 1) == -1);
 	if (argc == 3) {
+		/* Reproduce RPCd's global libnl-tiny symbols before loading the native libnl-3 client. */
+		assert(dlopen("libnl-tiny.so", RTLD_NOW | RTLD_GLOBAL));
 		bool available = qsdk_telemetry_read(argv[1], argv[2], &result);
 		printf("{\"available\":%s,\"rx\":", available ? "true" : "false");
 		print_usage(&result.rx);
