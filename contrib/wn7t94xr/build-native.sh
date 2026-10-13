@@ -65,6 +65,10 @@ cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$l
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
 /tmp/qsdk-rate-selfcheck
+cc -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" \
+	"$luci/contrib/wn7t94xr/acceleration-selfcheck.c" "$host/lib/libblobmsg_json.a" \
+	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-acceleration-selfcheck
+/tmp/qsdk-acceleration-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
 	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o /tmp/qsdk-telemetry-selfcheck
 /tmp/qsdk-telemetry-selfcheck

@@ -58,6 +58,14 @@ EAP ClientはPEAP・TTLSの内部認証をwpa_supplicantの設定へ変換しま
 
 MLOはGeneral SetupのMulti-Link Operationでグループを作成・選択します。各ラジオを1リンクずつ、最大3リンク追加できます。全ラジオでBEモードを使い、Clientにはブリッジではないネットワークを割り当ててください。リンクを削除してグループが空になると、そのグループも削除します。MLO Clientの接続先にはMLOが有効なAPが必要です。
 
+## アクセラレーション
+
+Network → Accelerationで、純正ECMの有効・無効と加速エンジンを設定できます。WN-7T94XRではAuto、PPE、SFE、PPE＋SFEを選べます。搭載されていないNSSの選択肢は表示しません。設定は純正の`/etc/config/ecm`へ保存し、純正の`qca-nss-ecm restart`で反映します。適用時にECMを再読み込みするため、通信速度が一時的に低下する場合があります。適用に失敗した場合は元の設定へ戻して再読み込みを試みます。
+
+標準RPCdモジュールの`luci-rpc.getAccelerationStatus`で、IPv4/IPv6・エンジン別の加速接続数、TCP/UDPの内訳、処理待ち数、PPEの資源・フロー・失敗統計、Wi-Fi Direct Switchの送受信パケット数を取得します。画面は5秒間隔で更新し、取得できない値は「-」で表示します。64ビットの累積カウンターは文字列で返し、JavaScriptでの丸めを避けます。
+
+純正ドライバーと起動処理は変更しません。追加の常駐プロセスや起動スクリプトは不要です。標準OpenWrtのFlow Offloadingとは別の設定で、SQMや端末別QoSの追加には対応していません。
+
 ## IPK のビルド
 
 Linux amd64 と OpenWrt 19.07.10 の ipq40xx SDK を使います。SDK はユーザー空間のモジュールをビルドするために使い、カーネルやファームウェアは置き換えません。

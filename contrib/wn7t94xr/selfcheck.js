@@ -254,7 +254,7 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	frequency.qca = null;
 	frequency.write('wifi1', ['VHT80', '11a', '36']);
 	assert.equal(data.wifi1.hwmode, '11a');
-	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js'])
+	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'])
 		new Function(fs.readFileSync(path.join(root, file), 'utf8'));
 	assert(!wireless.includes('require tools.qca'));
 	assert(wireless.includes("if (hwtype != 'qcawificfg80211') o.value('fast', 'FAST');"));
