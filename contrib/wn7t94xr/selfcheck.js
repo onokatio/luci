@@ -94,6 +94,16 @@ assert.notEqual(fragment.validate('ap', '512'), true);
 assert.equal(fragment.validate('ap', ''), true);
 fragmentMode = '11g';
 assert.equal(fragment.validate('ap', '512'), true);
+assert.notEqual(fragment.validate('ap', '513'), true);
+
+const detailCode = wireless.slice(wireless.indexOf('function render_station_details'), wireless.indexOf('function radio_restart'));
+const detail = new Function('E', '_', 'format_wifirate', detailCode + '\nreturn render_station_details;')(
+	(tag, attrs, children) => ({ tag, attrs, children }), value => value, rate);
+const info = JSON.stringify(detail({ mac: '00:11:22:33:44:55', network: { getShortName: () => '<untrusted>', getIfname: () => 'ath1' }, rx: { he: true, packets: 0 }, tx: {}, authenticated: true }));
+assert(info.includes('The driver did not report MCS') && !info.includes('undefined'));
+assert(info.includes('Authenticated') && info.includes('Yes'));
+assert(info.includes('Authorized') && info.includes('"-"'));
+assert(info.includes('"0"') && info.includes('<untrusted>'));
 const cell = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const child = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const button = { blur() {}, classList: { add() {} } };

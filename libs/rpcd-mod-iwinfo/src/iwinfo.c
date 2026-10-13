@@ -29,6 +29,8 @@
 #endif
 
 #include <rpcd/plugin.h>
+#include <errno.h>
+#include "../../rpcd-mod-luci/src/qsdk-hostapd-control.h"
 
 
 static struct blob_buf buf;
@@ -419,6 +421,57 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_rate_entry *r)
 	}
 }
 
+/* QSDK omits STA_FLAGS in nl80211; native hostapd has the authentication state. */
+struct qsdk_station_info {
+	bool flags, authorized, authenticated, wme, mfp, preamble, tdls;
+	bool has_rx_bytes, has_tx_bytes;
+	uint64_t rx_bytes, tx_bytes;
+};
+
+static void
+rpc_iwinfo_qsdk_station_parse(char *reply, struct qsdk_station_info *station)
+{
+	char *line, *save, *value, *end;
+	uint64_t bytes;
+	for (line = strtok_r(reply, "\n", &save); line; line = strtok_r(NULL, "\n", &save)) {
+		if (!strncmp(line, "flags=", 6)) {
+			station->flags = true;
+			station->authorized = strstr(line + 6, "[AUTHORIZED]") != NULL;
+			station->authenticated = strstr(line + 6, "[AUTH]") != NULL;
+			station->wme = strstr(line + 6, "[WMM]") != NULL;
+			station->mfp = strstr(line + 6, "[MFP]") != NULL;
+			station->preamble = strstr(line + 6, "[SHORT_PREAMBLE]") != NULL;
+			station->tdls = strstr(line + 6, "[TDLS]") != NULL;
+		}
+		else if (!strncmp(line, "rx_bytes=", 9) || !strncmp(line, "tx_bytes=", 9)) {
+			value = line + 9;
+			if (!*value || strspn(value, "0123456789") != strlen(value)) continue;
+			errno = 0;
+			bytes = strtoull(value, &end, 10);
+			if (errno || *end) continue;
+			if (line[0] == 'r') { station->rx_bytes = bytes; station->has_rx_bytes = true; }
+			else { station->tx_bytes = bytes; station->has_tx_bytes = true; }
+		}
+	}
+}
+
+static void
+rpc_iwinfo_qsdk_station(const char *vif, const char *mac, struct qsdk_station_info *station)
+{
+	char path[108], command[32], reply[8192];
+	int radio;
+	memset(station, 0, sizeof(*station));
+	if (!qsdk_hostapd_ifname(vif) || !qsdk_hostapd_mac(mac)) return;
+	snprintf(command, sizeof(command), "STA %s", mac);
+	for (radio = 0; radio < 3; radio++) {
+		snprintf(path, sizeof(path), "/var/run/hostapd-wifi%d/%s", radio, vif);
+		if (access(path, F_OK)) continue;
+		if (qsdk_hostapd_request(path, command, reply, sizeof(reply)) > 0 && strncmp(reply, "FAIL", 4))
+			rpc_iwinfo_qsdk_station_parse(reply, station);
+		break;
+	}
+}
+
 static int
 rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
                      struct ubus_request_data *req, const char *method,
@@ -428,6 +481,10 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 	char mac[18];
 	char res[IWINFO_BUFSIZE];
 	struct iwinfo_assoclist_entry *a;
+	struct qsdk_station_info station;
+	bool qsdk;
+	uint16_t stats;
+	uint8_t flags;
 	struct ether_addr *macaddr = NULL;
 	void *c, *d, *e;
 	struct blob_attr *tb[__RPC_A_MAX];
@@ -463,19 +520,25 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 					 a->mac[0], a->mac[1], a->mac[2],
 					 a->mac[3], a->mac[4], a->mac[5]);
 
+			qsdk = !strcmp(iw->name, "qcawificfg80211");
+			memset(&station, 0, sizeof(station));
+			if (qsdk) rpc_iwinfo_qsdk_station(iwinfo_qcawificfg80211_ifname(ifname), mac, &station);
+			stats = qsdk ? a->stats_mask : UINT16_MAX;
+			flags = qsdk && !station.flags ? a->flags_mask : UINT8_MAX;
+
 			blobmsg_add_string(&buf, "mac", mac);
 			blobmsg_add_u32(&buf, "signal", a->signal);
-			blobmsg_add_u32(&buf, "signal_avg", a->signal_avg);
+			if (stats) blobmsg_add_u32(&buf, "signal_avg", a->signal_avg);
 			blobmsg_add_u32(&buf, "noise", a->noise);
-			blobmsg_add_u32(&buf, "inactive", a->inactive);
-			blobmsg_add_u32(&buf, "connected_time", a->connected_time);
-			blobmsg_add_u32(&buf, "thr", a->thr);
-			blobmsg_add_u8(&buf, "authorized", a->is_authorized);
-			blobmsg_add_u8(&buf, "authenticated", a->is_authenticated);
-			blobmsg_add_string(&buf, "preamble", a->is_preamble_short ? "short" : "long");
-			blobmsg_add_u8(&buf, "wme", a->is_wme);
-			blobmsg_add_u8(&buf, "mfp", a->is_mfp);
-			blobmsg_add_u8(&buf, "tdls", a->is_tdls);
+			if (stats & IWINFO_ASSOC_S_INACTIVE) blobmsg_add_u32(&buf, "inactive", a->inactive);
+			if (stats & IWINFO_ASSOC_S_CONNECTED_TIME) blobmsg_add_u32(&buf, "connected_time", a->connected_time);
+			if (stats & IWINFO_ASSOC_S_THR) blobmsg_add_u32(&buf, "thr", a->thr);
+			if (flags & IWINFO_ASSOC_F_AUTHORIZED) blobmsg_add_u8(&buf, "authorized", station.flags ? station.authorized : a->is_authorized);
+			if (flags & IWINFO_ASSOC_F_AUTHENTICATED) blobmsg_add_u8(&buf, "authenticated", station.flags ? station.authenticated : a->is_authenticated);
+			if (flags & IWINFO_ASSOC_F_PREAMBLE) blobmsg_add_string(&buf, "preamble", (station.flags ? station.preamble : a->is_preamble_short) ? "short" : "long");
+			if (flags & IWINFO_ASSOC_F_WME) blobmsg_add_u8(&buf, "wme", station.flags ? station.wme : a->is_wme);
+			if (flags & IWINFO_ASSOC_F_MFP) blobmsg_add_u8(&buf, "mfp", station.flags ? station.mfp : a->is_mfp);
+			if (flags & IWINFO_ASSOC_F_TDLS) blobmsg_add_u8(&buf, "tdls", station.flags ? station.tdls : a->is_tdls);
 
 			blobmsg_add_u16(&buf, "mesh llid", a->llid);
 			blobmsg_add_u16(&buf, "mesh plid", a->plid);
@@ -485,17 +548,17 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 			blobmsg_add_string(&buf, "mesh non-peer PS", a->nonpeer_ps);
 
 			e = blobmsg_open_table(&buf, "rx");
-			blobmsg_add_u64(&buf, "drop_misc", a->rx_drop_misc);
-			blobmsg_add_u32(&buf, "packets", a->rx_packets);
-			blobmsg_add_u32(&buf, "bytes", a->rx_bytes);
+			if (stats & IWINFO_ASSOC_S_RX_DROP_MISC) blobmsg_add_u64(&buf, "drop_misc", a->rx_drop_misc);
+			if (stats & IWINFO_ASSOC_S_RX_PACKETS) blobmsg_add_u32(&buf, "packets", a->rx_packets);
+			if ((stats & IWINFO_ASSOC_S_RX_BYTES) || station.has_rx_bytes) blobmsg_add_u64(&buf, "bytes", station.has_rx_bytes ? station.rx_bytes : a->rx_bytes);
 			rpc_iwinfo_add_rateinfo(&a->rx_rate);
 			blobmsg_close_table(&buf, e);
 
 			e = blobmsg_open_table(&buf, "tx");
-			blobmsg_add_u32(&buf, "failed", a->tx_failed);
-			blobmsg_add_u32(&buf, "retries", a->tx_retries);
-			blobmsg_add_u32(&buf, "packets", a->tx_packets);
-			blobmsg_add_u32(&buf, "bytes", a->tx_bytes);
+			if (stats & IWINFO_ASSOC_S_TX_FAILED) blobmsg_add_u32(&buf, "failed", a->tx_failed);
+			if (stats & IWINFO_ASSOC_S_TX_RETRIES) blobmsg_add_u32(&buf, "retries", a->tx_retries);
+			if (stats & IWINFO_ASSOC_S_TX_PACKETS) blobmsg_add_u32(&buf, "packets", a->tx_packets);
+			if ((stats & IWINFO_ASSOC_S_TX_BYTES) || station.has_tx_bytes) blobmsg_add_u64(&buf, "bytes", station.has_tx_bytes ? station.tx_bytes : a->tx_bytes);
 			rpc_iwinfo_add_rateinfo(&a->tx_rate);
 			blobmsg_close_table(&buf, e);
 

@@ -1,6 +1,10 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <string.h>
+#include "qsdk-hostapd-control.h"
 #include <libubox/blobmsg_json.h>
 #include <iwinfo.h>
 static struct blob_buf buf;
@@ -8,6 +12,19 @@ static struct blob_buf buf;
 
 int main(void)
 {
+	struct qsdk_station_info station;
+	char response[] = "flags=[AUTH][ASSOC][AUTHORIZED][WMM][MFP]\nrx_bytes=4294967297\ntx_bytes=18446744073709551615\n";
+	char invalid[] = "rx_bytes=-1\ntx_bytes=18446744073709551616\n";
+	memset(&station, 0, sizeof(station));
+	rpc_iwinfo_qsdk_station_parse(response, &station);
+	assert(station.flags && station.authorized && station.authenticated && station.wme && station.mfp);
+	assert(station.has_rx_bytes && station.rx_bytes == 4294967297ULL);
+	assert(station.has_tx_bytes && station.tx_bytes == UINT64_MAX);
+	memset(&station, 0, sizeof(station));
+	rpc_iwinfo_qsdk_station_parse(invalid, &station);
+	assert(!station.flags && !station.has_rx_bytes && !station.has_tx_bytes);
+	rpc_iwinfo_qsdk_station("ath1;id", "00:11:22:33:44:55", &station);
+	assert(!station.flags);
 	struct iwinfo_rate_entry rate = { .rate = 5764800, .mcs = -1, .is_eht = 1, .is_320mhz = 1, .nss = 2 };
 	struct blob_attr *tb[4];
 	const struct blobmsg_policy policy[] = {
