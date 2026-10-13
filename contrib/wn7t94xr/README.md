@@ -27,6 +27,9 @@ MLOを含む設定変更は、純正の制御処理でラジオ全体に適用�
 | WMM、DTIM、ビーコン、RTS、プリアンブル、GTK更新、端末の無通信時間 | 純正の設定生成を使い、不足する標準項目はhostapdの起動前に補います。フラグメント閾値はLegacyモードで使えます。 |
 | Distance Optimization | ラジオの距離を0〜21150mで指定し、純正APIでACKタイムアウトを調整します。空欄・0で元の値に戻します。 |
 | WPA2/SAE、OWE、EAP/RADIUS、PMF、802.11r、WPSの有効化 | 純正hostapd/wpa_supplicantの設定へ反映します。6 GHzとMLOではSAE、OWE、WPA3-EAPの強い暗号化を選びます。 |
+| OFDMA、MU-MIMO、Beamforming、Multicast・IGMP、接続台数上限 | 純正UCIとドライバーAPIへ反映し、稼働中の値を読み取れます。空欄は純正の設定を使います。Multicastは純正モード5と無効、IGMPは接続先ブリッジのSnoopingを使います。 |
+| 802.11k/v、WPS操作 | Neighbor Report・Beacon Report・BSS Transitionを設定し、純正hostapdへ測定要求・移動要求・WPS開始／中止を送ります。 |
+| ATF、TWT、BSS Color | ATFはラジオ単位で有効にし、SSID・端末ごとの配分を設定します。TWT ResponderはAPごと、BSS Colorはラジオごとに設定します。 |
 | Associated Stations、Disconnect | iwinfoと標準の `hostapd.<ifname>.del_client` APIを使います。一時拒否は期限後に解除します。 |
 
 純正ドライバーが公開しないAd-Hoc、802.11sは表示しません。802.11rの実際のローミング、RADIUSサーバーとの認証、WDSのブリッジ通信には、対応する別のAPや認証サーバーが必要です。設定の反映・サービスの起動確認と、これらの相互接続確認は区別します。
@@ -67,7 +70,23 @@ Network → Accelerationで、純正ECMの有効・無効と加速エンジン�
 
 標準RPCdモジュールの`luci-rpc.getAccelerationStatus`で、IPv4/IPv6・エンジン別の加速接続数、TCP/UDPの内訳、処理待ち数、PPEの資源・フロー・失敗統計、Wi-Fi Direct Switchの送受信パケット数を取得します。画面は5秒間隔で更新し、取得できない値は「-」で表示します。64ビットの累積カウンターは文字列で返し、JavaScriptでの丸めを避けます。
 
-純正ドライバーと起動処理は変更しません。追加の常駐プロセスや起動スクリプトは不要です。標準OpenWrtのFlow Offloadingとは別の設定で、SQMや端末別QoSの追加には対応していません。
+純正ドライバーとECMの起動処理は変更しません。標準OpenWrtのFlow Offloadingとは別の設定です。
+
+## ATF・802.11k/v・TWT・BSS Color
+
+WirelessのAdvanced Settingsに設定と操作を追加しています。ATFの有効・無効を切り替えると、純正モジュールを再読み込みするため全ラジオの接続が一時的に切れます。SSIDの配分はラジオごと、端末の配分はSSIDごとに合計100%以下にしてください。端末を削除したり配分を解除した場合は、設定を再生成します。実際の配分効果の比較には複数の端末が必要です。
+
+BSS Colorは0で無効、1〜63で固定、空欄で自動選択です。固定から自動へ戻すときは、全ラジオを再起動します。TWTはResponderの有効・無効を設定するもので、クライアントとのスケジュールを強制する操作はありません。
+
+Neighbor APは「BSSID Operating Class Channel PHY」の形式で入力します。保存・適用後、端末のMACアドレスを指定してBSS Transition RequestとBeacon Measurement Requestを送れます。移動要求では端末の切断を強制しません。標準の `hostapd.*.rrm_nr_list`、`rrm_beacon_req`、`bss_transition_request`、`wps_start/cancel/status` を使い、Neighborの追加・削除だけは `qsdk_rrm_nr_add/remove` 拡張です。標準hostapd API全体の互換実装ではありません。
+
+## SQM・帯域制御
+
+Network → SQM QoSは公式 `luci-app-sqm` と `sqm-scripts` を使います。CAKE・IFBは純正カーネルの既存モジュールを使います。SQMが有効な間はECMのPPE/SFE加速を止め、全キューを無効にしたときやLuCIを停止したときに、開始前の加速設定へ戻します。加速を元から無効にしていた場合は無効を保ちます。
+
+設定はoverlay、SQM本体と依存パッケージは起動時にRAMへ取得します。初期状態ではSQMを無効にしています。対象インターフェースと回線速度を設定して有効にしてください。ソフトウェア処理になるため、最大速度はCPU性能に制限されます。AP／ブリッジ構成では、実際の通信経路が指定したキューを通ることを確認してください。
+
+WPSの実際のペアリング、別APへの802.11k/vローミング、複数端末のATF配分比較は、対応機器がないため未検証です。
 
 ## IPK のビルド
 
@@ -87,13 +106,13 @@ python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-ca
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 ```
 
-準備・起動用の2個と、RAMに展開するQSDK対応6個の、計8個の自作IPKを生成します。変更のない11個のIPKは公式リポジトリから取得し、GitHubには再配布しません。QSDK対応は `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインに含みます。純正rpcd本体は使い続けます。RAM用パッケージはLuCIのバージョン情報も補い、更新後のJavaScriptをブラウザーが再取得できるようにします。
+準備・起動用の2個と、RAMに展開するQSDK対応6個の、計8個の自作IPKを生成します。変更のない14個のIPKは公式リポジトリから取得し、GitHubには再配布しません。QSDK対応は `luci-mod-network`、iwinfoのライブラリとLua/RPCモジュール、`rpcd-mod-luci`、netifdプラグインに含みます。純正rpcd本体は使い続けます。RAM用パッケージはLuCIのバージョン情報も補い、更新後のJavaScriptをブラウザーが再取得できるようにします。
 
 機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
 
 ## RAMとoverlayの配置
 
-`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の17個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の20個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
 
 | 内容 | 保存先 |
 | --- | --- |
@@ -122,8 +141,8 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.9.0-2
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.9.0-2_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.10.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.10.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -135,7 +154,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v3.9.0-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v3.10.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

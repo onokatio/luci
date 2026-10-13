@@ -132,8 +132,18 @@ static int qsdk_hostapd_del_client(struct ubus_context *ctx, struct ubus_object 
 	return UBUS_STATUS_OK;
 }
 
+#include "qsdk-hostapd-management.h"
+
 static const struct ubus_method qsdk_hostapd_methods[] = {
 	UBUS_METHOD("del_client", qsdk_hostapd_del_client, qsdk_hostapd_policy),
+	UBUS_METHOD_NOARG("wps_start", qsdk_hostapd_wps),
+	UBUS_METHOD_NOARG("wps_cancel", qsdk_hostapd_wps),
+	UBUS_METHOD_NOARG("wps_status", qsdk_hostapd_wps),
+	UBUS_METHOD("bss_transition_request", qsdk_hostapd_transition, qsdk_management_policy),
+	UBUS_METHOD("rrm_beacon_req", qsdk_hostapd_transition, qsdk_management_policy),
+	UBUS_METHOD_NOARG("rrm_nr_list", qsdk_hostapd_neighbor),
+	UBUS_METHOD("qsdk_rrm_nr_add", qsdk_hostapd_neighbor, qsdk_neighbor_policy),
+	UBUS_METHOD("qsdk_rrm_nr_remove", qsdk_hostapd_neighbor, qsdk_neighbor_policy),
 };
 static struct ubus_object_type qsdk_hostapd_type = UBUS_OBJECT_TYPE("qsdk-hostapd", qsdk_hostapd_methods);
 

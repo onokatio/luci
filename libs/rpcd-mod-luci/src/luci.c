@@ -56,6 +56,7 @@
 
 static struct blob_buf blob;
 #include "qsdk-acceleration.h"
+#include "qsdk-wireless.h"
 
 struct reply_context {
 	struct ubus_context *context;
@@ -2002,6 +2003,7 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		UBUS_METHOD_NOARG("getBoardJSON", rpc_luci_get_board_json),
 		UBUS_METHOD_NOARG("getDSLStatus", rpc_luci_get_dsl_status),
 		UBUS_METHOD_NOARG("getAccelerationStatus", rpc_luci_get_acceleration_status),
+		UBUS_METHOD("getWirelessSettings", rpc_luci_get_wireless_settings, qsdk_wireless_policy),
 		UBUS_METHOD("getDHCPLeases", rpc_luci_get_dhcp_leases, rpc_get_leases_policy)
 	};
 

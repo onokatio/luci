@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.9.0-2'
-SUFFIX = '+qsdk3.9.0'
+VERSION = '3.10.0-1'
+SUFFIX = '+qsdk3.10.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -102,6 +102,7 @@ mapping = {
         'www/luci-static/resources/view/network/acceleration.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js',
         'usr/lib/lua/luci/controller/admin/network.lua': 'modules/luci-mod-network/luasrc/controller/admin/network.lua',
         'usr/share/rpcd/acl.d/luci-qsdk-acceleration.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-acceleration.json',
+        'usr/share/rpcd/acl.d/luci-qsdk-wireless.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-wireless.json',
     },
 }
 for package in LOCK['base_packages']:
@@ -168,6 +169,9 @@ driver = (NETIFD / 'examples/wireless/qcawificfg80211.sh').read_bytes()
 runtime_payload = {'etc/init.d/network': (network, 0o755),
                    'sbin/wifi': (wifi, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
+runtime_payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
+runtime_payload['etc/hotplug.d/iface/11-sqm'] = ((HERE / 'root/etc/hotplug.d/iface/11-sqm').read_bytes(), 0o755)
+runtime_payload['usr/lib/lua/luci/model/cbi/sqm.lua'] = ((LUCI / 'applications/luci-app-sqm/luasrc/model/cbi/sqm.lua').read_bytes(), 0o644)
 base = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
 base_ipk = read_archive((CACHE / base['filename']).read_bytes())
 base_payload = read_archive(base_ipk['data.tar.gz'][0])
@@ -184,6 +188,7 @@ runtime_control = f'''Package: luci-qsdk-wn7t94xr-runtime
 Version: {VERSION}
 Architecture: {ARCH}
 Depends: libc, netifd, ubus, jshn
+Provides: kmod-sched-cake
 Section: luci
 License: GPL-2.0-only
 Description: RAM-loaded QSDK network integration for WN-7T94XR
@@ -210,6 +215,9 @@ payload['etc/config/uhttpd'] = http['etc/config/uhttpd']
 payload['etc/init.d/luci-ram'] = ((HERE / 'root/etc/init.d/luci-ram').read_bytes(), 0o755)
 payload['etc/luci-qsdk/ram-packages'] = (manifest, 0o644)
 payload['sbin/luci-reload'] = ('/tmp/luci-ram/sbin/luci-reload', 0o755)
+payload['etc/init.d/sqm'] = ('/tmp/luci-ram/etc/init.d/sqm', 0o755)
+payload['etc/hotplug.d/iface/11-sqm'] = ('/tmp/luci-ram/etc/hotplug.d/iface/11-sqm', 0o755)
+payload['etc/config/sqm'] = (b"config queue 'uplink'\n\toption enabled '0'\n\toption interface 'eth0'\n\toption download '85000'\n\toption upload '10000'\n\toption qdisc 'cake'\n\toption script 'piece_of_cake.qos'\n\toption linklayer 'none'\n", 0o644)
 for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
     payload[name] = ('/tmp/luci-ram/' + name, 0o755)
 
@@ -299,6 +307,11 @@ uci add_list uhttpd.main.listen_http=0.0.0.0:8080
 uci set uhttpd.main.ubus_prefix=/ubus/
 uci set uhttpd.main.redirect_https=0
 uci commit uhttpd
+if ! uci -q show ucitrack | grep -q '=sqm$'; then
+ section="$(uci add ucitrack sqm)"
+ uci set "ucitrack.$section.init=sqm"
+ uci commit ucitrack
+fi
 /etc/init.d/luci-ram enable
 sync
 echo 'Installed the all-RAM LuCI bootstrap. Reboot or run /etc/init.d/luci-ram start.'
@@ -321,7 +334,7 @@ Description: Boot-time downloads of the complete QSDK LuCI runtime into RAM
  Keeps only the bootstrap and configuration on flash. Retains vendor drivers.
 '''
 hooks = {'control': (control.encode(), 0o644),
-         'conffiles': (b'/etc/config/luci\n/etc/config/ucitrack\n/etc/config/uhttpd\n', 0o644)}
+         'conffiles': (b'/etc/config/luci\n/etc/config/ucitrack\n/etc/config/uhttpd\n/etc/config/sqm\n', 0o644)}
 hooks.update({name: (data.encode(), 0o755) for name, data in [
     ('preinst', preinst), ('postinst', postinst), ('prerm', prerm)]})
 write_package('luci-qsdk-wn7t94xr', VERSION, payload, hooks)

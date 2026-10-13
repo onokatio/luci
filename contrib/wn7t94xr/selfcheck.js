@@ -22,6 +22,12 @@ const uci = {
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
 const helpers = wireless.slice(wireless.indexOf('var qca_shared'), wireless.indexOf('function count_changes'));
+const neighborReport = new Function('uci', helpers + '\nreturn qca_neighbor_report;')(uci);
+assert.equal(neighborReport('02:11:22:33:44:66 115 36 9'), '02112233446600000000732409');
+assert.equal(neighborReport('02:11:22:33:44:66 115 036 9'), '02112233446600000000732409');
+for (const bad of ['01:11:22:33:44:66 115 36 9', '00:00:00:00:00:00 115 36 9',
+	'02:11:22:33:44:66 256 36 9', '02:11:22:33:44:66 115 234 9',
+	'02:11:22:33:44:66 115 36 17', '02:11:22:33:44:66 115 36 9 x']) assert.equal(neighborReport(bad), null);
 const modalStatusCode = wireless.slice(wireless.indexOf('function render_modal_status'), wireless.indexOf('function format_wifirate'));
 const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_modal_status;')((tag, text) => ({ tag, text }), v => v);
 assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
@@ -287,7 +293,9 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 			}
 		}; } };
 		const mockFs = { exec: async () => ({ code: ++restarts == 1 && ['restart', 'rollback'].includes(failure) ? 1 : 0 }) };
-		const apply = new Function('rpc', 'fs', '_', acceleration.slice(acceleration.indexOf('var status'), acceleration.indexOf('function number')) + 'return applySettings;')(mockRpc, mockFs, s => s);
+		const mockUci = { sections: () => failure == 'sqm' ? [{ enabled: '1' }] : [] };
+		const apply = new Function('rpc', 'fs', 'uci', '_', acceleration.slice(acceleration.indexOf('var status'), acceleration.indexOf('function number')) + 'return applySettings;')(mockRpc, mockFs, mockUci, s => s);
+		if (failure == 'sqm') { await assert.rejects(apply(wanted, original), /Disable SQM/); assert.equal(sets, 0); assert.equal(restarts, 0); return; }
 		if (!failure) { await apply(wanted, original); assert.deepEqual(stored, wanted); assert.equal(restarts, 1); }
 		else {
 			await assert.rejects(apply(wanted, original), e => failure == 'rollback' ? !e.restored && e.message.includes('could not be restored') : e.restored === true);
@@ -295,7 +303,7 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 			assert.equal(restarts, failure == 'set' ? 0 : failure == 'rollback' ? 1 : 2);
 		}
 	}
-	for (const failure of ['', 'set', 'restart', 'mismatch', 'rollback']) await checkApply(failure);
+	for (const failure of ['', 'set', 'restart', 'mismatch', 'rollback', 'sqm']) await checkApply(failure);
 	assert(wireless.includes("if (hwtype != 'qcawificfg80211') o.value('fast', 'FAST');"));
 	console.log('Core Wireless selfcheck passed: AP lifecycle, standard iwinfo frequency routing, failed-save cancellation, MLO, validation and JS syntax');
 })().catch(e => { console.error(e); process.exitCode = 1; });

@@ -93,64 +93,12 @@ static void qsdk_telemetry_parse(char *text, const char *vif, const char *mac, b
 	}
 }
 
-static int64_t qsdk_telemetry_millis(void)
-{
-	struct timespec now;
-	clock_gettime(CLOCK_MONOTONIC, &now);
-	return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
-}
+#include "../../rpcd-mod-luci/src/qsdk-exec.h"
 
 static bool qsdk_telemetry_capture(const char *program, const char *level, const char *mac, char *text, size_t size)
 {
-	int pipefd[2], status = 0;
-	pid_t child, waited;
-	size_t length = 0;
-	bool complete = false;
-	if (pipe(pipefd)) return false;
-	fcntl(pipefd[0], F_SETFD, FD_CLOEXEC);
-	fcntl(pipefd[1], F_SETFD, FD_CLOEXEC);
-	child = fork();
-	if (!child) {
-		close(pipefd[0]);
-		if (dup2(pipefd[1], STDOUT_FILENO) < 0) _exit(127);
-		fcntl(STDOUT_FILENO, F_SETFD, 0);
-		if (pipefd[1] != STDOUT_FILENO) close(pipefd[1]);
-		int nullfd = open("/dev/null", O_WRONLY);
-		if (nullfd >= 0) dup2(nullfd, STDERR_FILENO);
-		if (nullfd > STDERR_FILENO) close(nullfd);
-		execl(program, program, level, "-s", "-m", mac, "-f", "TX,RX", (char *)NULL);
-		_exit(127);
-	}
-	close(pipefd[1]);
-	if (child < 0) { close(pipefd[0]); return false; }
-	int64_t deadline = qsdk_telemetry_millis() + 1500;
-	while (length + 1 < size) {
-		struct pollfd input = { .fd = pipefd[0], .events = POLLIN };
-		int remaining = deadline - qsdk_telemetry_millis();
-		if (remaining <= 0) break;
-		int ready = poll(&input, 1, remaining);
-		if (ready < 0 && errno == EINTR) continue;
-		if (ready <= 0) break;
-		ssize_t bytes = read(pipefd[0], text + length, size - length - 1);
-		if (!bytes) { complete = true; break; }
-		if (bytes < 0) { if (errno == EINTR) continue; break; }
-		length += bytes;
-	}
-	close(pipefd[0]);
-	text[length] = 0;
-	do {
-		waited = waitpid(child, &status, WNOHANG);
-		if (waited == child || (waited < 0 && errno != EINTR)) break;
-		if (qsdk_telemetry_millis() >= deadline) break;
-		struct timespec delay = { .tv_nsec = 1000000 };
-		nanosleep(&delay, NULL);
-	} while (true);
-	if (waited != child) {
-		kill(child, SIGKILL);
-		while (waitpid(child, &status, 0) < 0 && errno == EINTR) { }
-		return false;
-	}
-	return complete && WIFEXITED(status) && !WEXITSTATUS(status);
+	const char *argv[] = { program, level, "-s", "-m", mac, "-f", "TX,RX", NULL };
+	return qsdk_exec_capture(argv, text, size, 1500, false);
 }
 
 static bool qsdk_telemetry_read(const char *vif, const char *mac, struct qsdk_telemetry *result)

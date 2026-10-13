@@ -1,0 +1,68 @@
+#!/bin/sh /etc/rc.common
+# GPL-2.0-only; SQM 1.4.0 service with native QSDK acceleration coordination.
+
+START=96
+USE_PROCD=1
+saved=/etc/luci-qsdk/sqm-ecm-enabled
+
+service_triggers() { procd_add_reload_trigger "sqm"; }
+
+sqm_configured() {
+	local active=0
+	check_queue() {
+		local enabled
+		config_get_bool enabled "$1" enabled 0
+		[ "$enabled" != 1 ] || active=1
+	}
+	config_load sqm || return 1
+	config_foreach check_queue queue
+	[ "$active" = 1 ]
+}
+
+restore_acceleration() {
+	[ -f "$saved" ] || return 0
+	[ ! -L "$saved" ] && [ "$(cat "$saved")" = 1 ] || return 1
+	uci -q set ecm.global.enabled=1 && uci -q commit ecm || return 1
+	/etc/init.d/qca-nss-ecm restart || return 1
+	[ -d /sys/module/ecm ] || return 1
+	rm -f "$saved"
+}
+
+start_service() {
+	local previous temporary
+	sqm_configured || return 0
+	[ -x /usr/lib/sqm/run.sh ] && [ -f /lib/modules/5.4.213/sch_cake.ko ] &&
+		[ -f /lib/modules/5.4.213/ifb.ko ] || return 1
+	previous="$(uci -q get ecm.global.enabled)"
+	case "$previous" in 0) ;; 1)
+		if [ ! -e "$saved" ]; then
+			umask 077
+			temporary="$(mktemp "$saved.XXXXXX")" || return 1
+			printf '1\n' > "$temporary" && mv "$temporary" "$saved" || { rm -f "$temporary"; return 1; }
+		fi
+		uci -q set ecm.global.enabled=0 && uci -q commit ecm || return 1;;
+		*) logger -t sqm 'Unknown native ECM configuration; not starting SQM'; return 1;;
+	esac
+	# Hardware and shortcut paths must not bypass the Linux qdiscs.
+	if [ -d /sys/module/ecm ]; then
+		if ! /etc/init.d/qca-nss-ecm stop || [ -d /sys/module/ecm ]; then
+			restore_acceleration || logger -t sqm 'Native acceleration could not be restored'
+			return 1
+		fi
+	fi
+	if ! /usr/lib/sqm/run.sh start "$@"; then
+		/usr/lib/sqm/run.sh stop "$@"
+		if restore_acceleration; then logger -t sqm 'SQM failed; removed its queues and restored acceleration'
+		else logger -t sqm 'SQM failed and native acceleration could not be restored'; fi
+		return 1
+	fi
+}
+
+stop_service() {
+	/usr/lib/sqm/run.sh stop "$@" || return 1
+	# During reload the enabled configuration still owns acceleration.
+	if ! sqm_configured || [ "${SQM_QSDK_RELEASE_ACCEL:-0}" = 1 ]; then restore_acceleration; fi
+}
+
+reload_service() { stop "$@" && start "$@"; }
+boot() { start "$@"; }

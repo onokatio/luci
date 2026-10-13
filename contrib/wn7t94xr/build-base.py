@@ -14,7 +14,7 @@ cache.mkdir(parents=True, exist_ok=True)
 packages = lock['base_packages']
 available = {p['name'] for p in packages} | set(lock['rom_packages']) | {
     'libc', 'libpthread', 'opkg', 'libiwinfo20181126', 'libiwinfo-lua',
-    'rpcd-mod-iwinfo', 'rpcd-mod-luci'}
+    'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'kmod-sched-cake'}
 for package in packages:
     assert all(d.split(' ')[0] in available for d in package['depends'].split(', ') if d)
 
