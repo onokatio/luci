@@ -61,7 +61,13 @@ PY
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luci/src" \
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
 /tmp/qsdk-hostapd-selfcheck
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
 /tmp/qsdk-rate-selfcheck
+cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
+	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o /tmp/qsdk-telemetry-selfcheck
+/tmp/qsdk-telemetry-selfcheck
+"$cc" -D_GNU_SOURCE -Os -std=gnu99 -Wall -Werror -mfloat-abi=hard \
+	-I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
+	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o "$output/telemetry-selfcheck"

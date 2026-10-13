@@ -31,6 +31,7 @@
 #include <rpcd/plugin.h>
 #include <errno.h>
 #include "../../rpcd-mod-luci/src/qsdk-hostapd-control.h"
+#include "qsdk-telemetry.h"
 
 
 static struct blob_buf buf;
@@ -49,12 +50,14 @@ static const struct blobmsg_policy rpc_device_policy[__RPC_D_MAX] = {
 enum {
 	RPC_A_DEVICE,
 	RPC_A_MACADDR,
+	RPC_A_STATISTICS,
 	__RPC_A_MAX,
 };
 
 static const struct blobmsg_policy rpc_assoclist_policy[__RPC_A_MAX] = {
 	[RPC_A_DEVICE] = { .name = "device", .type = BLOBMSG_TYPE_STRING },
 	[RPC_A_MACADDR] = { .name = "mac", .type = BLOBMSG_TYPE_STRING },
+	[RPC_A_STATISTICS] = { .name = "statistics", .type = BLOBMSG_TYPE_BOOL },
 };
 
 enum {
@@ -472,6 +475,30 @@ rpc_iwinfo_qsdk_station(const char *vif, const char *mac, struct qsdk_station_in
 	}
 }
 
+static void
+rpc_iwinfo_add_usage(const struct qsdk_usage *usage)
+{
+	static const char *modes[] = { "ht", "vht", "he", "eht" };
+	void *table, *array;
+	int mode, index;
+	if (usage->has_mcs) {
+		table = blobmsg_open_table(&buf, "mcs_usage");
+		for (mode = 0; mode < 4; mode++) {
+			array = blobmsg_open_array(&buf, modes[mode]);
+			for (index = 0; index < QSDK_MCS_COUNT; index++)
+				if (usage->modes[mode].present & (1U << index)) blobmsg_add_u32(&buf, NULL, usage->modes[mode].mcs[index]);
+				else blobmsg_add_field(&buf, BLOBMSG_TYPE_UNSPEC, NULL, NULL, 0);
+			blobmsg_close_array(&buf, array);
+		}
+		blobmsg_close_table(&buf, table);
+	}
+	if (usage->has_gi) {
+		array = blobmsg_open_array(&buf, "gi_usage");
+		for (index = 0; index < QSDK_GI_COUNT; index++) blobmsg_add_u32(&buf, NULL, usage->gi[index]);
+		blobmsg_close_array(&buf, array);
+	}
+}
+
 static int
 rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
                      struct ubus_request_data *req, const char *method,
@@ -482,7 +509,9 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 	char res[IWINFO_BUFSIZE];
 	struct iwinfo_assoclist_entry *a;
 	struct qsdk_station_info station;
+	struct qsdk_telemetry telemetry;
 	bool qsdk;
+	bool want_statistics;
 	uint16_t stats;
 	uint8_t flags;
 	struct ether_addr *macaddr = NULL;
@@ -492,6 +521,9 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 
 	blobmsg_parse(rpc_assoclist_policy, __RPC_A_MAX, tb,
 	              blob_data(msg), blob_len(msg));
+	want_statistics = tb[RPC_A_STATISTICS] && blobmsg_get_bool(tb[RPC_A_STATISTICS]);
+	if (want_statistics && (!tb[RPC_A_MACADDR] || !qsdk_hostapd_mac(blobmsg_get_string(tb[RPC_A_MACADDR]))))
+		return UBUS_STATUS_INVALID_ARGUMENT;
 
 	rv = __rpc_iwinfo_open(tb[RPC_A_DEVICE]);
 	if (rv)
@@ -523,10 +555,17 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 			qsdk = !strcmp(iw->name, "qcawificfg80211");
 			memset(&station, 0, sizeof(station));
 			if (qsdk) rpc_iwinfo_qsdk_station(iwinfo_qcawificfg80211_ifname(ifname), mac, &station);
+			memset(&telemetry, 0, sizeof(telemetry));
+			if (want_statistics && qsdk) qsdk_telemetry_read(iwinfo_qcawificfg80211_ifname(ifname), mac, &telemetry);
 			stats = qsdk ? a->stats_mask : UINT16_MAX;
 			flags = qsdk && !station.flags ? a->flags_mask : UINT8_MAX;
 
 			blobmsg_add_string(&buf, "mac", mac);
+			if (want_statistics) {
+				e = blobmsg_open_table(&buf, "telemetry");
+				blobmsg_add_u8(&buf, "available", telemetry.rx.has_mcs || telemetry.rx.has_gi || telemetry.tx.has_mcs || telemetry.tx.has_gi);
+				blobmsg_close_table(&buf, e);
+			}
 			blobmsg_add_u32(&buf, "signal", a->signal);
 			if (stats) blobmsg_add_u32(&buf, "signal_avg", a->signal_avg);
 			blobmsg_add_u32(&buf, "noise", a->noise);
@@ -552,6 +591,7 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 			if (stats & IWINFO_ASSOC_S_RX_PACKETS) blobmsg_add_u32(&buf, "packets", a->rx_packets);
 			if ((stats & IWINFO_ASSOC_S_RX_BYTES) || station.has_rx_bytes) blobmsg_add_u64(&buf, "bytes", station.has_rx_bytes ? station.rx_bytes : a->rx_bytes);
 			rpc_iwinfo_add_rateinfo(&a->rx_rate);
+			if (want_statistics) rpc_iwinfo_add_usage(&telemetry.rx);
 			blobmsg_close_table(&buf, e);
 
 			e = blobmsg_open_table(&buf, "tx");
@@ -560,6 +600,7 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 			if (stats & IWINFO_ASSOC_S_TX_PACKETS) blobmsg_add_u32(&buf, "packets", a->tx_packets);
 			if ((stats & IWINFO_ASSOC_S_TX_BYTES) || station.has_tx_bytes) blobmsg_add_u64(&buf, "bytes", station.has_tx_bytes ? station.tx_bytes : a->tx_bytes);
 			rpc_iwinfo_add_rateinfo(&a->tx_rate);
+			if (want_statistics) rpc_iwinfo_add_usage(&telemetry.tx);
 			blobmsg_close_table(&buf, e);
 
 			found = true;
