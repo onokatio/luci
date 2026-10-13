@@ -371,7 +371,7 @@ function render_station_details(bss) {
 		[_('Connected time'), bss.connected_time == null ? '-' : '%t'.format(bss.connected_time)],
 		[_('Inactive'), bss.inactive == null ? '-' : '%.3f s'.format(bss.inactive / 1000)],
 		[_('Signal / Noise'), '%s / %s dBm'.format(count(bss.signal), bss.noise || '-')],
-		[_('Average signal'), bss.signal_avg ? '%d dBm'.format(bss.signal_avg) : '-'],
+		[_('Average signal'), bss.signal_avg == null ? '-' : '%d dBm'.format(bss.signal_avg)],
 		[_('Authenticated'), yesno(bss.authenticated)],
 		[_('Authorized'), yesno(bss.authorized)],
 		[_('WMM'), yesno(bss.wme)],

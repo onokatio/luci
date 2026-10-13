@@ -1,7 +1,7 @@
 {
   "forks": {
     "netifd": "bdce2ceabf0ca47b13bb1158dd4845ca75b46f85",
-    "iwinfo": "f5bbe41085761537d157efd02721203a482618de"
+    "iwinfo": "04aa42fadd438d32d97282d54d32bad693b7b65c"
   },
   "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
   "base_packages": [
