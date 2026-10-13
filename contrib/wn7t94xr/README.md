@@ -40,11 +40,15 @@ Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を�
 
 筐体のLAN1・LAN2・LAN3が、それぞれSSDKのポート1・2・3に対応することを、実機のケーブル差し替えとリンク状態で確認しました。画面にもLAN1〜LAN3を表示します。リンク状態とVLAN機能の取得には、既存の標準RPCと純正 `swconfig` を使います。この追加処理はVLANの有効化や設定変更を行いません。VLANを編集する際は、CPUポートとLANインターフェースの対応を確認してください。VLAN機能を無効にする場合は、設定項目を削除せず `enable_vlan=0` を保存します。QSDKでは項目がないと有効な状態が残るため、標準フォームの保存処理を修正しました。
 
+## フラグメント閾値と接続詳細
+
 フラグメント閾値はLegacyモードのAPごとに反映し、同じラジオ内の別APへ上書きしません。256〜2346バイトの偶数を指定でき、空欄へ戻すと解除します。純正ドライバーはN・AC・AX・BEモードで従来のフラグメント閾値を反映しないため、そのモードでは入力値を保存できません。HEのフラグメント能力とは別の設定です。
 
 Associated StationsのDetailsでは、接続時間、無通信時間、信号、RX/TXの速度・帯域幅・HE/EHT・MCS/NSS、通信量、パケット数、再送・失敗・破棄、認証・WMM・PMFの状態を表示します。RXは端末からルーターへの通信です。統計は純正ドライバーの報告値を使い、詳細画面も5秒間隔で更新します。切断された場合は、その状態を表示します。
 
 QSDKが標準APIへ返さない認証状態と64ビットの通信量は、純正hostapdの制御ソケットから補います。MCSは標準のHE/EHT属性がある場合だけ表示し、速度から推定しません。ドライバーが報告しない項目は未取得として表示します。
+
+QSDKランタイムのバージョンごとにJavaScriptのキャッシュキーを更新するため、更新後は通常の再読み込みで新しい画面を取得できます。
 
 EAP ClientはPEAP・TTLSの内部認証をwpa_supplicantの設定へ変換します。TTLSのEAP方式には `autheap=`、PEAPには `auth=` を使います。純正wpa_supplicantにFASTは組み込まれていないため、WN-7T94XRでは選択肢から外しています。
 
@@ -103,8 +107,8 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v3.5.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.5.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v3.6.0-2
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_3.6.0-2_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -116,7 +120,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v3.5.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v3.6.0-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
