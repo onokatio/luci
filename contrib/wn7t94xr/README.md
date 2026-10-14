@@ -94,7 +94,7 @@ Network → Wireless diagnosticsで、純正ドライバーのChannel Survey、�
 
 WirelessのAdvanced Settingsで、WMMのCWmin/CWmax・AIFS・TXOP・ACM・NoAckと、SSID別のDSCP→TIDを設定できます。WMMはAP内部キューと広告するBSSの設定を区別します。CW値は指数、TXOPは32µs単位です。DSCPは0〜63、TIDは0〜7で指定します。純正APIへ渡す際にDSCPをTraffic Classへ変換し、実際の値を読み戻します。
 
-ATFはStrict scheduling、SSIDグループ、グループのFair／Strict／Fair without borrowing、AC別配分に対応します。グループには最低1つのAPを割り当ててください。共有グループのAC設定は、メンバーAPのうち1つにだけ登録します。グループと個別SSIDの配分はラジオ内で合計100%以下、ACと端末の配分はそれぞれのSSIDまたはグループ内で合計100%以下です。入力の矛盾は反映前に拒否します。設定を解除した場合もドライバーの古いテーブルを残さないよう、全ラジオを再初期化します。
+ATFはStrict scheduling、SSIDグループ、グループのFair／Strict／Fair without borrowing、AC別配分に対応します。Strict schedulingを指定した場合は、純正APIでグループ間の方針もStrictへ揃えます。グループには最低1つのAPを割り当ててください。共有グループのAC設定は、メンバーAPのうち1つにだけ登録します。グループと個別SSIDの配分はラジオ内で合計100%以下、ACと端末の配分はそれぞれのSSIDまたはグループ内で合計100%以下です。入力の矛盾は反映前に拒否します。設定を解除した場合もドライバーの古いテーブルを残さないよう、全ラジオを再初期化します。
 
 純正hostapdの情報から標準の `get_clients`、`get_status`、`get_features` を返します。DAWN／usteerが使う通知や応答制御のAPI全体には対応していません。
 

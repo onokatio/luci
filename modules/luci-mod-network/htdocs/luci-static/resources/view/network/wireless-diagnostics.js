@@ -33,6 +33,7 @@ function diagnosticTables(data, previous) {
 		[ _('Automatic DFS puncturing'), data.dfs_puncture==null?'-':data.dfs_puncture ],
 		[ _('Strict puncturing validation'), data.puncture_strict==null?'-':data.puncture_strict ],
 		[ _('Strict airtime scheduling'), data.atf_strict==null?'-':data.atf_strict ],
+		[ _('Strict scheduling between airtime groups'), data.atf_group_strict==null?'-':data.atf_group_strict ],
 		[ _('Puncture bitmap'), data.puncture_bitmap == null ? '-' : '0x' + Number(data.puncture_bitmap).toString(16) ]
 	]);
 	survey.appendChild(E('tr', { 'class': 'tr table-titles' }, [ _('Channel'), _('Frequency'), _('Busy'), _('Sample') ].map(function(t) { return E('th', { 'class': 'th' }, t); })));

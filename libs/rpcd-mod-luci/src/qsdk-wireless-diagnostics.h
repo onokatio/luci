@@ -31,7 +31,7 @@ static int rpc_luci_get_wireless_diagnostics(struct ubus_context *ctx, struct ub
 	for (i = 0; i < ARRAY_SIZE(getters); i++)
 		if (qsdk_wireless_get(device, getters[i][1], &value)) blobmsg_add_double(&result, getters[i][0], (double)value);
 	if(qsdk_hostapd_parent(device,parent)) {
-		const char *radio_getters[][2]={{"dfs_puncture","g_dfs_puncture_en"},{"puncture_strict","g_puncture_strict"},{"atf_strict","gatfstrictsched"}};
+		const char *radio_getters[][2]={{"dfs_puncture","g_dfs_puncture_en"},{"puncture_strict","g_puncture_strict"},{"atf_strict","gatfstrictsched"},{"atf_group_strict","gatfgrouppolicy"}};
 		for(i=0;i<ARRAY_SIZE(radio_getters);i++)
 			if(qsdk_wireless_get(parent,radio_getters[i][1],&value)) blobmsg_add_double(&result,radio_getters[i][0],(double)value);
 	}

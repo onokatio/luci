@@ -1270,7 +1270,7 @@ return view.extend({
 						o.write=function(id,value){uci.set('wireless',id,'puncture_bitmap',String(Number(value)));};
 						o.remove=function(id){uci.unset('wireless',id,'puncture_bitmap');};
 						[['dfs_puncture_en',_('Automatic DFS puncturing')],['puncture_strict',_('Strict puncturing validation')]].forEach(function(item){o=ss.taboption('advanced',form.Flag,item[0],item[1]);o.optional=true;});
-						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Requires ATF.'));
+						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Also enables strict scheduling between configured SSID groups. Requires ATF.'));
 						o.optional = true;
 						o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_groups', _('ATF SSID groups'), _('One group per entry: name, percentage (1–100), policy (0: fair, 1: strict, 2: fair without borrowing). Assign APs to the group below. Group percentages must total at most 100.'));
 						o.optional = true;
