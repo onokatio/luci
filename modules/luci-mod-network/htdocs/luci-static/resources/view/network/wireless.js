@@ -1270,8 +1270,12 @@ return view.extend({
 						o.write=function(id,value){uci.set('wireless',id,'puncture_bitmap',String(Number(value)));};
 						o.remove=function(id){uci.unset('wireless',id,'puncture_bitmap');};
 						[['dfs_puncture_en',_('Automatic DFS puncturing')],['puncture_strict',_('Strict puncturing validation')]].forEach(function(item){o=ss.taboption('advanced',form.Flag,item[0],item[1]);o.optional=true;});
-						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Also enables strict scheduling between configured SSID groups. Requires ATF.'));
+						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Requires ATF. This firmware cannot combine strict radio scheduling with SSID groups; use each group\'s scheduling policy instead.'));
 						o.optional = true;
+						o.validate = function(id, value) {
+							var option = this.map.lookupOption('qsdk_atf_groups', id), groups = option ? option[0].formvalue(id) : [];
+							return value != '1' || !(Array.isArray(groups) ? groups.some(function(g) { return !!g; }) : groups) ? true : _('Disable strict radio scheduling before using SSID groups.');
+						};
 						o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_groups', _('ATF SSID groups'), _('One group per entry: name, percentage (1–100), policy (0: fair, 1: strict, 2: fair without borrowing). Assign APs to the group below. Group percentages must total at most 100.'));
 						o.optional = true;
 						o.validate = function(id,value) { var f=(value || '').trim().split(/\s+/);return !value || f.length==3 && /^[A-Za-z][A-Za-z0-9_-]{0,30}$/.test(f[0]) && /^\d{1,3}$/.test(f[1]) && +f[1]>=1 && +f[1]<=100 && /^[012]$/.test(f[2]) ? true : _('Enter a group name, percentage and policy 0–2.'); };

@@ -36,6 +36,13 @@ const uci = {
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
 const helpers = wireless.slice(wireless.indexOf('var qca_shared'), wireless.indexOf('function count_changes'));
+let strictAtf, atfGroups = [];
+const strictAtfCode = wireless.match(/o = ss\.taboption\('advanced', form\.Flag, 'atfstrictsched'[\s\S]*?(?=\n\s*o = ss\.taboption)/)[0];
+new Function('ss', 'form', '_', 'var o; ' + strictAtfCode)({taboption:()=>strictAtf={map:{lookupOption:()=>[{formvalue:()=>atfGroups}]}}}, {Flag:{}}, v=>v);
+assert.equal(strictAtf.validate('wifi1','1'), true);
+atfGroups = ['primary 60 1'];
+assert.notEqual(strictAtf.validate('wifi1','1'), true);
+assert.equal(strictAtf.validate('wifi1','0'), true);
 const neighborReport = new Function('uci', helpers + '\nreturn qca_neighbor_report;')(uci);
 assert.equal(neighborReport('02:11:22:33:44:66 115 36 9'), '02112233446600000000732409');
 assert.equal(neighborReport('02:11:22:33:44:66 115 036 9'), '02112233446600000000732409');
