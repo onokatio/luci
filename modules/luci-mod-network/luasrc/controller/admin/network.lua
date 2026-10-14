@@ -15,6 +15,15 @@ function index()
 		page.uci_depends = { wireless = { ["@wifi-device[0]"] = "wifi-device" } }
 		page.leaf = true
 
+		if nixio.fs.access("/lib/wifi/qcawificfg80211.sh") then
+			page = entry({"admin", "network", "wireless_diagnostics"}, view("network/wireless-diagnostics"), _("Wireless diagnostics"), 18)
+			page.leaf = true
+			page = entry({"admin", "network", "band_steering"}, view("network/band-steering"), _("Band steering"), 19)
+			page.leaf = true
+			page = entry({"admin", "network", "switch_advanced"}, view("network/switch-advanced"), _("Advanced switch"), 21)
+			page.leaf = true
+		end
+
 		page = entry({"admin", "network", "acceleration"}, view("network/acceleration"), _("Acceleration"), 25)
 		page.uci_depends = { ecm = true }
 		page.leaf = true

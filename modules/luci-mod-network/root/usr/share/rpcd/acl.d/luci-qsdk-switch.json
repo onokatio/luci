@@ -1,0 +1,19 @@
+{
+  "luci-qsdk-switch": {
+    "description": "Manage the native LAN switch",
+    "read": {
+      "ubus": {
+        "luci-rpc": [
+          "getSwitchSettings"
+        ]
+      }
+    },
+    "write": {
+      "ubus": {
+        "luci-rpc": [
+          "setSwitchSettings"
+        ]
+      }
+    }
+  }
+}

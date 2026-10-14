@@ -1,0 +1,45 @@
+{
+  "luci-qsdk-steering": {
+    "description": "Manage native standalone band steering",
+    "read": {
+      "uci": [
+        "lbd",
+        "repacd",
+        "ezmesh",
+        "hyd"
+      ],
+      "ubus": {
+        "service": [
+          "list"
+        ]
+      },
+      "file": {
+        "/usr/sbin/repacdcli athx get_all_freq": [
+          "exec"
+        ],
+        "/etc/init.d/lbd enabled": [
+          "exec"
+        ]
+      }
+    },
+    "write": {
+      "uci": [
+        "lbd"
+      ],
+      "file": {
+        "/etc/init.d/lbd enable": [
+          "exec"
+        ],
+        "/etc/init.d/lbd disable": [
+          "exec"
+        ],
+        "/etc/init.d/lbd restart": [
+          "exec"
+        ],
+        "/etc/init.d/lbd stop": [
+          "exec"
+        ]
+      }
+    }
+  }
+}

@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.10.0-3'
-SUFFIX = '+qsdk3.10.0'
+VERSION = '3.11.0-3'
+SUFFIX = '+qsdk3.11.0'
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -98,8 +98,13 @@ def record(path, payload, control):
 mapping = {
     'luci-mod-network': {
         'www/luci-static/resources/view/network/wireless.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js',
+        'www/luci-static/resources/view/network/band-steering.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/band-steering.js',
+        'usr/share/rpcd/acl.d/luci-qsdk-steering.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-steering.json',
+        'www/luci-static/resources/view/network/switch-advanced.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch-advanced.js',
+        'usr/share/rpcd/acl.d/luci-qsdk-switch.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-switch.json',
         'www/luci-static/resources/view/network/switch.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js',
         'www/luci-static/resources/view/network/acceleration.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js',
+        'www/luci-static/resources/view/network/wireless-diagnostics.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless-diagnostics.js',
         'usr/lib/lua/luci/controller/admin/network.lua': 'modules/luci-mod-network/luasrc/controller/admin/network.lua',
         'usr/share/rpcd/acl.d/luci-qsdk-acceleration.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-acceleration.json',
         'usr/share/rpcd/acl.d/luci-qsdk-wireless.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-wireless.json',

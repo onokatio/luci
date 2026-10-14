@@ -3,6 +3,20 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const wireless = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js'), 'utf8');
+const diagnostics = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless-diagnostics.js'), 'utf8');
+const surveyUsage = new Function(diagnostics.slice(diagnostics.indexOf('function surveyUsage'), diagnostics.indexOf('function diagnosticTables')) + '\nreturn surveyUsage;')();
+assert.equal(surveyUsage({total:'100',busy:'25'}), '25.0%');
+assert.equal(surveyUsage({total:'9007199254741093',busy:'9007199254740993'}, {total:'9007199254740993',busy:'9007199254740993'}), '0.0%');
+assert.equal(surveyUsage({total:'10',busy:'5'}, {total:'20',busy:'8'}), '-');
+const steering=fs.readFileSync(path.join(root,'modules/luci-mod-network/htdocs/luci-static/resources/view/network/band-steering.js'),'utf8');
+let ownerEnabled=false;
+const steeringHelpers=new Function('uci',steering.slice(steering.indexOf('function steeringRunning'),steering.indexOf('function native'))+'return {running:steeringRunning,conflict:steeringConflict};')({get:()=>ownerEnabled?'1':'0'});
+assert.equal(steeringHelpers.running({}),false);
+assert.equal(steeringHelpers.running({lbd:{instances:{main:{running:true}}}}),true);
+assert.equal(steeringHelpers.conflict(),false);ownerEnabled=true;assert.equal(steeringHelpers.conflict(),true);
+const switchView=fs.readFileSync(path.join(root,'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch-advanced.js'),'utf8');
+const switchInteger=new Function(switchView.slice(switchView.indexOf('function integer'),switchView.indexOf('return view.extend'))+'return integer;')();
+assert.equal(switchInteger('1000',0,2500000),true);assert.equal(switchInteger('1e3',0,2500000),false);assert.equal(switchInteger('-1',0,7),false);
 const data = {
 	wifi0: { '.type': 'wifi-device', type: 'qcawificfg80211', disabled: '1', hwmode: '11beg', htmode: 'HT40', channel: 'auto' },
 	wifi1: { '.type': 'wifi-device', type: 'qcawificfg80211', hwmode: '11bea', htmode: 'EHT160', channel: '0' },
@@ -22,6 +36,13 @@ const uci = {
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
 const helpers = wireless.slice(wireless.indexOf('var qca_shared'), wireless.indexOf('function count_changes'));
+let strictAtf, atfGroups = [];
+const strictAtfCode = wireless.match(/o = ss\.taboption\('advanced', form\.Flag, 'atfstrictsched'[\s\S]*?(?=\n\s*o = ss\.taboption)/)[0];
+new Function('ss', 'form', '_', 'var o; ' + strictAtfCode)({taboption:()=>strictAtf={map:{lookupOption:()=>[{formvalue:()=>atfGroups}]}}}, {Flag:{}}, v=>v);
+assert.equal(strictAtf.validate('wifi1','1'), true);
+atfGroups = ['primary 60 1'];
+assert.notEqual(strictAtf.validate('wifi1','1'), true);
+assert.equal(strictAtf.validate('wifi1','0'), true);
 const neighborReport = new Function('uci', helpers + '\nreturn qca_neighbor_report;')(uci);
 assert.equal(neighborReport('02:11:22:33:44:66 115 36 9'), '02112233446600000000732409');
 assert.equal(neighborReport('02:11:22:33:44:66 115 036 9'), '02112233446600000000732409');

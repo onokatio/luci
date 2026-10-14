@@ -16,7 +16,7 @@ static int64_t qsdk_exec_millis(void)
 	return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
 }
 
-static bool qsdk_exec_capture(const char *const argv[], char *text, size_t size, int timeout, bool capture_stderr)
+static bool qsdk_exec_capture_pid(const char *const argv[], char *text, size_t size, int timeout, bool capture_stderr, pid_t *executed_pid)
 {
 	int pipefd[2], status = 0;
 	pid_t child, waited;
@@ -42,6 +42,7 @@ static bool qsdk_exec_capture(const char *const argv[], char *text, size_t size,
 	}
 	close(pipefd[1]);
 	if (child < 0) { close(pipefd[0]); return false; }
+	if (executed_pid) *executed_pid = child;
 	int64_t deadline = qsdk_exec_millis() + timeout;
 	while (length + 1 < size) {
 		struct pollfd input = { .fd = pipefd[0], .events = POLLIN };
@@ -70,5 +71,10 @@ static bool qsdk_exec_capture(const char *const argv[], char *text, size_t size,
 		return false;
 	}
 	return complete && WIFEXITED(status) && !WEXITSTATUS(status);
+}
+
+static bool qsdk_exec_capture(const char *const argv[], char *text, size_t size, int timeout, bool capture_stderr)
+{
+	return qsdk_exec_capture_pid(argv, text, size, timeout, capture_stderr, NULL);
 }
 

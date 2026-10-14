@@ -57,6 +57,8 @@
 static struct blob_buf blob;
 #include "qsdk-acceleration.h"
 #include "qsdk-wireless.h"
+#include "qsdk-wireless-diagnostics.h"
+#include "qsdk-dscp.h"
 
 struct reply_context {
 	struct ubus_context *context;
@@ -1742,6 +1744,22 @@ rpc_luci_dt_u32(const char *path, uint32_t value)
 	return match;
 }
 
+static bool
+rpc_luci_qsdk_switch_supported(void)
+{
+	return !(strcmp(readstr("/sys/firmware/devicetree/base/compatible"), "qcom,ipq5332-ap-mi01.6") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible"), "qcom,ess-switch-qca8386") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/aliases/ethernet1"), "/soc/dp2") ||
+	    strcmp(readstr("/sys/class/net/eth1/type"), "1") ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/device_id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp", 14) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp", 0) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1));
+}
+
 static void
 rpc_luci_qsdk_switch(struct blob_buf *buf)
 {
@@ -1754,18 +1772,7 @@ rpc_luci_qsdk_switch(struct blob_buf *buf)
 	int rem, i;
 
 	/* The vendor board generator skips port metadata when network UCI already exists. */
-	if (strcmp(readstr("/sys/firmware/devicetree/base/compatible"), "qcom,ipq5332-ap-mi01.6") ||
-	    strcmp(readstr("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible"), "qcom,ess-switch-qca8386") ||
-	    strcmp(readstr("/sys/firmware/devicetree/base/aliases/ethernet1"), "/soc/dp2") ||
-	    strcmp(readstr("/sys/class/net/eth1/type"), "1") ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/device_id", 1) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp", 1) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp", 14) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp", 0) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,id", 1) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected", 1) ||
-	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1))
-		return;
+	if (!rpc_luci_qsdk_switch_supported()) return;
 
 	blobmsg_parse(&switch_policy, 1, &switches, blob_data(buf->head), blob_len(buf->head));
 	if (switches) {
@@ -1820,6 +1827,7 @@ rpc_luci_qsdk_switch(struct blob_buf *buf)
 	blob_buf_free(&original);
 }
 /* End QSDK switch topology */
+#include "qsdk-switch-controls.h"
 
 static int
 rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
@@ -2003,7 +2011,13 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		UBUS_METHOD_NOARG("getBoardJSON", rpc_luci_get_board_json),
 		UBUS_METHOD_NOARG("getDSLStatus", rpc_luci_get_dsl_status),
 		UBUS_METHOD_NOARG("getAccelerationStatus", rpc_luci_get_acceleration_status),
+		UBUS_METHOD_NOARG("getSwitchSettings", rpc_luci_get_switch_settings),
+		UBUS_METHOD("setSwitchSettings", rpc_luci_set_switch_settings, qsdk_switch_policy),
+		UBUS_METHOD_NOARG("applySwitchSettings", rpc_luci_set_switch_settings),
 		UBUS_METHOD("getWirelessSettings", rpc_luci_get_wireless_settings, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessDiagnostics", rpc_luci_get_wireless_diagnostics, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessWmm", rpc_luci_get_wireless_wmm, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessDscpMap", rpc_luci_get_wireless_dscp, qsdk_dscp_policy),
 		UBUS_METHOD("getDHCPLeases", rpc_luci_get_dhcp_leases, rpc_get_leases_policy)
 	};
 
