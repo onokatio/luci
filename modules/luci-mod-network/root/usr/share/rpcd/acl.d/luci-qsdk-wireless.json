@@ -3,7 +3,7 @@
     "description": "Manage the native QSDK wireless services",
     "read": {
       "uci": ["wireless"],
-      "ubus": {"hostapd.*": ["wps_status", "rrm_nr_list"], "luci-rpc": ["getWirelessSettings"]}
+      "ubus": {"hostapd.*": ["wps_status", "rrm_nr_list", "get_clients", "get_status", "get_features"], "luci-rpc": ["getWirelessSettings", "getWirelessDiagnostics", "getWirelessDscpMap", "getWirelessWmm"]}
     },
     "write": {
       "uci": ["wireless"],

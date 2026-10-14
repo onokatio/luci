@@ -64,6 +64,10 @@ int main(int argc, char **argv)
 	char text[128];
 	const char *stderr_args[] = { "/bin/sh", "-c", "printf native-table >&2", NULL };
 	assert(qsdk_exec_capture(stderr_args, text, sizeof(text), 250, true) && !strcmp(text, "native-table"));
+	pid_t child;
+	const char *pid_args[] = { "/bin/sh", "-c", "printf '%s' \"$$\"", NULL };
+	assert(qsdk_exec_capture_pid(pid_args, text, sizeof(text), 250, false, &child));
+	assert(child > 0 && strtol(text, NULL, 10) == child);
 	assert(qsdk_telemetry_capture(argv[0], "ok", mac, text, sizeof(text)) && !strcmp(text, "test output\n"));
 	assert(!qsdk_telemetry_capture(argv[0], "large", mac, text, sizeof(text)));
 	int64_t start = qsdk_exec_millis();

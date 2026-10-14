@@ -79,3 +79,12 @@ cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$l
 "$cc" -D_GNU_SOURCE -Os -std=gnu99 -Wall -Werror -mfloat-abi=hard \
 	-I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
 	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o "$output/telemetry-selfcheck"
+
+python3 - "$luci/libs/rpcd-mod-luci/src/qsdk-switch-controls.h" "$output/qsdk-switch-controls.inc" <<'CHECK'
+import pathlib,sys
+source=pathlib.Path(sys.argv[1]).read_text()
+parts=[source[source.index('struct qsdk_switch_port'):source.index('static bool qsdk_ssdk_batch')],source[source.index('static bool qsdk_ssdk_field'):source.index('static bool qsdk_switch_read')],source[source.index('static bool qsdk_switch_valid'):source.index('static bool qsdk_switch_write')],source[source.index('static unsigned int qsdk_switch_rate'):source.index('static const char *const qsdk_switch_keys')]]
+pathlib.Path(sys.argv[2]).write_text('\n'.join(parts))
+CHECK
+cc -std=gnu99 -Wall -Werror -I"$output" "$luci/contrib/wn7t94xr/switch-controls-selfcheck.c" -o /tmp/qsdk-switch-controls-selfcheck
+/tmp/qsdk-switch-controls-selfcheck

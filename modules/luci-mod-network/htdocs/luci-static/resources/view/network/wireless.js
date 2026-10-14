@@ -1263,6 +1263,18 @@ return view.extend({
 					if (hwtype == 'qcawificfg80211') {
 						o = ss.taboption('advanced', form.Flag, 'atf_enabled', _('Airtime Fairness'), _('Enabling or disabling ATF reinitializes the native wireless modules and briefly disconnects all radios.'));
 						o.rmempty = false; o.default = '0';
+						o = ss.taboption('advanced', form.Value, 'puncture_bitmap', _('EHT punctured subchannels'), _('Hexadecimal bitmap (for example 0x8). Each 1 disables a 20 MHz subchannel, starting with the lowest frequency. Requires EHT80/160/320 and a fixed primary channel; the primary cannot be punctured. Clear for native defaults, or 0 to disable. The backend validates legal patterns and verifies the applied bitmap.'));
+						o.optional=true;
+						o.cfgvalue=function(id){var v=uci.get('wireless',id,'puncture_bitmap');return v==null?'':'0x'+(+v).toString(16);};
+						o.validate=function(id,value){return !value || /^(0x[0-9a-fA-F]{1,4}|[0-9]{1,5})$/.test(value) && Number(value)<=65535 ? true : _('Enter a 16-bit hexadecimal or decimal bitmap.');};
+						o.write=function(id,value){uci.set('wireless',id,'puncture_bitmap',String(Number(value)));};
+						o.remove=function(id){uci.unset('wireless',id,'puncture_bitmap');};
+						[['dfs_puncture_en',_('Automatic DFS puncturing')],['puncture_strict',_('Strict puncturing validation')]].forEach(function(item){o=ss.taboption('advanced',form.Flag,item[0],item[1]);o.optional=true;});
+						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Requires ATF.'));
+						o.optional = true;
+						o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_groups', _('ATF SSID groups'), _('One group per entry: name, percentage (1–100), policy (0: fair, 1: strict, 2: fair without borrowing). Assign APs to the group below. Group percentages must total at most 100.'));
+						o.optional = true;
+						o.validate = function(id,value) { var f=(value || '').trim().split(/\s+/);return !value || f.length==3 && /^[A-Za-z][A-Za-z0-9_-]{0,30}$/.test(f[0]) && /^\d{1,3}$/.test(f[1]) && +f[1]>=1 && +f[1]<=100 && /^[012]$/.test(f[2]) ? true : _('Enter a group name, percentage and policy 0–2.'); };
 						o = ss.taboption('advanced', form.Value, 'he_bsscolor', _('BSS Color'), _('Use 1–63 for a fixed color, 0 to disable coloring, or clear for native automatic selection. Clearing a fixed color reinitializes all radios.'));
 						o.datatype = 'and(uinteger,range(0,63))'; o.optional = true; o.placeholder = _('Automatic');
 						o.cfgvalue = function(id) { var value = uci.get('wireless', id, 'he_bsscolor'); return value ? String(value).split(' ')[0] : ''; };
@@ -1609,6 +1621,18 @@ return view.extend({
 					o = ss.taboption('advanced', form.Value, 'maxsta', _('Maximum associated clients'));
 					o.datatype = 'and(uinteger,range(1,128))'; o.placeholder = 128; o.optional = true;
 					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
+					o = ss.taboption('advanced', form.DynamicList, 'qsdk_wmm', _('WMM queue parameters'), _('Format: parameter (cwmin/cwmax/aifs/txop/acm/noack), AC (BE/BK/VI/VO), scope (local/bss), value. CW values are exponents 0–15; AIFS 1–15; TXOP units are 32 µs; ACM/NoAck are 0/1. NoAck is local only. Clearing overrides reinitializes all radios.'));
+					o.optional = true;
+					o.validate = function(id,value) { var f=(value || '').trim().split(/\s+/), limits={cwmin:[0,15],cwmax:[0,15],aifs:[1,15],txop:[0,65535],acm:[0,1],noack:[0,1]},r=limits[f[0]];return !value || f.length==4 && r && /^(BE|BK|VI|VO)$/.test(f[1]) && /^(local|bss)$/.test(f[2]) && /^\d{1,5}$/.test(f[3]) && +f[3]>=r[0] && +f[3]<=r[1] && !(f[0]=='noack' && f[2]=='bss') ? true : _('Enter a valid WMM parameter, access category, scope and value.'); };
+					o = ss.taboption('advanced', form.DynamicList, 'qsdk_dscp_map', _('DSCP to TID mapping'), _('One mapping per entry: DSCP (0–63), TID (0–7). Values not listed retain native defaults. Mapping is per SSID.'));
+					o.optional = true;
+					o.validate = function(id,value) {var f=(value || '').trim().split(/\s+/);return !value || f.length==2 && /^\d{1,2}$/.test(f[0]) && +f[0]<=63 && /^[0-7]$/.test(f[1]) ? true : _('Enter a DSCP value 0–63 and TID 0–7.');};
+					o = ss.taboption('advanced', form.Value, 'qsdk_atf_group', _('ATF group membership'), _('Use a group name configured on this radio. Clear the separate SSID allocation when using a group.'));
+					o.optional = true;o.depends('mode','ap');
+					o.validate = function(id,value) {return !value || /^[A-Za-z][A-Za-z0-9_-]{0,30}$/.test(value) ? true : _('Use letters, digits, underscores and hyphens, beginning with a letter.');};
+					o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_ac', _('ATF access category allocations'), _('One AC per entry: BE/BK/VI/VO and percentage (1–100). Applies to this SSID, or its shared group. Percentages must total at most 100.'));
+					o.optional = true;o.depends('mode','ap');
+					o.validate = function(id,value) {var f=(value || '').trim().split(/\s+/);return !value || f.length==2 && /^(BE|BK|VI|VO)$/.test(f[0]) && /^\d{1,3}$/.test(f[1]) && +f[1]>=1 && +f[1]<=100 ? true : _('Enter an access category and percentage 1–100.');};
 					o = ss.taboption('advanced', form.Value, 'atf_airtime', _('SSID airtime allocation'), _('Percentage (1–100) used when ATF is enabled on this radio. Clear to leave the SSID in the unassigned pool.'));
 					o.datatype = 'and(uinteger,range(1,100))'; o.optional = true;
 					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
