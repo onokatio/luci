@@ -63,6 +63,8 @@ cmake --build "$build/ucode-build" -j4
 DESTDIR="$prefix" cmake --install "$build/ucode-build"
 cmake -S "$sources/lucihttp" -B "$build/http-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
  -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_LUA=OFF -DBUILD_TESTS=OFF -DBUILD_UCODE=ON -DCMAKE_SHARED_LINKER_FLAGS="-L$prefix/usr/lib"
+# Relink the binding when an incremental build changes the ucode ABI.
+rm -f "$build/http-build/ucode/lucihttp.so"
 cmake --build "$build/http-build" -j4
 DESTDIR="$prefix" cmake --install "$build/http-build"
 mkdir -p "$out/usr/lib/ucode/luci" "$out/usr/lib/rpcd" "$out/usr/bin"
@@ -78,10 +80,15 @@ rpcd_header="$(find "$sdk/build_dir" -path '*/rpcd-*/include/rpcd/plugin.h' -pri
 "$cc" -Os -Wall -Werror -fPIC -shared -mfloat-abi=hard -DINSTALL_PREFIX='"/usr"' -I"$prefix/usr/include" \
  -I"$stage/usr/include" -I"$(dirname "$(dirname "$rpcd_header")")" "$sources/rpcd/ucode.c" \
  -L"$prefix/usr/lib" -L"$stage/usr/lib" -Wl,-rpath,/tmp/luci-ram/usr/lib -lucode -lubus -lubox -o "$out/usr/lib/rpcd/ucode.so"
+mkdir -p "$out/usr/share/licenses/libucode20230711"
+cp "$sources/ucode/LICENSE" "$out/usr/share/licenses/libucode20230711/ucode.txt"
+cp "$build/json-c/COPYING" "$out/usr/share/licenses/libucode20230711/json-c.txt"
+sed '/^[[:space:]]*\*\//q' "$sources/qsort.c" > "$out/usr/share/licenses/libucode20230711/qsort.txt"
 cp -a "$prefix/usr/bin/ucode" "$out/usr/bin/"
 cp -a "$prefix/usr/lib/libucode.so.20230711" "$prefix/usr/lib/liblucihttp.so.0" "$prefix/usr/lib/liblucihttp.so.0.1" "$out/usr/lib/"
 for module in fs log uci ubus math lucihttp; do cp "$prefix/usr/lib/ucode/$module.so" "$out/usr/lib/ucode/"; done
 find "$out/usr" -type f \( -name '*.so' -o -name '*.so.[0-9]*' -o -name ucode \) -exec "$strip" '{}' +
 [ -z "$("$tc/arm-openwrt-linux-muslgnueabi-nm" -D "$out/usr/lib/libucode.so.20230711" | awk '$2=="T" && $3 ~ /^json_/')" ]
 
+"$tc/arm-openwrt-linux-muslgnueabi-readelf" -d "$out/usr/lib/ucode/lucihttp.so" | grep -q 'Shared library: \[libucode.so.20230711\]'
 "$tc/arm-openwrt-linux-muslgnueabi-readelf" -d "$out/usr/bin/ucode" | grep -q 'Shared library: \[libucode.so.20230711\]'

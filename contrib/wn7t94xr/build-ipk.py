@@ -147,6 +147,9 @@ for name, (filenames, depends) in native.items():
         if isinstance(binary, bytes):
             assert binary[:6] == b'\x7fELF\x01\x01' and binary[18:20] == b'\x28\x00', filename
         payload[filename] = (binary, 0o755)
+    if name == 'libucode20230711':
+        payload.update(tree(NATIVE / 'usr/share/licenses/libucode20230711', 'usr/share/licenses/libucode20230711'))
+        assert len(payload) == 4
     emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else 'libucode' if name == 'libucode20230711' else '')
 
 luci_packages = {
