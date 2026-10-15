@@ -1,6 +1,6 @@
 #!/bin/sh /etc/rc.common
 
-START=95
+START=99
 STOP=89
 EXTRA_COMMANDS=fetch
 EXTRA_HELP="fetch  Download and verify the complete LuCI runtime into RAM"
@@ -62,6 +62,19 @@ fetch() {
 	mv "$unpack" "$ram" || { rm -rf "$unpack" "$download"; return 1; }
 	rm -rf "$download"
 	logger -t luci-ram 'Verified all LuCI packages and unpacked them in RAM'
+}
+
+boot() {
+	# Let vendor services finish while DNS and the uplink become ready.
+	(
+		local attempt
+		for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+			if fetch; then start; exit $?; fi
+			[ "$attempt" = 12 ] || sleep 10
+		done
+		/etc/init.d/sqm start
+		exit 1
+	) </dev/null >/dev/null 2>&1 &
 }
 
 owns_mount() {

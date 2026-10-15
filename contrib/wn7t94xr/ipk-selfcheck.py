@@ -98,7 +98,7 @@ assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uh
 assert payload['sbin/luci-reload'] == '/tmp/luci-ram/sbin/luci-reload'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
-assert 'START=95' in init and '/root/' not in init
+assert 'START=99' in init and '/root/' not in init
 assert 'lowerdir=$ram/$dir:/$dir' in init and 'state=/overlay/luci-ram' in init
 assert int(main['Installed-Size']) < 24 * 1024
 assert not any(name.startswith(('luci-mod-status', 'luci-mod-system')) for name in records)
@@ -276,4 +276,21 @@ if start; then exit 14; fi
 '''
     result = subprocess.run(['bash', '-e'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + result.stderr.decode() + str(result.returncode)
+    boot_log, gate = root / 'boot-log', root / 'boot-gate'
+    for succeeds in (True, False):
+        boot_log.unlink(missing_ok=True)
+        gate.unlink(missing_ok=True)
+        probe = f'''
+attempts=0
+fetch() {{ attempts=$((attempts + 1)); echo fetch >> '{boot_log}'; [ '{succeeds}' = True ] && [ "$attempts" -ge 2 ]; }}
+start() {{ echo started >> '{boot_log}'; }}
+service() {{ echo "$*" >> '{boot_log}'; }}
+sleep() {{ while [ ! -e '{gate}' ]; do command sleep 0.01; done; }}
+boot
+touch '{gate}'
+wait
+'''
+        result = subprocess.run(['bash'], input=(script + probe).encode(), capture_output=True, timeout=5)
+        assert result.returncode == 0
+        assert boot_log.read_text().splitlines() == (['fetch'] * 2 + ['started'] if succeeds else ['fetch'] * 12 + ['sqm start'])
 print(f'{len(custom_names)} custom and {len(official)} official IPKs passed: minimal persistent bootstrap, all {len(ram_names)} runtime packages in RAM, pinned downloads, package records, addon persistence, failure isolation, mount rollback and ARM ABI')
