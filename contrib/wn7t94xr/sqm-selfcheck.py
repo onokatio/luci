@@ -17,7 +17,11 @@ with tempfile.TemporaryDirectory() as directory:
     run = root / 'run.sh'
     run.write_text('#!/bin/sh\ncase "$1" in start) [ ! -f "$probe/fail" ] || exit 1; touch "$probe/queue" "$probe/states/eth0.state";; stop) rm -f "$probe/queue" "$probe/states/"*.state;; esac\n')
     run.chmod(0o755)
-    script = source.replace('/etc/luci-qsdk/sqm-ecm-enabled', str(root / 'saved')).replace('/var/run/qsdk-sqm.lock', str(root / 'lock'))
+    update = root / 'update-qdiscs'
+    update.write_text('#!/bin/sh\n[ ! -f "$probe/fail-probe" ] || exit 1\nmkdir -p "$probe/states/available_qdiscs"\ntouch "$probe/states/available_qdiscs/cake"\n')
+    update.chmod(0o755)
+    script = source.replace('/usr/lib/sqm/update-available-qdiscs', str(update))
+    script = script.replace('/etc/luci-qsdk/sqm-ecm-enabled', str(root / 'saved')).replace('/var/run/qsdk-sqm.lock', str(root / 'lock'))
     script = script.replace('/var/run/sqm/', str(root / 'states') + '/')
     script = script.replace('/etc/init.d/qca-nss-ecm', str(ecm)).replace('/sys/module/ecm', str(root / 'module'))
     script = script.replace('/usr/lib/sqm/run.sh', str(run)).replace('/lib/modules/5.4.213/', str(root) + '/')
@@ -38,6 +42,13 @@ uci() {
 }
 echo 1 > "$probe/enabled"
 mkdir "$probe/module"
+queue_active=0
+touch "$probe/fail-probe"
+! start_service || exit 33
+[ "$(cat "$probe/enabled")" = 1 ] && [ ! -e "$probe/saved" ] || exit 34
+rm "$probe/fail-probe"
+start_service || exit 35
+[ -f "$probe/states/available_qdiscs/cake" ] && [ "$(cat "$probe/enabled")" = 1 ] && [ ! -e "$probe/queue" ] || exit 36
 queue_active=1
 start_service || exit 10
 [ "$(cat "$probe/enabled")" = 0 ] && [ -f "$probe/saved" ] && [ ! -d "$probe/module" ] && [ -f "$probe/queue" ] || exit 11

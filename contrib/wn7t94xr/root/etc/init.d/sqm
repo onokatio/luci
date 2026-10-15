@@ -41,6 +41,9 @@ start_service() (
 	exec 9>/var/run/qsdk-sqm.lock
 	busybox flock -x 9 || return 1
 	local previous temporary
+	if [ -x /usr/lib/sqm/update-available-qdiscs ] && [ ! -d /var/run/sqm/available_qdiscs ]; then
+		/usr/lib/sqm/update-available-qdiscs || return 1
+	fi
 	if ! sqm_configured "$1"; then
 		sqm_configured || restore_acceleration
 		return $?
