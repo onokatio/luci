@@ -231,6 +231,7 @@ const methods = {
 				offloading: access('/sys/module/xt_FLOWOFFLOAD/refcnt') == true || access('/sys/module/nft_flow_offload/refcnt') == true,
 				br2684ctl:  access('/usr/sbin/br2684ctl') == true,
 				swconfig:   access('/sbin/swconfig') == true,
+				netifd_legacy: access('/rom/lib/wifi/qcawificfg80211.sh') == true,
 				zram:       access('/sys/class/zram-control') == true,
 				sysntpd:    readlink('/usr/sbin/ntpd') != null,
 				ipv6:       access('/proc/net/ipv6_route') == true,

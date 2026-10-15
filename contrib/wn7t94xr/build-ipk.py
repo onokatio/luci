@@ -304,9 +304,11 @@ uci -q delete uhttpd.main.listen_https || true
 uci -q delete uhttpd.main.lua_prefix || true
 uci -q delete uhttpd.main.ucode_prefix || true
 uci add_list uhttpd.main.listen_http=0.0.0.0:8080
-uci set uhttpd.main.ubus_prefix=/ubus/
+uci set uhttpd.main.ubus_prefix=/ubus
 uci set uhttpd.main.redirect_https=0
 uci commit uhttpd
+uci set luci.main.ubuspath=/cgi-bin/luci/admin/ubus
+uci commit luci
 /etc/init.d/luci-ram disable
 /etc/init.d/luci-ram enable
 /etc/init.d/sqm enable

@@ -88,6 +88,6 @@
       "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
     }
   },
-  "version": "5.0.0-2",
+  "version": "5.0.0-4",
   "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d"
 }

@@ -2,6 +2,52 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
+String.prototype.format = function(...args) { let i = 0; return this.replace(/%s|%d|%\.[0-9]f/g, () => String(args[i++])); };
+// The native netifd still requires interface-level bridges and ifname lists.
+{
+	const model = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/network.js'), 'utf8');
+	const interfaces = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/interfaces.js'), 'utf8');
+	const helpers = model.slice(model.indexOf('function appendValue'), model.indexOf('function prefixToMask'));
+	const protocol = model.slice(model.indexOf('Protocol = baseclass.extend('), model.indexOf('Device = baseclass.extend('));
+	let legacy = true;
+	const values = { lan: { type: 'bridge', ifname: 'eth1 eth2' }, wan: { ifname: 'eth0' } };
+	const state = { get: (c, s, o) => values[s]?.[o], set: (c, s, o, v) => values[s][o] = v,
+		unset: (c, s, o) => delete values[s][o], sections: () => [] };
+	const L = { hasSystemFeature: () => legacy, toArray: v => Array.isArray(v) ? v : typeof v == 'string' ? v.split(/\s+/).filter(Boolean) : [] };
+	const device = name => ({ getName: () => name });
+	const factory = new Function('uci', 'L', 'baseclass', 'Network', 'Device', 'ifnameOf', 'getWifiSidByIfname', 'getWifiNetidByNetname', 'deviceSort',
+		model.slice(model.indexOf('function getDeviceOption'), model.indexOf('function getWifiStateBySid')) + helpers +
+		'let Protocol;\n' + protocol + '\nreturn Protocol;');
+	const proto = factory(state, L, { extend: v => v }, { prototype: { instantiateDevice: device } }, device, v => v,
+		() => null, () => null, (a, b) => a.getName().localeCompare(b.getName()));
+	const lan = Object.assign(Object.create(proto), { sid: 'lan' });
+	const wan = Object.assign(Object.create(proto), { sid: 'wan' });
+	assert.equal(lan.get('device'), 'eth1 eth2');
+	assert.deepEqual(lan.getDevices().map(d => d.getName()), ['eth1', 'eth2']);
+	assert(lan.containsDevice('eth2'));
+	assert.equal(wan.getDevice().getName(), 'eth0');
+	assert.equal(wan.isEmpty(), false);
+	assert(wan.addDevice('eth3'));
+	assert.equal(values.wan.ifname, 'eth0 eth3');
+	assert(!('device' in values.wan));
+	assert(wan.deleteDevice('eth0'));
+	assert.equal(values.wan.ifname, 'eth3');
+	wan.set('device', '@lan');
+	assert.equal(wan.isAlias(), 'lan');
+	legacy = false;
+	wan.set('device', 'eth4');
+	assert.equal(values.wan.device, 'eth4');
+	assert.equal(wan.getDevice().getName(), 'eth4');
+	assert.equal(values.wan.ifname, '@lan');
+	assert(interfaces.includes('if (!legacyNetifd && this.interfaceBridgeWithIfnameSections().length)'));
+	assert(interfaces.includes("o.ucioption = network.getDeviceOption();"));
+	const validate = new Function('L', '_', 'return ' + interfaces.match(/o\.validate = (function\(id, value\) \{\n\s*const bridge =[\s\S]*?\n\s*\});/)[1])(L, v => v);
+	const option = { map: { lookupOption: () => [{ formvalue: () => 'bridge' }] } };
+	assert.equal(validate.call(option, 'lan', ['eth1', 'eth2']), true);
+	option.map.lookupOption = () => [{ formvalue: () => '' }];
+	assert.equal(validate.call(option, 'wan', ['eth0']), true);
+	assert.notEqual(validate.call(option, 'wan', ['eth0', 'eth1']), true);
+}
 const wireless = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js'), 'utf8');
 const diagnostics = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless-diagnostics.js'), 'utf8');
 const surveyUsage = new Function(diagnostics.slice(diagnostics.indexOf('function surveyUsage'), diagnostics.indexOf('function diagnosticTables')) + '\nreturn surveyUsage;')();
@@ -105,7 +151,6 @@ qca.writeSecurity('ath1', 'sae-mixed');
 assert.equal(data.ath1.encryption, 'psk2+ccmp');
 assert.equal(data.ath1.ieee80211w, '1');
 assert.deepEqual(data.ath1.sae_password, ['test-password']);
-String.prototype.format = function(...args) { let i = 0; return this.replace(/%s|%d|%\.[0-9]f/g, () => String(args[i++])); };
 const rateCode = wireless.slice(wireless.indexOf('function format_wifirate'), wireless.indexOf('function radio_restart'));
 const rate = new Function('_', rateCode + '\nreturn format_wifirate;')(v => v);
 assert(!rate({ rate: 258000, he: true, mhz: 20, nss: 2 }).includes('MCS'));

@@ -456,10 +456,11 @@ return view.extend({
 	},
 
 	render([dslModemType, netDevs, rtTables]) {
+		const legacyNetifd = network.getDeviceOption() == 'ifname';
 
-		if (this.interfaceBridgeWithIfnameSections().length)
+		if (!legacyNetifd && this.interfaceBridgeWithIfnameSections().length)
 			return this.renderBridgeMigration();
-		else if (this.deviceWithIfnameSections().length || this.interfaceWithIfnameSections().length)
+		else if (!legacyNetifd && (this.deviceWithIfnameSections().length || this.interfaceWithIfnameSections().length))
 			return this.renderIfnameMigration();
 
 		let m, s, o;
@@ -606,11 +607,26 @@ return view.extend({
 				}, this);
 
 				o = s.taboption('general', widgets.DeviceSelect, '_net_device', _('Device'));
-				o.ucioption = 'device';
+				o.ucioption = network.getDeviceOption();
 				o.nobridges = false;
 				o.optional = false;
 				o.network = ifc.getName();
 				o.exclude = '@' + ifc.getName();
+				if (legacyNetifd) {
+					o.multiple = true;
+					o.optional = true;
+					o.validate = function(id, value) {
+						const bridge = this.map.lookupOption('type', id)[0].formvalue(id) == 'bridge';
+						return bridge || L.toArray(value).length <= 1 || _('Enable bridging to select multiple devices.');
+					};
+					o = s.taboption('physical', form.Flag, 'type', _('Bridge interfaces'));
+					o.enabled = 'bridge'; o.disabled = '';
+					o = s.taboption('physical', form.Flag, 'stp', _('Enable Spanning Tree Protocol'));
+					o.depends('type', 'bridge');
+					o = s.taboption('physical', form.Flag, 'igmp_snooping', _('Enable IGMP snooping'));
+					o.depends('type', 'bridge');
+				}
+
 
 				o = s.taboption('general', form.Flag, 'disabled', _('Disable this interface'));
 				o.modalonly = true;

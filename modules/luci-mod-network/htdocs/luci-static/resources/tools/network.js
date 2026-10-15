@@ -450,7 +450,8 @@ return baseclass.extend({
 		if (L.hasSystemFeature('bonding')) {
 			o.value('bonding', _('Bonding/Aggregation device'));
 		}
-		o.value('bridge', _('Bridge device'));
+		if (!L.hasSystemFeature('netifd_legacy'))
+			o.value('bridge', _('Bridge device'));
 		o.value('8021q', _('VLAN (802.1q)'));
 		o.value('8021ad', _('VLAN (802.1ad)'));
 		o.value('macvlan', _('MAC VLAN'));

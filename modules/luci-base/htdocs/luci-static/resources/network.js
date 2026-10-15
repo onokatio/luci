@@ -129,6 +129,10 @@ function getProtocolHandlers() {
 	});
 }
 
+function getDeviceOption() {
+	return L.hasSystemFeature('netifd_legacy') ? 'ifname' : 'device';
+}
+
 function getWifiStateBySid(sid) {
 	const s = uci.get('wireless', sid);
 
@@ -663,6 +667,8 @@ let Hosts, Network, Protocol, Device, WifiDevice, WifiNetwork, WifiVlan;
  * current configuration details and to manipulate settings.
  */
 Network = baseclass.extend(/** @lends LuCI.network.prototype */ {
+	getDeviceOption: getDeviceOption,
+
 	/**
 	 * Converts the given prefix size in bits to a netmask.
 	 *
@@ -1999,7 +2005,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 	},
 
 	_get(opt) {
-		const val = uci.get('network', this.sid, opt);
+		const val = this.get(opt);
 
 		if (Array.isArray(val))
 			return val.join(' ');
@@ -2027,7 +2033,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 	 * not found.
 	 */
 	get(opt) {
-		return uci.get('network', this.sid, opt);
+		return uci.get('network', this.sid, opt == 'device' ? getDeviceOption() : opt);
 	},
 
 	/**
@@ -2042,7 +2048,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 	 * @returns {null}
 	 */
 	set(opt, val) {
-		return uci.set('network', this.sid, opt, val);
+		return uci.set('network', this.sid, opt == 'device' ? getDeviceOption() : opt, val);
 	},
 
 	/**
@@ -2589,7 +2595,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 	 * is an alias or `null` if it is not an alias interface.
 	 */
 	isAlias() {
-		const ifnames = L.toArray(uci.get('network', this.sid, 'device'));
+		const ifnames = L.toArray(this.get('device'));
 		let parent = null;
 
 		for (let ifn of ifnames)
@@ -2658,7 +2664,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 		if (wif != null)
 			return appendValue('wireless', wif, 'network', this.sid);
 
-		return appendValue('network', this.sid, 'device', device);
+		return appendValue('network', this.sid, getDeviceOption(), device);
 	},
 
 	/**
@@ -2687,7 +2693,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 		if (wif != null)
 			rv = removeValue('wireless', wif, 'network', this.sid);
 
-		if (removeValue('network', this.sid, 'device', device))
+		if (removeValue('network', this.sid, getDeviceOption(), device))
 			rv = true;
 
 		return rv;
@@ -2713,7 +2719,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 			return new Device(ifname, this);
 		}
 		else {
-			const ifnames = L.toArray(uci.get('network', this.sid, 'device'));
+			const ifnames = L.toArray(this.get('device'));
 
 			for (let ifn of ifnames) {
 				const m = ifn.match(/^([^:/]+)/);
@@ -2768,9 +2774,8 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 		if (!this.isBridge() && !(this.isVirtual() && !this.isFloating()))
 			return null;
 
-		const device = uci.get('network', this.sid, 'device');
-
-		if (device && device.charAt(0) != '@') {
+		for (const device of L.toArray(this.get('device'))) {
+			if (device.charAt(0) == '@') continue;
 			const m = device.match(/^([^:/]+)/);
 			if (m != null)
 				rv.push(Network.prototype.instantiateDevice(m[1], this));
@@ -2823,8 +2828,7 @@ Protocol = baseclass.extend(/** @lends LuCI.network.Protocol.prototype */ {
 		else if (this.isBridge() && 'br-%s'.format(this.sid) == device)
 			return true;
 
-		const name = uci.get('network', this.sid, 'device');
-		if (name) {
+		for (const name of L.toArray(this.get('device'))) {
 			const m = name.match(/^([^:/]+)/);
 			if (m != null && m[1] == device)
 				return true;
