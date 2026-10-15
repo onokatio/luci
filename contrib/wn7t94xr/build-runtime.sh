@@ -55,7 +55,7 @@ export PKG_CONFIG_SYSROOT_DIR="$prefix" PKG_CONFIG_LIBDIR="$prefix/usr/lib/pkgco
 cmake -S "$sources/ucode" -B "$build/ucode-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
  -DCMAKE_C_FLAGS="-Os -mfloat-abi=hard -I$prefix/usr/include -include $here/qsort-compat.h" \
  -DCMAKE_SHARED_LINKER_FLAGS="$build/qsort.o -Wl,--exclude-libs,libjson-c.a" \
- -Dpkgcfg_lib_JSONC_json-c="$prefix/usr/lib/libjson-c.a" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib \
+ -Dpkgcfg_lib_JSONC_json-c="$prefix/usr/lib/libjson-c.a" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DSOVERSION=20230711 \
  -DUBUS_SUPPORT=ON -DUCI_SUPPORT=ON -DFS_SUPPORT=ON -DMATH_SUPPORT=ON -DLOG_SUPPORT=ON \
  -DDEBUG_SUPPORT=OFF -DNL80211_SUPPORT=OFF -DRTNL_SUPPORT=OFF -DRESOLV_SUPPORT=OFF \
  -DSOCKET_SUPPORT=OFF -DZLIB_SUPPORT=OFF -DDIGEST_SUPPORT=OFF -DULOOP_SUPPORT=OFF -DIO_SUPPORT=OFF -DSTRUCT_SUPPORT=OFF
@@ -79,7 +79,9 @@ rpcd_header="$(find "$sdk/build_dir" -path '*/rpcd-*/include/rpcd/plugin.h' -pri
  -I"$stage/usr/include" -I"$(dirname "$(dirname "$rpcd_header")")" "$sources/rpcd/ucode.c" \
  -L"$prefix/usr/lib" -L"$stage/usr/lib" -Wl,-rpath,/tmp/luci-ram/usr/lib -lucode -lubus -lubox -o "$out/usr/lib/rpcd/ucode.so"
 cp -a "$prefix/usr/bin/ucode" "$out/usr/bin/"
-cp -a "$prefix/usr/lib/libucode.so.0" "$prefix/usr/lib/liblucihttp.so.0" "$prefix/usr/lib/liblucihttp.so.0.1" "$out/usr/lib/"
+cp -a "$prefix/usr/lib/libucode.so.20230711" "$prefix/usr/lib/liblucihttp.so.0" "$prefix/usr/lib/liblucihttp.so.0.1" "$out/usr/lib/"
 for module in fs log uci ubus math lucihttp; do cp "$prefix/usr/lib/ucode/$module.so" "$out/usr/lib/ucode/"; done
 find "$out/usr" -type f \( -name '*.so' -o -name '*.so.[0-9]*' -o -name ucode \) -exec "$strip" '{}' +
-[ -z "$("$tc/arm-openwrt-linux-muslgnueabi-nm" -D "$out/usr/lib/libucode.so.0" | awk '$2=="T" && $3 ~ /^json_/')" ]
+[ -z "$("$tc/arm-openwrt-linux-muslgnueabi-nm" -D "$out/usr/lib/libucode.so.20230711" | awk '$2=="T" && $3 ~ /^json_/')" ]
+
+"$tc/arm-openwrt-linux-muslgnueabi-readelf" -d "$out/usr/bin/ucode" | grep -q 'Shared library: \[libucode.so.20230711\]'

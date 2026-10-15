@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
 OUT, CACHE = map(pathlib.Path, sys.argv[1:])
-custom_names = {'libiwinfo20181126', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode', 'ucode',
+custom_names = {'libiwinfo20181126', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
                 'liblucihttp0', 'liblucihttp-ucode', 'rpcd-mod-ucode', 'luci-base', 'luci-mod-network',
                 'luci-theme-bootstrap', 'luci-lib-uqr', 'luci-app-package-manager', 'luci-app-sqm',
                 'luci-qsdk-wn7t94xr-runtime', 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
@@ -116,7 +116,7 @@ for line in manifest.splitlines():
 assert ram_names == set(records) - persistent and len(ram_names) == len(records) - len(persistent)
 libraries = {file: data for name in ram_names for file, data in records[name][1].items()
              if file.startswith('usr/lib/') and '/' not in file.removeprefix('usr/lib/')}
-exposed = set(payload) | {'usr/lib/libiwinfo.so', 'usr/lib/libucode.so.0'}
+exposed = set(payload) | {'usr/lib/libiwinfo.so', 'usr/lib/libucode.so.20230711'}
 for file, data in libraries.items():
     if file in exposed and isinstance(data, str):
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
@@ -126,7 +126,7 @@ assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network',
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
 base = records['luci-base'][1]
 assert ('25.12+qsdk' + main['Version']).encode() in base['usr/share/ucode/luci/version.uc']
-assert b'/tmp/luci-ram/usr/lib' in records['libucode'][1]['usr/lib/libucode.so.0']
+assert b'/tmp/luci-ram/usr/lib' in records['libucode20230711'][1]['usr/lib/libucode.so.20230711']
 assert not any('/lib/lua/' in file for file in base)
 assert 'www/cgi-bin/luci' in base and 'usr/share/rpcd/ucode/luci' in base
 

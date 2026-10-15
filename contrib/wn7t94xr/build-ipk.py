@@ -130,14 +130,14 @@ native = {
     'libiwinfo20181126': (['usr/lib/libiwinfo.so'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
     'rpcd-mod-iwinfo': (['usr/lib/rpcd/iwinfo.so'], 'libc, rpcd, libiwinfo20181126, libubox20191228, libubus20210603, libuci20130104'),
     'rpcd-mod-luci': (['usr/lib/rpcd/luci.so'], 'libc, rpcd, libiwinfo20181126, libubox20191228, libubus20210603, libuci20130104, libnl-tiny'),
-    'libucode': (['usr/lib/libucode.so.0'], 'libc, libgcc'),
-    'ucode': (['usr/bin/ucode'], 'libc, libucode'),
+    'libucode20230711': (['usr/lib/libucode.so.20230711'], 'libc, libgcc'),
+    'ucode': (['usr/bin/ucode'], 'libc, libucode20230711'),
     'liblucihttp0': (['usr/lib/liblucihttp.so.0', 'usr/lib/liblucihttp.so.0.1'], 'libc'),
-    'liblucihttp-ucode': (['usr/lib/ucode/lucihttp.so'], 'libc, libucode, liblucihttp0'),
-    'rpcd-mod-ucode': (['usr/lib/rpcd/ucode.so'], 'libc, rpcd, libucode, libubus20210603, libubox20191228'),
+    'liblucihttp-ucode': (['usr/lib/ucode/lucihttp.so'], 'libc, libucode20230711, liblucihttp0'),
+    'rpcd-mod-ucode': (['usr/lib/rpcd/ucode.so'], 'libc, rpcd, libucode20230711, libubus20210603, libubox20191228'),
 }
 for module in ['fs', 'log', 'uci', 'ubus', 'math', 'html']:
-    native['ucode-mod-' + module] = (['usr/lib/ucode/' + module + '.so'], 'libc, libucode' +
+    native['ucode-mod-' + module] = (['usr/lib/ucode/' + module + '.so'], 'libc, libucode20230711' +
         (', libuci20130104' if module == 'uci' else ', libubus20210603, libubox20191228' if module == 'ubus' else ''))
 for name, (filenames, depends) in native.items():
     payload = {}
@@ -147,7 +147,7 @@ for name, (filenames, depends) in native.items():
         if isinstance(binary, bytes):
             assert binary[:6] == b'\x7fELF\x01\x01' and binary[18:20] == b'\x28\x00', filename
         payload[filename] = (binary, 0o755)
-    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else '')
+    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else 'libucode' if name == 'libucode20230711' else '')
 
 luci_packages = {
     'luci-base': ('modules/luci-base', 'libc, rpcd, rpcd-mod-file, rpcd-mod-luci, rpcd-mod-ucode, cgi-io, ucode, ucode-mod-fs, ucode-mod-log, ucode-mod-uci, ucode-mod-ubus, ucode-mod-math, ucode-mod-html, liblucihttp-ucode'),
