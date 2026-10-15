@@ -154,6 +154,7 @@ main_hooks = unpack(unpack(records['luci-qsdk-wn7t94xr'][2].read_bytes())['contr
 assert 'exec /' + prepare_path in main_hooks['preinst'].decode()
 assert b'luci-ram enable' in main_hooks['postinst'] and b'network restart' not in main_hooks['postinst']
 assert b'uci set uhttpd.main.ubus_prefix=/ubus\n' in main_hooks['postinst']
+assert b'uci set luci.main.ubuspath=/cgi-bin/luci/admin/ubus\n' in main_hooks['postinst']
 assert 64 <= json.loads((OUT / 'sizes.json').read_text())['preflight_kib'] < 100
 
 with tempfile.TemporaryDirectory() as directory:
