@@ -1,0 +1,38 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-2.0-only
+. /rom/etc/init.d/network
+
+reload_service() {
+	if [ "$1" = wireless ]; then
+		[ ! -e /lib/wifi/cust/wireless_backup ] || {
+			logger -t network 'Finish the pending vendor Wireless change first'
+			return 1
+		}
+		/sbin/wifi reload
+	else (
+		. /rom/etc/init.d/network
+		reload_service "$@"
+	)
+	fi
+}
+
+service_running() {
+	ubus -t 30 wait_for network.interface
+	/sbin/wifi up
+}
+
+service_triggers() {
+	procd_add_reload_trigger network
+	procd_open_trigger
+	procd_add_config_trigger "config.change" wireless /etc/init.d/network reload wireless
+	procd_close_trigger
+	procd_open_validate
+	validate_atm_bridge_section
+	validate_route_section
+	[ ! -e /proc/sys/net/ipv6 ] || validate_route6_section
+	validate_rule_section
+	[ ! -e /proc/sys/net/ipv6 ] || validate_rule6_section
+	validate_switch_section
+	validate_switch_vlan
+	procd_close_validate
+}

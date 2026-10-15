@@ -1,0 +1,155 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=89
+EXTRA_COMMANDS=fetch
+EXTRA_HELP="fetch  Download and verify the complete LuCI runtime into RAM"
+
+ram=/tmp/luci-ram
+state=/overlay/luci-ram
+manifest=/etc/luci-qsdk/ram-packages
+dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'
+bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
+
+fetch() {
+	local digest download unpack name version sha url database
+	digest="$(sha256sum "$manifest" | cut -d ' ' -f 1)" || return 1
+	[ ! -L "$ram" ] || return 1
+	if [ -d "$ram" ]; then
+		[ "$(stat -c '%u:%a' "$ram")" = 0:755 ] &&
+		   [ "$(cat "$ram/.manifest-sha256")" = "$digest" ] &&
+		   [ -x "$ram/usr/sbin/uhttpd" ] && [ -f "$ram/www/cgi-bin/luci" ]
+		return $?
+	fi
+	download="$(mktemp -d /tmp/luci-download.XXXXXX)" || return 1
+	unpack="$(mktemp -d /tmp/luci-unpack.XXXXXX)" || { rm -rf "$download"; return 1; }
+	mkdir -p "$unpack/usr/lib/opkg/info" || { rm -rf "$unpack" "$download"; return 1; }
+	database=/usr/lib/opkg/status
+	[ ! -f "$state/upper/usr/lib/opkg/status" ] || database="$state/upper/usr/lib/opkg/status"
+	awk 'BEGIN { packages["luci-qsdk-wn7t94xr"]=1; packages["luci-qsdk-wn7t94xr-prepare"]=1 } NR==FNR { packages[$1]=1; next } /^Package: / { skip=($2 in packages) } !skip { print }' \
+		"$manifest" "$database" > "$unpack/usr/lib/opkg/status"
+	awk '/^Package: / { keep=($2=="luci-qsdk-wn7t94xr" || $2=="luci-qsdk-wn7t94xr-prepare") } keep { print }' \
+		/usr/lib/opkg/status >> "$unpack/usr/lib/opkg/status" || { rm -rf "$unpack" "$download"; return 1; }
+	while read -r name version sha url; do
+		if ! curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors --connect-timeout 10 --max-time 45 "$url" -o "$download/package.ipk" ||
+		   [ "$(sha256sum "$download/package.ipk" | cut -d ' ' -f 1)" != "$sha" ] ||
+		   ! tar -xzf "$download/package.ipk" -C "$download" ||
+		   ! tar -xzf "$download/data.tar.gz" -C "$unpack" ||
+		   ! tar -xzf "$download/control.tar.gz" -C "$download" ||
+		   [ "$(sed -n 's/^Package: //p' "$download/control")" != "$name" ] ||
+		   [ "$(sed -n 's/^Version: //p' "$download/control")" != "$version" ]; then
+			rm -rf "$unpack" "$download"
+			logger -t luci-ram "LuCI package download or verification failed: $name"
+			return 1
+		fi
+		if ! cp "$download/control" "$unpack/usr/lib/opkg/info/$name.control" ||
+		   ! { cat "$download/control"; printf 'Status: install ok installed\n\n'; } >> "$unpack/usr/lib/opkg/status" ||
+		   ! tar -tzf "$download/data.tar.gz" > "$download/filelist" ||
+		   ! sed -e '/\/$/d' -e 's,^\./,,' -e '/^etc\//d' -e '/^sbin\/luci-reload$/d' -e '/^sbin\/wifi$/d' \
+		     -e '/^usr\/bin\/ucode$/d' -e '/^usr\/sbin\/uhttpd$/d' -e '/^usr\/libexec\/cgi-io$/d' \
+		     -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
+		     -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \
+		     "$download/filelist" > "$unpack/usr/lib/opkg/info/$name.list"; then
+			rm -rf "$unpack" "$download"
+			return 1
+		fi
+		rm -f "$download"/*
+	done < "$manifest"
+	[ -x "$unpack/usr/sbin/uhttpd" ] && [ -x "$unpack/usr/bin/ucode" ] && [ -f "$unpack/usr/share/ucode/luci/dispatcher.uc" ] &&
+	   [ -f "$unpack/lib/netifd/wireless/qcawificfg80211.sh" ] &&
+	   [ -f "$unpack/etc/init.d/network" ] && [ -f "$unpack/sbin/wifi" ] || { rm -rf "$unpack" "$download"; return 1; }
+	printf '%s\n' "$digest" > "$unpack/.manifest-sha256"
+	chmod 755 "$unpack"
+	mv "$unpack" "$ram" || { rm -rf "$unpack" "$download"; return 1; }
+	rm -rf "$download"
+	logger -t luci-ram 'Verified all LuCI packages and unpacked them in RAM'
+}
+
+owns_mount() {
+	grep -F " /$1 overlay " /proc/mounts | grep -Fq "upperdir=$state/upper/$1,"
+}
+
+start() {
+	# Finish every download before changing the vendor service or filesystem view.
+	fetch || { /etc/init.d/sqm start; return 1; }
+	[ ! -L "$state" ] || return 1
+	for dir in $dirs; do
+		owns_mount "$dir" && continue
+		grep -Fq " /$dir " /proc/mounts && return 1
+	done
+	for file in $bindings; do
+		[ "/$file" -ef "$ram/$file" ] && continue
+		grep -Fq " /$file " /proc/mounts && return 1
+	done
+	mount -o remount,compr=zlib /overlay || return 1
+	mkdir -p "$state" || return 1
+	chmod 700 "$state"
+	for dir in $dirs; do
+		owns_mount "$dir" && continue
+		mkdir -p "/$dir" "$ram/$dir" "$state/upper/$dir" "$state/work/$dir" || { stop; return 1; }
+		mount -t overlay overlay -o "lowerdir=$ram/$dir:/$dir,upperdir=$state/upper/$dir,workdir=$state/work/$dir" "/$dir" || { stop; return 1; }
+	done
+	for file in $bindings; do
+		[ "/$file" -ef "$ram/$file" ] && continue
+		mount --bind "$ram/$file" "/$file" || { stop; return 1; }
+	done
+	if [ -f "$state/upper/usr/lib/opkg/status" ]; then
+		awk 'BEGIN { packages["luci-qsdk-wn7t94xr"]=1; packages["luci-qsdk-wn7t94xr-prepare"]=1 } NR==FNR { packages[$1]=1; next } /^Package: / { skip=($2 in packages) } !skip { print }' \
+			"$manifest" "$state/upper/usr/lib/opkg/status" > "$ram/opkg-status.new" || { stop; return 1; }
+		awk 'BEGIN { packages["luci-qsdk-wn7t94xr"]=1; packages["luci-qsdk-wn7t94xr-prepare"]=1 } NR==FNR { packages[$1]=1; next } /^Package: / { keep=($2 in packages) } keep { print }' \
+			"$manifest" "$ram/usr/lib/opkg/status" >> "$ram/opkg-status.new" || { stop; return 1; }
+		cat "$ram/opkg-status.new" > /usr/lib/opkg/status || { stop; return 1; }
+		rm -f "$ram/opkg-status.new"
+	fi
+	if [ ! -f "$ram/.started" ]; then
+		# netifd discovers wireless driver scripts only when its process starts.
+		/etc/init.d/rpcd restart || { stop; return 1; }
+		/etc/init.d/network restart || { stop; return 1; }
+		ubus -t 30 wait_for network.interface || { stop; return 1; }
+		rm -rf /tmp/luci-modulecache
+		rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*.json
+		"$ram/etc/init.d/ucitrack" start || { stop; return 1; }
+		"$ram/etc/init.d/uhttpd" start || { stop; return 1; }
+		if [ -f /etc/config/luci_qsdk_switch ]; then
+			ubus call luci-rpc applySwitchSettings || logger -t luci-ram 'Switch profile failed; check system logs'
+		fi
+		touch "$ram/.started"
+	fi
+	if [ -x /etc/init.d/sqm ]; then
+		/etc/init.d/sqm enable || return 1
+		/etc/init.d/sqm start || logger -t luci-ram 'SQM did not start; inspect its configuration and log'
+	fi
+}
+
+stop() {
+	local mounted=0 result=0
+	for dir in $dirs; do owns_mount "$dir" && mounted=1; done
+	for file in $bindings; do [ "/$file" -ef "$ram/$file" ] && mounted=1; done
+	[ "$mounted" = 1 ] || return 0
+	rm -f "$ram/.started"
+	[ ! -x /etc/init.d/sqm ] || SQM_QSDK_RELEASE_ACCEL=1 /etc/init.d/sqm stop || return 1
+	[ ! -x /etc/init.d/sqm ] || /etc/init.d/sqm disable || return 1
+	[ ! -x "$ram/etc/init.d/uhttpd" ] || "$ram/etc/init.d/uhttpd" stop
+	[ ! -x "$ram/etc/init.d/ucitrack" ] || "$ram/etc/init.d/ucitrack" stop
+	/etc/init.d/rpcd stop
+	# Keep routing active if a busy mount prevents restoring the vendor view.
+	for file in usr/lib/libiwinfo.so sbin/wifi etc/init.d/network; do
+		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || result=1
+	done
+	for dir in lib/netifd/wireless www usr/share etc/sqm usr/lib/sqm usr/lib/opkg usr/libexec usr/lib/rpcd usr/lib/ucode usr/lib/lua; do
+		owns_mount "$dir" || continue
+		if ! umount "/$dir"; then
+			# netifd retains a directory fd until the network restart below.
+			[ "$dir" = lib/netifd/wireless ] && umount -l "/$dir" || result=1
+		fi
+	done
+	/etc/init.d/rpcd start
+	[ "$result" = 0 ] || return 1
+	/etc/init.d/network restart || return 1
+	[ ! -L "$ram" ] && [ "$(stat -c '%u' "$ram")" = 0 ] || return 1
+	rm -rf "$ram"
+}
+
+shutdown() {
+	[ ! -x "$ram/etc/init.d/uhttpd" ] || "$ram/etc/init.d/uhttpd" stop
+}
