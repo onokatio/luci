@@ -35,6 +35,7 @@
 #include <netinet/ether.h>
 #include <linux/rtnetlink.h>
 #include <linux/if_packet.h>
+#include <dirent.h>
 
 #include <netlink/msg.h>
 #include <netlink/attr.h>
@@ -51,6 +52,7 @@
 #include <iwinfo.h>
 
 #include <rpcd/plugin.h>
+#include "qsdk-hostapd.h"
 
 #ifndef IN6_IS_ADDR_ULA
 #define IN6_IS_ADDR_ULA(a) (((a)->s6_addr[0] & 0xfe) == 0xfc)
@@ -58,6 +60,10 @@
 
 
 static struct blob_buf blob;
+#include "qsdk-acceleration.h"
+#include "qsdk-wireless.h"
+#include "qsdk-wireless-diagnostics.h"
+#include "qsdk-dscp.h"
 
 struct reply_context {
 	struct ubus_context *context;
@@ -1095,12 +1101,27 @@ static bool rpc_luci_get_iwinfo(struct blob_buf *buf, const char *devname,
 	return true;
 }
 
+static const char *rpc_luci_config_string(struct blob_attr *section, const char *key)
+{
+	struct blob_attr *cur, *option;
+	int rem, rem2;
+	blobmsg_for_each_attr(cur, section, rem) {
+		if (strcmp(blobmsg_name(cur), "config") || blobmsg_type(cur) != BLOBMSG_TYPE_TABLE)
+			continue;
+		blobmsg_for_each_attr(option, cur, rem2)
+			if (!strcmp(blobmsg_name(option), key) && blobmsg_type(option) == BLOBMSG_TYPE_STRING)
+				return blobmsg_get_string(option);
+	}
+	return NULL;
+}
+
 static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
                                              int type, struct blob_attr *msg)
 {
 	struct blob_attr *wifi, *cur, *iface, *cur2;
 	struct reply_context *rctx = req->priv;
-	const char *name, *first_ifname;
+	const char *name, *first_ifname, *link_ifname, *driver;
+	bool qca;
 	int rem, rem2, rem3, rem4;
 	void *o, *a, *o2;
 
@@ -1113,6 +1134,8 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 
 		rem2 = blobmsg_data_len(wifi);
 		first_ifname = NULL;
+		driver = rpc_luci_config_string(wifi, "type");
+		qca = driver && !strcmp(driver, "qcawificfg80211");
 
 		__blob_for_each_attr(cur, blobmsg_data(wifi), rem2) {
 			name = blobmsg_name(cur);
@@ -1136,10 +1159,19 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 
 					rem4 = blobmsg_data_len(iface);
 					name = NULL;
+					link_ifname = qca ? rpc_luci_config_string(iface, "ifname") : NULL;
 
 					__blob_for_each_attr(cur2, blobmsg_data(iface), rem4) {
-						if (!strcmp(blobmsg_name(cur2), "ifname"))
+						if (!strcmp(blobmsg_name(cur2), "ifname")) {
 							name = blobmsg_get_string(cur2);
+							if (link_ifname) {
+								/* MLO bridge ownership stays in netifd; show its physical link. */
+								blobmsg_add_string(&rctx->blob, "bridge_ifname", name);
+								name = link_ifname;
+								blobmsg_add_string(&rctx->blob, "ifname", name);
+								continue;
+							}
+						}
 						else if (!strcmp(blobmsg_name(cur2), "iwinfo"))
 							continue;
 
@@ -1161,7 +1193,7 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 		}
 
 		rpc_luci_get_iwinfo(&rctx->blob,
-		                    first_ifname ? first_ifname : blobmsg_name(wifi),
+		                    qca ? blobmsg_name(wifi) : first_ifname ? first_ifname : blobmsg_name(wifi),
 		                    true);
 
 		blobmsg_close_table(&rctx->blob, o);
@@ -1903,6 +1935,108 @@ rpc_luci_get_duid_hints(struct ubus_context *ctx, struct ubus_object *obj,
 	return UBUS_STATUS_OK;
 }
 
+/* QSDK switch topology */
+static bool
+rpc_luci_dt_u32(const char *path, uint32_t value)
+{
+	uint32_t data;
+	FILE *f = fopen(path, "rb");
+	bool match;
+
+	if (!f)
+		return false;
+
+	match = fread(&data, 1, sizeof(data), f) == sizeof(data) &&
+	        fgetc(f) == EOF && !ferror(f) && ntohl(data) == value;
+	fclose(f);
+	return match;
+}
+
+static bool
+rpc_luci_qsdk_switch_supported(void)
+{
+	return !(strcmp(readstr("/sys/firmware/devicetree/base/compatible"), "qcom,ipq5332-ap-mi01.6") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible"), "qcom,ess-switch-qca8386") ||
+	    strcmp(readstr("/sys/firmware/devicetree/base/aliases/ethernet1"), "/soc/dp2") ||
+	    strcmp(readstr("/sys/class/net/eth1/type"), "1") ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/device_id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_cpu_bmp", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_lan_bmp", 14) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/switch_wan_bmp", 0) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,id", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,is_switch_connected", 1) ||
+	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1));
+}
+
+static void
+rpc_luci_qsdk_switch(struct blob_buf *buf)
+{
+	static const struct blobmsg_policy switch_policy = { "switch", BLOBMSG_TYPE_UNSPEC };
+	static const struct blobmsg_policy device_policy = { "switch1", BLOBMSG_TYPE_UNSPEC };
+	static const struct blobmsg_policy ports_policy = { "ports", BLOBMSG_TYPE_UNSPEC };
+	struct blob_attr *switches = NULL, *device = NULL, *ports = NULL, *cur;
+	struct blob_buf original;
+	void *s, *d, *a, *p;
+	int rem, i;
+
+	/* The vendor board generator skips port metadata when network UCI already exists. */
+	if (!rpc_luci_qsdk_switch_supported()) return;
+
+	blobmsg_parse(&switch_policy, 1, &switches, blob_data(buf->head), blob_len(buf->head));
+	if (switches) {
+		if (blobmsg_type(switches) != BLOBMSG_TYPE_TABLE)
+			return;
+		blobmsg_parse(&device_policy, 1, &device, blobmsg_data(switches), blobmsg_data_len(switches));
+		if (device) {
+			if (blobmsg_type(device) != BLOBMSG_TYPE_TABLE)
+				return;
+			blobmsg_parse(&ports_policy, 1, &ports, blobmsg_data(device), blobmsg_data_len(device));
+			if (ports && (blobmsg_type(ports) != BLOBMSG_TYPE_ARRAY || blobmsg_data_len(ports)))
+				return;
+		}
+	}
+
+	original = *buf;
+	memset(buf, 0, sizeof(*buf));
+	blob_buf_init(buf, 0);
+	blob_for_each_attr(cur, original.head, rem)
+		if (strcmp(blobmsg_name(cur), "switch"))
+			blobmsg_add_blob(buf, cur);
+
+	s = blobmsg_open_table(buf, "switch");
+	if (switches)
+		blobmsg_for_each_attr(cur, switches, rem)
+			if (strcmp(blobmsg_name(cur), "switch1"))
+				blobmsg_add_blob(buf, cur);
+
+	d = blobmsg_open_table(buf, "switch1");
+	if (device)
+		blobmsg_for_each_attr(cur, device, rem)
+			if (strcmp(blobmsg_name(cur), "ports"))
+				blobmsg_add_blob(buf, cur);
+
+	a = blobmsg_open_array(buf, "ports");
+	for (i = 0; i <= 3; i++) {
+		p = blobmsg_open_table(buf, NULL);
+		blobmsg_add_u32(buf, "num", i);
+		if (i == 0) {
+			blobmsg_add_string(buf, "device", "eth1");
+			blobmsg_add_u8(buf, "need_tag", false);
+		}
+		else {
+			blobmsg_add_string(buf, "role", "lan");
+			blobmsg_add_u32(buf, "index", i);
+		}
+		blobmsg_close_table(buf, p);
+	}
+	blobmsg_close_array(buf, a);
+	blobmsg_close_table(buf, d);
+	blobmsg_close_table(buf, s);
+	blob_buf_free(&original);
+}
+/* End QSDK switch topology */
+#include "qsdk-switch-controls.h"
+
 static int
 rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
                         struct ubus_request_data *req, const char *method,
@@ -1912,6 +2046,8 @@ rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
 
 	if (!blobmsg_add_json_from_file(&blob, "/etc/board.json"))
 		return UBUS_STATUS_UNKNOWN_ERROR;
+
+	rpc_luci_qsdk_switch(&blob);
 
 	ubus_send_reply(ctx, req, blob.head);
 	return UBUS_STATUS_OK;
@@ -2036,6 +2172,14 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		UBUS_METHOD_NOARG("getHostHints", rpc_luci_get_host_hints),
 		UBUS_METHOD_NOARG("getDUIDHints", rpc_luci_get_duid_hints),
 		UBUS_METHOD_NOARG("getBoardJSON", rpc_luci_get_board_json),
+		UBUS_METHOD_NOARG("getAccelerationStatus", rpc_luci_get_acceleration_status),
+		UBUS_METHOD_NOARG("getSwitchSettings", rpc_luci_get_switch_settings),
+		UBUS_METHOD("setSwitchSettings", rpc_luci_set_switch_settings, qsdk_switch_policy),
+		UBUS_METHOD_NOARG("applySwitchSettings", rpc_luci_set_switch_settings),
+		UBUS_METHOD("getWirelessSettings", rpc_luci_get_wireless_settings, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessDiagnostics", rpc_luci_get_wireless_diagnostics, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessWmm", rpc_luci_get_wireless_wmm, qsdk_wireless_policy),
+		UBUS_METHOD("getWirelessDscpMap", rpc_luci_get_wireless_dscp, qsdk_dscp_policy),
 		UBUS_METHOD("getDHCPLeases", rpc_luci_get_dhcp_leases, rpc_get_leases_policy)
 	};
 
@@ -2049,7 +2193,9 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		.n_methods = ARRAY_SIZE(luci_methods),
 	};
 
-	return ubus_add_object(ctx, &obj);
+	int ret = ubus_add_object(ctx, &obj);
+	if (!ret) qsdk_hostapd_init(ctx);
+	return ret;
 }
 
 struct rpc_plugin rpc_plugin = {

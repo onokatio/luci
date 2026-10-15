@@ -68,6 +68,8 @@ return view.extend({
 				  " and prioritisation on one " +
 				  "network interface.");
 
+		m.description += ' ' + _('QSDK acceleration is paused while SQM is enabled and restored after SQM is disabled.');
+
 		s = m.section(form.TypedSection, 'queue', _('Queues'));
 		s.tab("tab_basic", _("Basic Settings"));
 		s.tab("tab_qdisc", _("Queue Discipline"));

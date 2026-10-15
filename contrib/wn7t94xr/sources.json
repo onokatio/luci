@@ -1,0 +1,93 @@
+{
+  "base_packages": [
+    {
+      "depends": "libc, libubox20191228, libubus20210603",
+      "feed": "packages",
+      "filename": "cgi-io_2021-09-08-98cef9dd-20_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "GPL-2.0-or-later",
+      "name": "cgi-io",
+      "sha256": "b7068a06212587704c967aabb3eb284693e2736eb6feb243ecdcc5b0dfaa57e3",
+      "version": "2021-09-08-98cef9dd-20"
+    },
+    {
+      "depends": "libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2",
+      "feed": "base",
+      "filename": "uhttpd_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "ISC",
+      "name": "uhttpd",
+      "sha256": "089bb730a68477e336e4d00826fa1b4edfb39f7b8515ec447af06ee99fd37171",
+      "version": "2020-10-01-3abcc891-1"
+    },
+    {
+      "depends": "libc, uhttpd, libubus20210603, libblobmsg-json",
+      "feed": "base",
+      "filename": "uhttpd-mod-ubus_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "ISC",
+      "name": "uhttpd-mod-ubus",
+      "sha256": "936c8888d1b9c3375fe135a14fc6d9a1742a41e2e3028857a8277b48d9fb50be",
+      "version": "2020-10-01-3abcc891-1"
+    },
+    {
+      "depends": "libc, tc, kmod-sched-core, kmod-sched-cake, kmod-ifb, iptables, iptables-mod-ipopt, iptables-mod-conntrack-extra",
+      "feed": "packages",
+      "filename": "sqm-scripts_1.4.0-2_all.ipk",
+      "license": "GPLv2",
+      "name": "sqm-scripts",
+      "sha256": "8ca4cfe83c098f395ba8c692708601b6263effa52f951d32ce4827d10a55e43b",
+      "version": "1.4.0-2"
+    }
+  ],
+  "forks": {
+    "iwinfo": "50680afab93e6f76ddd0edc7d75db866adae2da7",
+    "netifd": "61ec92e000a8e33868f1b2cb24f5748615123d48"
+  },
+  "rom_packages": {
+    "curl": "7.80.0",
+    "iptables": "1.8.3-1",
+    "iptables-mod-conntrack-extra": "1.8.3-1",
+    "iptables-mod-ipopt": "1.8.3-1",
+    "kmod-ifb": "5.4.213-1",
+    "kmod-sched-core": "5.4.213-1",
+    "libblobmsg-json": "2020-05-25-66195aee-1",
+    "libjson-c2": "0.12.1-3.1",
+    "libjson-script": "2020-05-25-66195aee-1",
+    "liblua5.1.5": "5.1.5-3",
+    "libnl-tiny": "0.1-5",
+    "libubox20191228": "2020-05-25-66195aee-1",
+    "libubus-lua": "2022-02-21-b32a0e17-1",
+    "libubus20210603": "2022-02-21-b32a0e17-1",
+    "libuci20130104": "2019-09-01-415f9e48-4",
+    "lua": "5.1.5-3",
+    "rpcd": "2020-05-26-67c8a3fd-1",
+    "rpcd-mod-file": "2020-05-26-67c8a3fd-1",
+    "rpcd-mod-rrdns": "20170710",
+    "tc": "5.0.0-2.1",
+    "uci": "2019-09-01-415f9e48-4",
+    "usign": "2020-05-23-f1f65026-1"
+  },
+  "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
+  "runtime_sources": {
+    "ucode": {
+      "url": "https://github.com/jow-/ucode.git",
+      "revision": "85922056ef7abeace3cca3ab28bc1ac2d88e31b1"
+    },
+    "rpcd": {
+      "url": "https://github.com/openwrt/rpcd.git",
+      "revision": "d99f703e4035d03fbcfbada3cb697db346c2b984"
+    },
+    "lucihttp": {
+      "url": "https://github.com/jow-/lucihttp.git",
+      "revision": "9b5b683fbb2bb0010aa031d620d0ab8105516757"
+    },
+    "json-c": {
+      "url": "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18-nodoc.tar.gz",
+      "sha256": "602cdefc1d2aab8318fc0814b7ce7d59e72514d4276ca3eff92f35f86cf1c160"
+    },
+    "qsort": {
+      "url": "https://git.musl-libc.org/cgit/musl/plain/src/stdlib/qsort.c?h=v1.2.5",
+      "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
+    }
+  },
+  "version": "5.0.0-1",
+  "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d"
+}

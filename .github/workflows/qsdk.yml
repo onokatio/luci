@@ -1,0 +1,62 @@
+name: QSDK userspace IPK
+on:
+  push:
+    branches: [qsdk-25.12]
+  pull_request:
+    branches: [qsdk-25.12]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: luci
+      - name: Checkout backend forks
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          lock = json.load(open('luci/contrib/wn7t94xr/sources.json'))
+          for repo, revision in lock['forks'].items():
+              subprocess.run(['git', 'clone', '--filter=blob:none', 'https://github.com/onokatio/' + repo + '.git', repo], check=True)
+              subprocess.run(['git', '-C', repo, 'checkout', revision], check=True)
+          PY
+      - name: Prepare pinned SDK
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y python2 build-essential gawk gettext libncurses5-dev unzip curl rsync libssl-dev cmake pkg-config
+          sudo ln -sf /usr/bin/python2 /usr/local/bin/python
+          curl -fL https://archive.openwrt.org/releases/19.07.10/targets/ipq40xx/generic/openwrt-sdk-19.07.10-ipq40xx-generic_gcc-7.5.0_musl_eabi.Linux-x86_64.tar.xz -o sdk.tar.xz
+          echo 'b7c5e68c3d327a91dc5761f2d56c20a41e6846f36727f2c675810466d83b7306  sdk.tar.xz' | sha256sum -c -
+          mkdir sdk
+          tar -xJf sdk.tar.xz --strip-components=1 -C sdk
+          cd sdk
+          ./scripts/feeds update base
+          git -C feeds/base checkout "$(python3 -c 'import json; print(json.load(open("../luci/contrib/wn7t94xr/sources.json"))["sdk_base"])')"
+          ./scripts/feeds update -i base
+          ./scripts/feeds install libubox ubus uci lua libnl-tiny rpcd
+          make defconfig
+          sed -i 's/^CONFIG_AUTOREMOVE=y/# CONFIG_AUTOREMOVE is not set/' .config
+          make -j1 package/libubox/compile package/ubus/compile package/uci/compile package/lua/compile package/libnl-tiny/compile package/rpcd/compile
+      - name: Build and check
+        run: |
+          node luci/contrib/wn7t94xr/selfcheck.js
+          python3 luci/contrib/wn7t94xr/sqm-selfcheck.py
+          python3 netifd/contrib/qsdk/selfcheck.py
+          python3 iwinfo/tests/channel-selfcheck.py
+          sh luci/contrib/wn7t94xr/build-native.sh sdk iwinfo native
+          sh luci/contrib/wn7t94xr/build-runtime.sh sdk runtime-sources native
+          python3 luci/contrib/wn7t94xr/build-base.py base-cache
+          python3 luci/contrib/wn7t94xr/build-ipk.py native netifd base-cache package
+          python3 luci/contrib/wn7t94xr/ipk-selfcheck.py package base-cache
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wn7t94xr-ipk
+          path: |
+            package/*.ipk
+            package/SHA256SUMS
+            package/Packages*
+            package/sizes.json
+            native/telemetry-selfcheck
