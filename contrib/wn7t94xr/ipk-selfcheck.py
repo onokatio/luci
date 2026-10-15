@@ -94,7 +94,7 @@ main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages', 'sbin/luci-reload',
                         'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
-                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/libexec/opkg-call', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
+                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/libexec/opkg-call', 'usr/libexec/luci-peeraddr', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
 assert payload['sbin/luci-reload'] == '/tmp/luci-ram/sbin/luci-reload'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
