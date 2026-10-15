@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '4.0.0-4'
+VERSION = '4.0.0-5'
 SUFFIX = '+qsdk' + VERSION
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -306,6 +306,7 @@ if ! uci -q show ucitrack | grep -q '=sqm$'; then
  uci set "ucitrack.$section.init=sqm"
  uci commit ucitrack
 fi
+/etc/init.d/luci-ram disable
 /etc/init.d/luci-ram enable
 /etc/init.d/sqm enable
 sync
