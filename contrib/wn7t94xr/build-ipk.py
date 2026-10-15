@@ -99,8 +99,8 @@ def control(name, depends, version=VERSION, provides=''):
     return text + ('Provides: ' + provides + '\n' if provides else '')
 
 
-def emit(name, depends, payload, provides=''):
-    write_package(name, VERSION, payload, {'control': (control(name, depends, provides=provides).encode(), 0o644)})
+def emit(name, depends, payload, provides='', version=VERSION):
+    write_package(name, version, payload, {'control': (control(name, depends, version=version, provides=provides).encode(), 0o644)})
 
 
 def tree(path, destination=''):
@@ -139,6 +139,15 @@ native = {
 for module in ['fs', 'log', 'uci', 'ubus', 'math', 'html']:
     native['ucode-mod-' + module] = (['usr/lib/ucode/' + module + '.so'], 'libc, libucode20230711' +
         (', libuci20130104' if module == 'uci' else ', libubus20210603, libubox20191228' if module == 'ubus' else ''))
+# Keep compatibility fixes newer than the archived packages on the active feeds.
+component_versions = {
+    'libiwinfo20181126': '2019-10-16-07315b6f-1',
+    'rpcd-mod-iwinfo': '2020-05-26-67c8a3fd-1',
+    'rpcd-mod-luci': '20210614-1',
+    'liblucihttp0': '2023.03.15-9b5b683f-1',
+    'liblucihttp-ucode': '2023.03.15-9b5b683f-1',
+}
+component_versions = {name: version + '+qsdk' + VERSION for name, version in component_versions.items()}
 for name, (filenames, depends) in native.items():
     payload = {}
     for filename in filenames:
@@ -150,7 +159,9 @@ for name, (filenames, depends) in native.items():
     if name == 'libucode20230711':
         payload.update(tree(NATIVE / 'usr/share/licenses/libucode20230711', 'usr/share/licenses/libucode20230711'))
         assert len(payload) == 4
-    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else 'libucode' if name == 'libucode20230711' else '')
+    if name in ('rpcd-mod-iwinfo', 'rpcd-mod-luci'):
+        depends = depends.replace('libiwinfo20181126', 'libiwinfo20181126 (= ' + component_versions['libiwinfo20181126'] + ')')
+    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else 'libucode' if name == 'libucode20230711' else '', version=component_versions.get(name, VERSION))
 
 luci_packages = {
     'luci-base': ('modules/luci-base', 'libc, rpcd, rpcd-mod-file, rpcd-mod-luci, rpcd-mod-ucode, cgi-io, ucode, ucode-mod-fs, ucode-mod-log, ucode-mod-uci, ucode-mod-ubus, ucode-mod-math, ucode-mod-html, liblucihttp-ucode'),

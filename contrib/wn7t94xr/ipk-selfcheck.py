@@ -81,6 +81,12 @@ for fields, _, _ in records.values():
         if fields['Package'] in persistent:
             assert match[1] in LOCK['rom_packages'] or match[1] in persistent | {'libc', 'opkg', 'netifd', 'ubus', 'jshn'}
 
+for name, archived in [('libiwinfo20181126', '2019-10-16-07315b6f-1'), ('rpcd-mod-iwinfo', '2020-05-26-67c8a3fd-1')]:
+    version = records[name][0]['Version']
+    assert version.startswith(archived + '+qsdk'), name
+    if sys.platform.startswith('linux'):
+        subprocess.run(['dpkg', '--compare-versions', version, 'gt', archived], check=True)
+
 for original in LOCK['base_packages']:
     name = original['name']
     fields, payload, path = records[name]
