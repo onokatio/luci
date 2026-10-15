@@ -15,7 +15,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '4.0.0-2'
+VERSION = '4.0.0-3'
 SUFFIX = '+qsdk' + VERSION
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
@@ -298,7 +298,7 @@ uci -q delete uhttpd.main.listen_http || true
 uci -q delete uhttpd.main.listen_https || true
 uci -q delete uhttpd.main.lua_prefix || true
 uci add_list uhttpd.main.listen_http=0.0.0.0:8080
-uci set uhttpd.main.ubus_prefix=/ubus/
+uci set uhttpd.main.ubus_prefix=/ubus
 uci set uhttpd.main.redirect_https=0
 uci commit uhttpd
 if ! uci -q show ucitrack | grep -q '=sqm$'; then
