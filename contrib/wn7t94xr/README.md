@@ -26,6 +26,8 @@ LuCIの起動とSQMにはLuaを使いません。追加するLuCI拡張も25.12�
 
 Interfaces画面は、純正netifdの `ifname` とインターフェース内のブリッジ設定を維持します。新形式への設定移行は行わず、デバイスの選択・ブリッジ・STP・IGMP snoopingを同じ画面で編集できます。新形式の独立したブリッジデバイスの作成は表示しません。
 
+Webサーバーのubus公開先は `/ubus`、LuCIからの呼び出し先は標準の `/ubus/` を使います。サーバー側の設定にも末尾のスラッシュを付けると、クエリ付きの要求が404になり、同じ接続の次の要求も400になるためです。
+
 ## Wirelessの対応範囲
 
 | 標準画面の機能 | QSDKへの反映 |
@@ -180,8 +182,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.0.0-3
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.0.0-3_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.0.0-4
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.0.0-4_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -193,7 +195,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.0.0-3)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.0.0-4)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
