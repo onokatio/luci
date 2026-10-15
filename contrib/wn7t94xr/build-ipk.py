@@ -212,7 +212,7 @@ payload['sbin/luci-reload'] = ('/tmp/luci-ram/sbin/luci-reload', 0o755)
 payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
 payload['etc/hotplug.d/iface/11-sqm'] = ('/tmp/luci-ram/etc/hotplug.d/iface/11-sqm', 0o755)
 payload['etc/config/sqm'] = (b"config queue 'uplink'\n\toption enabled '0'\n\toption interface 'eth0'\n\toption download '85000'\n\toption upload '10000'\n\toption qdisc 'cake'\n\toption script 'piece_of_cake.qos'\n\toption linklayer 'none'\n", 0o644)
-for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
+for name in ('usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/libexec/opkg-call', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
     payload[name] = ('/tmp/luci-ram/' + name, 0o755)
 
 md5 = lambda data: hashlib.md5(data).hexdigest()

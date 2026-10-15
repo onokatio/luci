@@ -94,7 +94,7 @@ main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages', 'sbin/luci-reload',
                         'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
-                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
+                        'usr/sbin/uhttpd', 'usr/libexec/cgi-io', 'usr/libexec/opkg-call', 'usr/lib/liblucihttp.so', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
 assert payload['sbin/luci-reload'] == '/tmp/luci-ram/sbin/luci-reload'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
@@ -121,6 +121,8 @@ for file, data in libraries.items():
     if file in exposed and isinstance(data, str):
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
+helpers = {file for name in ram_names for file in records[name][1] if file.startswith('usr/libexec/') and '/' not in file.removeprefix('usr/libexec/')}
+assert helpers <= payload.keys(), f'RAM helpers are not exposed: {helpers - payload.keys()}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']}
 assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
