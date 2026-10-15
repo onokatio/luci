@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     name: Test ${{ matrix.arch }}
+    # The QSDK workflow cross-builds against the vendor ARM ABI.
+    if: github.base_ref != 'qsdk-25.12'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
