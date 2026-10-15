@@ -5,6 +5,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'openwrt/luci'
     name: Test ${{ matrix.arch }}
     runs-on: ubuntu-latest
     strategy:
