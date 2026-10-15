@@ -10,26 +10,27 @@ return view.extend({
 			L.resolveDefault(fs.stat('/sbin/block'), null),
 			L.resolveDefault(fs.stat('/etc/config/fstab'), null),
 			L.resolveDefault(fs.exec('/usr/sbin/ksmbd.mountd', ['-V']), {}).then(function(res) { return L.toArray((res.stdout || '').match(/version : (\S+)/))[1] }),
-			L.resolveDefault(fs.exec('/sbin/modinfo', ['ksmbd']), {}).then(function(res) { return L.toArray((res.stdout || '').match(/version:\t(\S+)/))[1] }),
+			L.resolveDefault(fs.exec('/sbin/modinfo', ['ksmbd']), {}).then(function(res) { return L.toArray((res.stdout || '').match(/vermagic:\t(\S+)/))[1] }),
 		]);
 	},
 	render: function(stats) {
-		var m, s, o, v;
-		v = '';
+		var m, s, o, v, v2;
+		v = '?';
+		v2 = '?';
 
 		m = new form.Map('ksmbd', _('Network Shares'));
 
-		if (stats[2]) {
+		if (stats[2])
 			v = stats[2].trim();
-		}
-		if (stats[3]) {
-			v = v + '  Kmod: ' + stats[3].trim();
-		}
-		s = m.section(form.TypedSection, 'globals', 'Ksmbd: ' + v);
+		if (stats[3])
+			v2 = stats[3].trim();
+		if (v != v2)
+			v = v +'/'+ v2;
+		s = m.section(form.TypedSection, 'globals', 'Ksmbd/Kmod Version ' + v);
 		s.anonymous = true;
 
 		s.tab('general',  _('General Settings'));
-		s.tab('template', _('Edit Template'));
+		s.tab('template', _('Edit Template'), _('Edit the template that is used for generating the ksmbd configuration.'));
 
 		s.taboption('general', widgets.NetworkSelect, 'interface', _('Interface'),
 			_('Listen only on the given interface or, if unspecified, on lan'));
@@ -44,7 +45,7 @@ return view.extend({
 			_('Allow legacy smb(v1)/Lanman connections, needed for older devices without smb(v2.1/3) support.'));
 
 		o = s.taboption('template', form.TextValue, '_tmpl',
-			_('Edit the template that is used for generating the ksmbd configuration.'),
+			null,
 			_("This is the content of the file '/etc/ksmbd/smb.conf.template' from which your ksmbd configuration will be generated. \
 			Values enclosed by pipe symbols ('|') should not be changed. They get their values from the 'General Settings' tab."));
 		o.rows = 20;

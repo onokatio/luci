@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2022-03-26 23:10+0000\n"
-"Last-Translator: dikastia <dikastia@gmail.com>\n"
+"PO-Revision-Date: 2024-01-04 07:07+0000\n"
+"Last-Translator: Diego Na <fromhd@naver.com>\n"
 "Language-Team: Korean <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/ko/>\n"
 "Language: ko\n"
@@ -10,14 +10,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:7
 msgid "A lightweight CalDAV/CardDAV server"
-msgstr ""
+msgstr "경량 CalDAV/CardDAV 서버"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:30
 msgid "Advanced Settings"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Authentication"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr ""
 
@@ -122,11 +122,11 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:29
 msgid "Encryption"
-msgstr ""
+msgstr "암호화"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:23
 msgid "Filename"
-msgstr ""
+msgstr "파일명"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:19
 msgid "Folder"
@@ -146,7 +146,7 @@ msgstr "기본 설정"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
@@ -159,6 +159,10 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
+msgstr ""
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
 msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
@@ -215,7 +219,7 @@ msgid ""
 "Log configuration file (no file means default procd which ends up in syslog"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr ""
@@ -394,7 +398,7 @@ msgstr ""
 msgid "Send debug information to logs"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr ""
@@ -403,7 +407,7 @@ msgstr ""
 msgid "Socket timeout (seconds)"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
@@ -427,7 +431,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:47
 msgid "Timeout"
-msgstr ""
+msgstr "시간초과"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:25
 msgid "Use File Locks"
@@ -447,7 +451,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:70
 msgid "Username"
-msgstr ""
+msgstr "사용자명"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:66
 msgid "Users and Passwords"

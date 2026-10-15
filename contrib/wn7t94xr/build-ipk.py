@@ -15,8 +15,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
 NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
 ARCH = 'arm_cortex-a7_neon-vfpv4'
-VERSION = '3.11.0-3'
-SUFFIX = '+qsdk3.11.0'
+VERSION = '4.0.0-2'
+SUFFIX = '+qsdk' + VERSION
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
 PREPARE_PATH = 'usr/libexec/luci-qsdk-prepare'
 PREPARE_KIB = 16
@@ -95,47 +95,50 @@ def record(path, payload, control):
                               'file_bytes': logical, 'file_count': len(payload), 'estimated_ubifs_bytes': flash_bytes(payload)}
 
 
-mapping = {
-    'luci-mod-network': {
-        'www/luci-static/resources/view/network/wireless.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js',
-        'www/luci-static/resources/view/network/band-steering.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/band-steering.js',
-        'usr/share/rpcd/acl.d/luci-qsdk-steering.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-steering.json',
-        'www/luci-static/resources/view/network/switch-advanced.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch-advanced.js',
-        'usr/share/rpcd/acl.d/luci-qsdk-switch.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-switch.json',
-        'www/luci-static/resources/view/network/switch.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js',
-        'www/luci-static/resources/view/network/acceleration.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js',
-        'www/luci-static/resources/view/network/wireless-diagnostics.js': 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless-diagnostics.js',
-        'usr/lib/lua/luci/controller/admin/network.lua': 'modules/luci-mod-network/luasrc/controller/admin/network.lua',
-        'usr/share/rpcd/acl.d/luci-qsdk-acceleration.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-acceleration.json',
-        'usr/share/rpcd/acl.d/luci-qsdk-wireless.json': 'modules/luci-mod-network/root/usr/share/rpcd/acl.d/luci-qsdk-wireless.json',
-    },
-}
+# Build the complete 22.03 tree against the vendor ABI; official 22.03 ARM binaries use a newer libc.
+source_payloads = {}
+source_version = '22.03+git.' + LOCK['luci_upstream'][:7] + '-1' + SUFFIX
+for name, spec in LOCK['luci_packages'].items():
+    payload = {}
+    for source, prefix in [('root', ''), ('htdocs', 'www/'), ('luasrc', 'usr/lib/lua/luci/')]:
+        for path in sorted((LUCI / spec['source'] / source).rglob('*')) if spec.get('source') else []:
+            if path.is_dir():
+                continue
+            dest = prefix + path.relative_to(LUCI / spec['source'] / source).as_posix()
+            data = path.readlink().as_posix() if path.is_symlink() else path.read_bytes()
+            if isinstance(data, bytes) and dest.endswith('.js'):
+                data = subprocess.check_output([str(jsmin.resolve())], input=data)
+            elif isinstance(data, bytes) and dest.endswith('.htm'):
+                data = re.sub(rb'<%# *([^ ]*)PKG_VERSION *%>', lambda m: m[1] + source_version.encode(), data)
+                data = re.sub(rb'"(<%= *(?:media|resource) *%>[^"\n]*\.(?:js|css))"',
+                              lambda m: b'"' + m[1] + b'?v=' + source_version.encode() + b'"', data)
+            payload[dest] = (data, 0o755 if path.stat().st_mode & 0o111 else 0o644)
+    for dest, source in spec.get('native', {}).items():
+        path = NATIVE / source
+        payload[dest] = (path.readlink().as_posix() if path.is_symlink() else path.read_bytes(), 0o755)
+    if name == 'luci-base':
+        version = subprocess.check_output(['sh', str(LUCI / spec['source'] / 'src/mkversion.sh'), '/dev/stdout',
+                                           source_version, 'LuCI openwrt-22.03 branch'])
+        payload['usr/lib/lua/luci/version.lua'] = (version, 0o644)
+    source_payloads[name] = payload
+    version = spec['version'] + SUFFIX if 'version' in spec else source_version
+    control = f'''Package: {name}
+Version: {version}
+Architecture: {ARCH}
+Depends: {spec['depends']}
+Section: luci
+Maintainer: onokatio
+License: {spec.get('license', 'Apache-2.0')}
+Description: LuCI 22.03 for the WN-7T94XR vendor userspace ABI
+'''
+    write_package(name, version, payload, {'control': (control.encode(), 0o644)})
+
 for package in LOCK['base_packages']:
     original = CACHE / package['filename']
     assert hashlib.sha256(original.read_bytes()).hexdigest() == package['sha256'], package['name']
     ipk = read_archive(original.read_bytes())
     payload, hooks = read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])
-    if package['name'] not in mapping:
-        record(original, payload, hooks['control'][0].decode())
-        continue
-    for dest, source in mapping[package['name']].items():
-        data = (LUCI / source).read_bytes()
-        if dest.endswith('.js'):
-            data = subprocess.check_output([str(jsmin.resolve())], input=data)
-        payload[dest] = (data, payload.get(dest, (None, 0o644))[1])
-    version = package['version'] + SUFFIX
-    control = re.sub(r'^Version: .*$', 'Version: ' + version, hooks['control'][0].decode(), flags=re.M)
-    hooks['control'] = (control.encode(), 0o644)
-    hooks['preinst'] = (b'''#!/bin/sh
-[ -z "$IPKG_INSTROOT" ] || exit 0
-for target in /usr/share/luci /www/luci-static /usr/lib/rpcd; do
- if grep -qs " $target " /proc/mounts; then
-  echo 'Migrate the old RAM LuCI before installing the flash packages.' >&2
-  exit 1
- fi
-done
-''', 0o755)
-    write_package(package['name'], version, payload, hooks)
+    record(original, payload, hooks['control'][0].decode())
 
 native = {
     'libiwinfo20181126': ('2019-10-16-07315b6f-1' + SUFFIX, 'usr/lib/libiwinfo.so', 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
@@ -176,18 +179,6 @@ runtime_payload = {'etc/init.d/network': (network, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755)}
 runtime_payload['etc/hotplug.d/iface/11-sqm'] = ((HERE / 'root/etc/hotplug.d/iface/11-sqm').read_bytes(), 0o755)
 runtime_payload['usr/lib/lua/luci/model/cbi/sqm.lua'] = ((LUCI / 'applications/luci-app-sqm/luasrc/model/cbi/sqm.lua').read_bytes(), 0o644)
-base = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
-base_ipk = read_archive((CACHE / base['filename']).read_bytes())
-base_payload = read_archive(base_ipk['data.tar.gz'][0])
-version_file = base_payload['usr/lib/lua/luci/version.lua'][0]
-runtime_payload['usr/lib/lua/luci/version.lua'] = (version_file +
-    ('\nluciversion = luciversion .. "+qsdk' + VERSION + '"\n').encode(), 0o644)
-# The official template bakes in the cache key used by all dynamically loaded Javascript.
-header_path = 'usr/lib/lua/luci/view/header.htm'
-header, replacements = re.subn(rb'(\?v=)[^"<>]+',
-    lambda match: match[0] + ('+qsdk' + VERSION).encode(), base_payload[header_path][0])
-assert replacements == 2 and b'/luci.js?v=' in header
-runtime_payload[header_path] = (header, 0o644)
 runtime_control = f'''Package: luci-qsdk-wn7t94xr-runtime
 Version: {VERSION}
 Architecture: {ARCH}
@@ -210,8 +201,7 @@ for name, version in versions.items():
     manifest.append(f'{name} {version} {hashlib.sha256(path.read_bytes()).hexdigest()} {url}\n')
 manifest = ''.join(manifest).encode()
 
-original = next(p for p in LOCK['base_packages'] if p['name'] == 'luci-base')
-base = read_archive(read_archive((CACHE / original['filename']).read_bytes())['data.tar.gz'][0])
+base = source_payloads['luci-base']
 original = next(p for p in LOCK['base_packages'] if p['name'] == 'uhttpd')
 http = read_archive(read_archive((CACHE / original['filename']).read_bytes())['data.tar.gz'][0])
 payload = {name: base[name] for name in ('etc/config/luci', 'etc/config/ucitrack')}

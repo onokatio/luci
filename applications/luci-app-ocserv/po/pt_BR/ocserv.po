@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-08-06 19:40+0000\n"
-"Last-Translator: Wellington Terumi Uemura <wellingtonuemura@gmail.com>\n"
+"PO-Revision-Date: 2024-01-14 10:54+0000\n"
+"Last-Translator: Davison Silva <davison_silva@outlook.com>\n"
 "Language-Team: Portuguese (Brazil) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsocserv/pt_BR/>\n"
 "Language: pt_BR\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.8-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:124
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:80
@@ -117,6 +117,10 @@ msgstr "Zona do Firewall"
 msgid "General Settings"
 msgstr "Configurações gerais"
 
+#: applications/luci-app-ocserv/root/usr/share/rpcd/acl.d/luci-app-ocserv.json:3
+msgid "Grant UCI access for luci-app-ocserv"
+msgstr "Conceda acesso UCI ao luci-app-ocserv"
+
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:23
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:67
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:52
@@ -198,7 +202,7 @@ msgstr ""
 msgid "Routing table"
 msgstr "Tabela de roteamento"
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:19
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:20
 msgid "Server Settings"
 msgstr "Configurações do Servidor"
 
@@ -209,7 +213,7 @@ msgstr "ID da Chave Pública do Servidor"
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:73
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:58
 msgid "Status"
-msgstr "Condição Geral"
+msgstr "Status"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:112
 msgid "The DNS servers to be provided to clients; can be either IPv6 or IPv4"
@@ -309,7 +313,7 @@ msgstr "Usuário"
 msgid "User Authentication"
 msgstr "Autenticação do Usuário"
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:24
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:25
 msgid "User Settings"
 msgstr "Configurações do Usuário"
 

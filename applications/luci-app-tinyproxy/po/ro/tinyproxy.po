@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-12-07 19:35+0000\n"
-"Last-Translator: Simona Iacob <s@zp1.net>\n"
+"PO-Revision-Date: 2022-05-10 19:15+0000\n"
+"Last-Translator: CRISTIAN ANDREI <cristianvdr@gmail.com>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationstinyproxy/ro/>\n"
 "Language: ro\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 4.12.1\n"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:219
 msgid ""
@@ -85,7 +85,7 @@ msgstr ""
 "Poate fi fie o adresă sau un interval IP, un nume de domeniu sau \".\" "
 "pentru orice gazdă fără domeniu"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Configurație"
 
@@ -133,6 +133,10 @@ msgstr "Filtrare și ACL-uri"
 msgid "General settings"
 msgstr "Setări generale"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "Acordă acces la UCI pentru luci-app-tinyproxy"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Grup"
@@ -158,11 +162,11 @@ msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
 "Lista de porturi permise pentru metoda CONNECT. O singură valoare \"0\" "
-"permite toate porturile"
+"dezactivează complet CONNECT, o listă goală permite toate porturile"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
@@ -293,7 +297,7 @@ msgstr "Specifică numele grupului sub care se execută procesul Tinyproxy"
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
 "Specifică proxy-ul din amonte care urmează să fie utilizat pentru accesarea "
 "gazdei țintă. Formatul este <code>adresa:port</code>"
@@ -310,7 +314,7 @@ msgstr "Porniți serverele de rezervă"
 msgid "Statistics page"
 msgstr "Pagina de statistici"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "Stare"
 
@@ -318,8 +322,8 @@ msgstr "Stare"
 msgid "Target host"
 msgstr "Gazda țintă"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

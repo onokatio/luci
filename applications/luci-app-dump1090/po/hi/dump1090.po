@@ -1,8 +1,14 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2024-07-06 11:32+0000\n"
+"Last-Translator: Sathvic <sathvic.p@gmail.com>\n"
+"Language-Team: Hindi <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsdump1090/hi/>\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:123
 msgid "Absolute maximum range for position decoding"
@@ -18,7 +24,7 @@ msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:193
 msgid "Apply a 1Hz DC filter to input data"
-msgstr ""
+msgstr "इनपुट डेटा पर 1Hz DC फ़िल्टर लागू करें"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:172
 msgid "Base directory for the internal HTTP server"
@@ -95,6 +101,10 @@ msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:23
 msgid "Gain (-10 for auto-gain)"
+msgstr ""
+
+#: applications/luci-app-dump1090/root/usr/share/rpcd/acl.d/luci-app-dump1090.json:3
+msgid "Grant UCI access for luci-app-dump1090"
 msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:65
@@ -217,7 +227,7 @@ msgstr ""
 msgid "Write json output every t seconds"
 msgstr ""
 
-#: applications/luci-app-dump1090/luasrc/controller/dump1090.lua:11
+#: applications/luci-app-dump1090/root/usr/share/luci/menu.d/luci-app-dump1090.json:3
 msgid "dump1090"
 msgstr ""
 

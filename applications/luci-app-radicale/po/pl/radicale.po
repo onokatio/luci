@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-05-02 15:56+0000\n"
-"Last-Translator: Marcin Net <marcin.net@linux.pl>\n"
+"PO-Revision-Date: 2023-11-07 22:37+0000\n"
+"Last-Translator: Matthaiks <kitynska@gmail.com>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale/pl/>\n"
 "Language: pl\n"
@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.1-dev\n"
+"X-Generator: Weblate 5.2-dev\n"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:268
 msgid ""
@@ -27,22 +27,6 @@ msgstr ""
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:272
 msgid "AUTO"
 msgstr "AUTO"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:734
-msgid "Access-Control-Allow-Headers"
-msgstr "Access-Control-Allow-Headers"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:726
-msgid "Access-Control-Allow-Methods"
-msgstr "Access-Control-Allow-Methods"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:718
-msgid "Access-Control-Allow-Origin"
-msgstr "Access-Control-Allow-Origin"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:742
-msgid "Access-Control-Expose-Headers"
-msgstr "Access-Control-Expose-Headers"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:706
 msgid "Additional HTTP headers"
@@ -241,6 +225,10 @@ msgstr "Pełna ścieżka i nazwa pliku certyfikatu"
 msgid "Full path and file name of private key"
 msgstr "Pełna ścieżka i nazwa pliku klucza prywatnego"
 
+#: applications/luci-app-radicale/root/usr/share/rpcd/acl.d/luci-app-radicale.json:3
+msgid "Grant UCI access for luci-app-radicale"
+msgstr "Przyznaj luci-app-radicale dostęp do UCI"
+
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:549
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:571
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:593
@@ -344,7 +332,7 @@ msgstr "Plik klucza prywatnego"
 
 #: applications/luci-app-radicale/luasrc/controller/radicale.lua:19
 msgid "Radicale CalDAV/CardDAV Server"
-msgstr "Radicale CalDAV/CardDAV Server"
+msgstr "Serwer Radicale CalDAV/CardDAV"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:459
 msgid "Radicale uses '/etc/radicale/rights' as regexp-based file."

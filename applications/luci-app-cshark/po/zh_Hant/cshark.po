@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-01-19 21:13+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2024-05-04 07:42+0000\n"
+"Last-Translator: Yuan Lau <traverslombard@outlook.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationscshark/zh_Hant/>\n"
 "Language: zh_Hant\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.5.3\n"
 
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:24
 msgid "Actions"
@@ -33,7 +33,7 @@ msgstr "清晰的列表"
 #: applications/luci-app-cshark/luasrc/controller/cshark.lua:19
 #: applications/luci-app-cshark/luasrc/model/cbi/admin_network/cshark.lua:17
 msgid "CloudShark"
-msgstr "CloudShark"
+msgstr "雲鯊"
 
 #: applications/luci-app-cshark/luasrc/model/cbi/admin_network/cshark.lua:27
 msgid "CloudShark API token"
@@ -47,6 +47,10 @@ msgstr "CloudShark網址"
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:51
 msgid "Filter"
 msgstr "過濾"
+
+#: applications/luci-app-cshark/root/usr/share/rpcd/acl.d/luci-app-cshark.json:3
+msgid "Grant UCI access for luci-app-cshark"
+msgstr "授予 luci-app-cshark 擁有 UCI 存取的權限"
 
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:21
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:28
@@ -84,7 +88,7 @@ msgstr "等待上傳完成..."
 
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:39
 msgid "any"
-msgstr "任意"
+msgstr "任何"
 
 #: applications/luci-app-cshark/luasrc/view/cshark.htm:47
 msgid "bytes"

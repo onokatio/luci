@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2022-02-18 20:18+0000\n"
-"Last-Translator: pisquan8 <cimurro@outlook.de>\n"
+"PO-Revision-Date: 2024-04-19 13:18+0000\n"
+"Last-Translator: ettore <hettore.giacomini@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsuhttpd/it/>\n"
 "Language: it\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:135
 msgid ""
@@ -29,7 +29,7 @@ msgstr "Un server HTTP(S) leggero a thread singolo"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:20
 msgid "Advanced Settings"
-msgstr "Impostazioni Avanzate"
+msgstr "Impostazioni avanzate"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:135
 msgid "Aliases"
@@ -64,7 +64,7 @@ msgstr ""
 msgid "Connection reuse"
 msgstr "Riutilizzo della connessione"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:229
 msgid "Country"
 msgstr "Nazione"
 
@@ -117,21 +117,31 @@ msgstr "Percorso reale completo per il gestore per gli script Lua"
 msgid "General Settings"
 msgstr "Impostazioni Generali"
 
+#: applications/luci-app-uhttpd/root/usr/share/rpcd/acl.d/luci-app-uhttpd.json:3
+msgid "Grant UCI access for luci-app-uhttpd"
+msgstr "Concedere l'accesso UCI per luci-app-uhttpd"
+
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:22
 msgid "HTTP listeners (address:port)"
 msgstr "Listener HTTP (indirizzo:porta)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:94
-msgid "HTTPS Certificate (DER Encoded)"
-msgstr ""
+msgid "HTTPS Certificate (DER or PEM format)"
+msgstr "Certificato HTTPS (formato DER o PEM)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:96
-msgid "HTTPS Private Key (DER Encoded)"
-msgstr ""
+msgid "HTTPS Private Key (DER or PEM format)"
+msgstr "Chiave privata HTTPS (formato DER o PEM)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:50
 msgid "HTTPS listener (address:port)"
 msgstr "Listener HTTPS (indirizzo:porta)"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "If empty, a random/unique value is used in cert generation"
+msgstr ""
+"Se vuoto, nel generare il certificato viene utilizzato un valore casuale/"
+"unico"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:90
 msgid "Ignore private IPs on public interface"
@@ -153,7 +163,7 @@ msgstr ""
 msgid "Length of key in bits"
 msgstr "Lunghezza della chiave in bit"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:227
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:223
 msgid "Location"
 msgstr "Posizione"
 
@@ -172,6 +182,10 @@ msgstr "Tempo massimo di attesa per l'esecuzione di Lua, CGI o ubus"
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:182
 msgid "Maximum wait time for network activity"
 msgstr "Tempo massimo di attesa per l'attività di rete"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "Organization"
+msgstr "Organizzazione"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:166
 msgid "Override path for ubus socket"
@@ -216,7 +230,7 @@ msgstr ""
 "Impostazioni che sono necessarie raramente o che influiscono sul servizio "
 "dell'interfaccia utente web"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:224
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:226
 msgid "State"
 msgstr "Stato"
 
@@ -259,8 +273,8 @@ msgstr "Non utilizzerà l'autenticazione HTTP se non presente"
 msgid "a.k.a CommonName"
 msgstr "alias CommonName"
 
-#: applications/luci-app-uhttpd/luasrc/controller/uhttpd/uhttpd.lua:13
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:6
+#: applications/luci-app-uhttpd/root/usr/share/luci/menu.d/luci-app-uhttpd.json:3
 msgid "uHTTPd"
 msgstr "uHTTPd"
 

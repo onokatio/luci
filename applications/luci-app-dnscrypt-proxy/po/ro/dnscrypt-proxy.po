@@ -16,7 +16,7 @@ msgstr ""
 msgid "-------"
 msgstr "-------"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:17
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:21
 msgid "Advanced"
 msgstr "Avansat"
 
@@ -71,16 +71,16 @@ msgstr "Creați un fișier de configurare personalizat"
 msgid "DNS Query Logfile"
 msgstr "Fișier jurnal de interogare DNS"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:14
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:15
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:58
 msgid "DNSCrypt-Proxy"
 msgstr "DNSCrypt-Proxy"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:35
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:39
 msgid "DNSCrypt-Proxy Logfile"
 msgstr "DNSCrypt-Proxy Fișier jurnal"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:26
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:30
 msgid "DNSCrypt-Proxy Resolver List"
 msgstr "DNSCrypt-Proxy Lista de rezolvare"
 
@@ -103,15 +103,15 @@ msgstr ""
 "Descărcați lista curentă de rezolvatori de pe 'github.com/dyne/dnscrypt-"
 "proxy'."
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:18
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:22
 msgid "Edit DNSCrypt-Proxy Configuration"
 msgstr "Editați configurația DNSCrypt-Proxy"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:19
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:23
 msgid "Edit Dnsmasq Configuration"
 msgstr "Editați configurația Dnsmasq"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:20
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:24
 msgid "Edit Resolvcrypt Configuration"
 msgstr "Editați configurația Resolvcrypt"
 
@@ -143,6 +143,10 @@ msgstr ""
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:97
 msgid "General Options"
 msgstr "Opțiuni generale"
+
+#: applications/luci-app-dnscrypt-proxy/root/usr/share/rpcd/acl.d/luci-app-dnscrypt-proxy.json:3
+msgid "Grant UCI access for luci-app-dnscrypt-proxy"
+msgstr "Acordarea accesului UCI pentru luci-app-dnscrypt-proxy"
 
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:189
 msgid "IP Address"
@@ -201,7 +205,7 @@ msgstr ""
 "Nu există o listă de rezolvare implicită și nu este disponibil suport SSL."
 "<br />"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:15
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:19
 msgid "Overview"
 msgstr "Prezentare generală"
 
@@ -347,10 +351,10 @@ msgstr ""
 msgid "Transfer Options To Dnsmasq"
 msgstr "Opțiuni de transfer către Dnsmasq"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:16
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:20
 msgid "View Logfile"
 msgstr "Vezi fișierul log"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:21
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:25
 msgid "View Resolver List"
 msgstr "Vizualizați lista de rezolvare"

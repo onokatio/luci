@@ -5,6 +5,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/system"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-config" ]
 		}
 	},
 
@@ -13,6 +16,9 @@
 		"order": 2,
 		"action": {
 			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-config", "luci-mod-system-ssh" ]
 		}
 	},
 
@@ -22,6 +28,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/password"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-config" ]
 		}
 	},
 
@@ -33,6 +42,7 @@
 			"path": "system/dropbear"
 		},
 		"depends": {
+			"acl": [ "luci-mod-system-ssh" ],
 			"fs": {	"/usr/sbin/dropbear": "executable" }
 		}
 	},
@@ -45,9 +55,24 @@
 			"path": "system/sshkeys"
 		},
 		"depends": {
+			"acl": [ "luci-mod-system-ssh" ],
 			"fs": {	"/usr/sbin/dropbear": "executable" }
 		}
 	},
+
+	"admin/system/admin/uhttpd": {
+		"title": "HTTP(S) Access",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "system/uhttpd"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-uhttpd" ],
+			"fs": {	"/usr/sbin/uhttpd": "executable" }
+		}
+	},
+
 
 	"admin/system/startup": {
 		"title": "Startup",
@@ -55,6 +80,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/startup"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-init" ]
 		}
 	},
 
@@ -64,6 +92,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/crontab"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-cron" ]
 		}
 	},
 
@@ -75,6 +106,7 @@
 			"path": "system/mounts"
 		},
 		"depends": {
+			"acl": [ "luci-mod-system-mounts" ],
 			"fs": { "/sbin/block": "executable" }
 		}
 	},
@@ -87,6 +119,7 @@
 			"path": "system/leds"
 		},
 		"depends": {
+			"acl": [ "luci-mod-system-config" ],
 			"fs": { "/sys/class/leds": "directory" }
 		}
 	},
@@ -97,6 +130,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/flash"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-flash" ]
 		}
 	},
 
@@ -106,6 +142,9 @@
 		"action": {
 			"type": "view",
 			"path": "system/reboot"
+		},
+		"depends": {
+			"acl": [ "luci-mod-system-reboot" ]
 		}
 	}
 }

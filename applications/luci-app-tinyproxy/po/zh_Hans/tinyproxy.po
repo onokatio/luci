@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-01-13 00:56+0000\n"
-"Last-Translator: 孤爺仔 <7312140@qq.com>\n"
+"PO-Revision-Date: 2024-04-08 17:22+0000\n"
+"Last-Translator: try496 <pinghejk@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationstinyproxy/zh_Hans/>\n"
 "Language: zh_Hans\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4.1-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:219
 msgid ""
@@ -70,7 +70,7 @@ msgid ""
 "without domain"
 msgstr "可以是IP地址或者范围，也可以是域名或者以\".\"代表任意主机"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "配置"
 
@@ -118,6 +118,10 @@ msgstr "过滤规则和访问控制列表"
 msgid "General settings"
 msgstr "常规设置"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "授予UCI访问luci-app-tinyproxy的权限"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "组"
@@ -141,9 +145,10 @@ msgstr "允许访问代理服务器的IP或IP段列表"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
-msgstr "值CONNECT方法允许的端口列表。单个值“0”代表允许所有端口"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
+msgstr ""
+"CONNECT 方式允许的端口列表。单一值“0”完全禁用 CONNECT，空列表允许所有端口"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
@@ -163,7 +168,7 @@ msgstr "用于消息转储的日志文件"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:80
 msgid "Log level"
-msgstr "日志记录等级"
+msgstr "日志级别"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:81
 msgid "Logging verbosity of the Tinyproxy process"
@@ -265,8 +270,10 @@ msgstr "指定Tinyproxy进程所属组"
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
-msgstr "指定上级代理. 格式 <code>IP地址:端口</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
+msgstr ""
+"指定上级代理. 格式 <code>IP地址:端口</code> 或 <code>socks5 IP地址:端口</"
+"code>"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:92
 msgid "Specifies the user name the Tinyproxy process is running as"
@@ -280,7 +287,7 @@ msgstr "启动备用服务器"
 msgid "Statistics page"
 msgstr "统计页面"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "状态"
 
@@ -288,8 +295,8 @@ msgstr "状态"
 msgid "Target host"
 msgstr "目标主机"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy服务器"
 

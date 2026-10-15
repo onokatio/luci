@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2021-12-10 01:37+0000\n"
+"PO-Revision-Date: 2023-08-09 15:50+0000\n"
 "Last-Translator: Simona Iacob <s@zp1.net>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/ro/>\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 5.0-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -32,7 +32,7 @@ msgstr "Cifre permise"
 msgid "Authentication"
 msgstr "Autentificare"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "Autentificare / Utilizatori"
 
@@ -148,12 +148,17 @@ msgstr "Setări generale"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
 "installed."
 msgstr ""
+"Generați acest câmp utilizând un generator pentru fișiere de autentificare "
+"de tip Apache htpasswd (pentru formatul hash pe care l-ați ales mai sus) sau "
+"instalați python3-passlib pentru a activa capacitatea de a crea hash-ul prin "
+"introducerea textului în clar într-un câmp care va apărea pe această pagină "
+"dacă python3-passlib este instalat."
 
 #: applications/luci-app-radicale2/luasrc/view/cbi/raduigo.htm:24
 msgid "Go to Radicale 2.x Web UI"
@@ -162,6 +167,10 @@ msgstr "Mergeți la Radicale 2.x Web UI"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "Mergeți la Radicale v2 Web UI"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "Acordă acces la UCI pentru luci-app-radicale2"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -224,7 +233,7 @@ msgstr ""
 "Fișier de configurare a jurnalului (niciun fișier înseamnă procd implicit "
 "care ajunge în syslog"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "Jurnalizare"
@@ -295,7 +304,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:66
 msgid "Private Key"
-msgstr "Cheie privată"
+msgstr "Cheia privată"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:18
 msgid "REMOTE_USER from web server"
@@ -406,7 +415,7 @@ msgstr "Selectați bcrypt de mai sus pentru a activa un hash securizat"
 msgid "Send debug information to logs"
 msgstr "Trimiteți informații de depanare în jurnale"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "Setări server"
@@ -415,11 +424,11 @@ msgstr "Setări server"
 msgid "Socket timeout (seconds)"
 msgstr "Timpul de așteptare al socketului (secunde)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
-msgstr "Depozitare"
+msgstr "Stocare"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:13
 msgid "Storage Type"
@@ -443,7 +452,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:47
 msgid "Timeout"
-msgstr "Termen de expirare"
+msgstr "Pauză"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:25
 msgid "Use File Locks"

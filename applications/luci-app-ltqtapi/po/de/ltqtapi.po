@@ -1,16 +1,16 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-07-11 21:29+0000\n"
-"Last-Translator: ssantos <ssantos@web.de>\n"
+"PO-Revision-Date: 2024-05-08 06:32+0000\n"
+"Last-Translator: David <dawin@users.noreply.hosted.weblate.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsltqtapi/de/>\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.2-dev\n"
+"X-Generator: Weblate 5.5.4-rc\n"
 
-#: applications/luci-app-ltqtapi/luasrc/controller/ltqtapi.lua:16
+#: applications/luci-app-ltqtapi/luasrc/controller/ltqtapi.lua:17
 #: applications/luci-app-ltqtapi/luasrc/model/cbi/luci_ltqtapi/account.lua:7
 msgid "Account"
 msgstr "Konto"
@@ -23,7 +23,7 @@ msgstr "Sammle Daten..."
 msgid "Contact"
 msgstr "Kontakt"
 
-#: applications/luci-app-ltqtapi/luasrc/controller/ltqtapi.lua:17
+#: applications/luci-app-ltqtapi/luasrc/controller/ltqtapi.lua:18
 msgid "Contacts"
 msgstr "Kontakte"
 
@@ -39,6 +39,10 @@ msgstr "Wählen"
 msgid "Disabled"
 msgstr "Deaktiviert"
 
+#: applications/luci-app-ltqtapi/root/usr/share/rpcd/acl.d/luci-app-ltqtapi.json:3
+msgid "Grant UCI access for luci-app-ltqtapi"
+msgstr "Gewähre UCI Zugriff auf luci-app-ltqtapi"
+
 #: applications/luci-app-ltqtapi/luasrc/model/cbi/luci_ltqtapi/account.lua:7
 msgid "Here You can specify the SIP account that you want to use."
 msgstr "Hier können Sie das SIP-Konto angeben, das Sie verwenden möchten."
@@ -53,7 +57,7 @@ msgstr "Name"
 
 #: applications/luci-app-ltqtapi/luasrc/model/cbi/luci_ltqtapi/account.lua:13
 msgid "Password"
-msgstr "Passwort"
+msgstr "Kennwort"
 
 #: applications/luci-app-ltqtapi/luasrc/view/telephony_status.htm:24
 msgid "Port1"

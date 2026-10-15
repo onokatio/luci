@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-09-16 15:46+0000\n"
-"Last-Translator: pisquan8 <cimurro@outlook.de>\n"
+"PO-Revision-Date: 2024-07-03 10:09+0000\n"
+"Last-Translator: moreno <morenomatassini95@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdump1090/it/>\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.9-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:123
 msgid "Absolute maximum range for position decoding"
@@ -16,27 +16,27 @@ msgstr "Intervallo massimo assoluto per la decodifica della posizione"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:184
 msgid "Accuracy of receiver location in json metadata"
-msgstr ""
+msgstr "Precisione della posizione del ricevitore nei metadati json"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:112
 msgid "Allow forwarding of received mlat results to output ports"
-msgstr ""
+msgstr "Consentire l'inoltro dei risultati mlat ricevuti ai porti di output"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:193
 msgid "Apply a 1Hz DC filter to input data"
-msgstr ""
+msgstr "Applica un filtro DC 1Hz ai dati in ingresso"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:172
 msgid "Base directory for the internal HTTP server"
-msgstr ""
+msgstr "Directory di base per il server HTTP interno"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:148
 msgid "Collect/show range histogram"
-msgstr ""
+msgstr "Raccogli/Mostra istogramma dell'intervallo"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:34
 msgid "Data file"
-msgstr ""
+msgstr "FIle Dati"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:165
 msgid "Debug mode flags"
@@ -89,7 +89,7 @@ msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:10
 msgid "Enabled"
-msgstr "Abilitato"
+msgstr "Abilita"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:89
 msgid "FlightAware TSV output port"
@@ -101,6 +101,10 @@ msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:23
 msgid "Gain (-10 for auto-gain)"
+msgstr ""
+
+#: applications/luci-app-dump1090/root/usr/share/rpcd/acl.d/luci-app-dump1090.json:3
+msgid "Grant UCI access for luci-app-dump1090"
 msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:65
@@ -223,7 +227,7 @@ msgstr ""
 msgid "Write json output every t seconds"
 msgstr ""
 
-#: applications/luci-app-dump1090/luasrc/controller/dump1090.lua:11
+#: applications/luci-app-dump1090/root/usr/share/luci/menu.d/luci-app-dump1090.json:3
 msgid "dump1090"
 msgstr ""
 

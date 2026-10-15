@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-02-18 20:58+0000\n"
-"Last-Translator: pisquan8 <cimurro@outlook.de>\n"
+"PO-Revision-Date: 2024-07-03 10:09+0000\n"
+"Last-Translator: moreno <morenomatassini95@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsmjpg-streamer/it/>\n"
 "Language: it\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Allow ringbuffer to exceed limit by this amount"
@@ -16,27 +16,27 @@ msgstr "Permetti al buffer circolare di eccedere il limite di questa quantità"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:95
 msgid "Ask for username and password on connect"
-msgstr ""
+msgstr "Richiedi nome utente e password alla connessione"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:95
 msgid "Authentication required"
-msgstr ""
+msgstr "Autenticazione richiesta"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:83
 msgid "Auto"
-msgstr ""
+msgstr "Auto"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:69
 msgid "Automatic disabling of MJPEG mode"
-msgstr ""
+msgstr "Disabilito automaticamente la modalità MJPEG"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:82
 msgid "Blink"
-msgstr ""
+msgstr "Blink"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid "Command to run"
-msgstr ""
+msgstr "Comando da eseguire"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:43
 msgid "Device"
@@ -51,7 +51,7 @@ msgid "Don't initialize dynctrls"
 msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
+msgid "Drop frames smaller than this limit"
 msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
@@ -64,7 +64,7 @@ msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enabled"
-msgstr "Abilitato"
+msgstr "Abilita"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Exceed"
@@ -72,7 +72,7 @@ msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr ""
 
@@ -95,6 +95,10 @@ msgstr ""
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "Generale"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -124,7 +128,7 @@ msgstr ""
 msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr ""
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr ""
 
@@ -134,11 +138,11 @@ msgstr ""
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:81
 msgid "Off"
-msgstr ""
+msgstr "Off"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:80
 msgid "On"
-msgstr ""
+msgstr "On"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:20
 msgid "Output plugin"

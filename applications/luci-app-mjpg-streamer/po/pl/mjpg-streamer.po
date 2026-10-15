@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-05-03 15:24+0000\n"
+"PO-Revision-Date: 2023-11-07 22:37+0000\n"
 "Last-Translator: Matthaiks <kitynska@gmail.com>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsmjpg-streamer/pl/>\n"
@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.2-dev\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Allow ringbuffer to exceed limit by this amount"
@@ -52,8 +52,8 @@ msgid "Don't initialize dynctrls"
 msgstr "Nie ładuj dynamicznych kontroli"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
-msgstr ""
+msgid "Drop frames smaller than this limit"
+msgstr "Porzucaj klatki mniejsze niż ten limit"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enable MJPG-streamer"
@@ -73,9 +73,11 @@ msgstr "Przekraczać"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr ""
+"Wykonaj komendę po wykonaniu zdjęcia. Mjpg-streamer analizuje nazwę pliku "
+"jako pierwszy parametr do Twojego skryptu."
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:34
 msgid "File output"
@@ -96,6 +98,10 @@ msgstr "Klatki na sekundę"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "Ogólne"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "Przyznaj luci-app-mjpg-streamer dostęp do UCI"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -127,7 +133,7 @@ msgstr ""
 "Połącz ostatnie zdjęcie w buforze pierścieniowym z dostarczonym z ustaloną "
 "nazwą plikiem."
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-Streamer"
 

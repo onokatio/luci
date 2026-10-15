@@ -1,10 +1,18 @@
 'use strict';
 'require ui';
 'require uci';
+'require rpc';
 'require dom';
 'require baseclass';
 
 var scope = this;
+
+var callSessionAccess = rpc.declare({
+	object: 'session',
+	method: 'access',
+	params: [ 'scope', 'object', 'function' ],
+	expect: { 'access': false }
+});
 
 var CBIJSONConfig = baseclass.extend({
 	__init__: function(data) {
@@ -66,7 +74,7 @@ var CBIJSONConfig = baseclass.extend({
 			if (indexA != indexB)
 				return (indexA - indexB);
 
-			return (a > b);
+			return L.naturalCompare(a, b);
 		}, this));
 
 		for (var i = 0; i < section_ids.length; i++)
@@ -273,15 +281,19 @@ var CBIAbstractElement = baseclass.extend(/** @lends LuCI.form.AbstractElement.p
 	 * The input string to clean.
 	 *
 	 * @returns {string}
-	 * The cleaned input string with HTML removes removed.
+	 * The cleaned input string with HTML tags removed.
 	 */
 	stripTags: function(s) {
 		if (typeof(s) == 'string' && !s.match(/[<>]/))
 			return s;
 
-		var x = dom.parse('<div>' + s + '</div>');
+		var x = dom.elem(s) ? s : dom.parse('<div>' + s + '</div>');
 
-		return x.textContent || x.innerText || '';
+		x.querySelectorAll('br').forEach(function(br) {
+			x.replaceChild(document.createTextNode('\n'), br);
+		});
+
+		return (x.textContent || x.innerText || '').replace(/([ \t]*\n)+/g, '\n');
 	},
 
 	/**
@@ -361,7 +373,6 @@ var CBIMap = CBIAbstractElement.extend(/** @lends LuCI.form.Map.prototype */ {
 
 		this.config = config;
 		this.parsechain = [ config ];
-		this.readonly = false;
 		this.data = uci;
 	},
 
@@ -370,6 +381,10 @@ var CBIMap = CBIAbstractElement.extend(/** @lends LuCI.form.Map.prototype */ {
 	 *
 	 * If set to `true`, the Map instance is marked readonly and any form
 	 * option elements added to it will inherit the readonly state.
+	 *
+	 * If left unset, the Map will test the access permission of the primary
+	 * uci configuration upon loading and mark the form readonly if no write
+	 * permissions are granted.
 	 *
 	 * @name LuCI.form.Map.prototype#readonly
 	 * @type boolean
@@ -521,7 +536,8 @@ var CBIMap = CBIAbstractElement.extend(/** @lends LuCI.form.Map.prototype */ {
 	 * an error.
 	 */
 	load: function() {
-		var loadTasks = [],
+		var doCheckACL = (!(this instanceof CBIJSONMap) && this.readonly == null),
+		    loadTasks = [ doCheckACL ? callSessionAccess('uci', this.config, 'write') : true ],
 		    configs = this.parsechain || [ this.config ];
 
 		loadTasks.push.apply(loadTasks, configs.map(L.bind(function(config, i) {
@@ -529,6 +545,9 @@ var CBIMap = CBIAbstractElement.extend(/** @lends LuCI.form.Map.prototype */ {
 		}, this)));
 
 		return Promise.all(loadTasks).then(L.bind(function(res) {
+			if (res[0] === false)
+				this.readonly = true;
+
 			return this.loadChildren();
 		}, this));
 	},
@@ -587,9 +606,9 @@ var CBIMap = CBIAbstractElement.extend(/** @lends LuCI.form.Map.prototype */ {
 				if (!silent) {
 					ui.showModal(_('Save error'), [
 						E('p', {}, [ _('An error occurred while saving the form:') ]),
-						E('p', {}, [ E('em', { 'style': 'white-space:pre' }, [ e.message ]) ]),
+						E('p', {}, [ E('em', { 'style': 'white-space:pre-wrap' }, [ e.message ]) ]),
 						E('div', { 'class': 'right' }, [
-							E('button', { 'click': ui.hideModal }, [ _('Dismiss') ])
+							E('button', { 'class': 'cbi-button', 'click': ui.hideModal }, [ _('Dismiss') ])
 						])
 					]);
 				}
@@ -1040,6 +1059,138 @@ var CBIAbstractSection = CBIAbstractElement.extend(/** @lends LuCI.form.Abstract
 		return obj;
 	},
 
+	/**
+	 * Query underlying option configuration values.
+	 *
+	 * This function is sensitive to the amount of arguments passed to it;
+	 * if only one argument is specified, the configuration values of all
+	 * options within this section are returned as dictionary.
+	 *
+	 * If both the section ID and an option name are supplied, this function
+	 * returns the configuration value of the specified option only.
+	 *
+	 * @param {string} section_id
+	 * The configuration section ID
+	 *
+	 * @param {string} [option]
+	 * The name of the option to query
+	 *
+	 * @returns {null|string|string[]|Object<string, null|string|string[]>}
+	 * Returns either a dictionary of option names and their corresponding
+	 * configuration values or just a single configuration value, depending
+	 * on the amount of passed arguments.
+	 */
+	cfgvalue: function(section_id, option) {
+		var rv = (arguments.length == 1) ? {} : null;
+
+		for (var i = 0, o; (o = this.children[i]) != null; i++)
+			if (rv)
+				rv[o.option] = o.cfgvalue(section_id);
+			else if (o.option == option)
+				return o.cfgvalue(section_id);
+
+		return rv;
+	},
+
+	/**
+	 * Query underlying option widget input values.
+	 *
+	 * This function is sensitive to the amount of arguments passed to it;
+	 * if only one argument is specified, the widget input values of all
+	 * options within this section are returned as dictionary.
+	 *
+	 * If both the section ID and an option name are supplied, this function
+	 * returns the widget input value of the specified option only.
+	 *
+	 * @param {string} section_id
+	 * The configuration section ID
+	 *
+	 * @param {string} [option]
+	 * The name of the option to query
+	 *
+	 * @returns {null|string|string[]|Object<string, null|string|string[]>}
+	 * Returns either a dictionary of option names and their corresponding
+	 * widget input values or just a single widget input value, depending
+	 * on the amount of passed arguments.
+	 */
+	formvalue: function(section_id, option) {
+		var rv = (arguments.length == 1) ? {} : null;
+
+		for (var i = 0, o; (o = this.children[i]) != null; i++) {
+			var func = this.map.root ? this.children[i].formvalue : this.children[i].cfgvalue;
+
+			if (rv)
+				rv[o.option] = func.call(o, section_id);
+			else if (o.option == option)
+				return func.call(o, section_id);
+		}
+
+		return rv;
+	},
+
+	/**
+	 * Obtain underlying option LuCI.ui widget instances.
+	 *
+	 * This function is sensitive to the amount of arguments passed to it;
+	 * if only one argument is specified, the LuCI.ui widget instances of all
+	 * options within this section are returned as dictionary.
+	 *
+	 * If both the section ID and an option name are supplied, this function
+	 * returns the LuCI.ui widget instance value of the specified option only.
+	 *
+	 * @param {string} section_id
+	 * The configuration section ID
+	 *
+	 * @param {string} [option]
+	 * The name of the option to query
+	 *
+	 * @returns {null|LuCI.ui.AbstractElement|Object<string, null|LuCI.ui.AbstractElement>}
+	 * Returns either a dictionary of option names and their corresponding
+	 * widget input values or just a single widget input value, depending
+	 * on the amount of passed arguments.
+	 */
+	getUIElement: function(section_id, option) {
+		var rv = (arguments.length == 1) ? {} : null;
+
+		for (var i = 0, o; (o = this.children[i]) != null; i++)
+			if (rv)
+				rv[o.option] = o.getUIElement(section_id);
+			else if (o.option == option)
+				return o.getUIElement(section_id);
+
+		return rv;
+	},
+
+	/**
+	 * Obtain underlying option objects.
+	 *
+	 * This function is sensitive to the amount of arguments passed to it;
+	 * if no option name is specified, all options within this section are
+	 * returned as dictionary.
+	 *
+	 * If an option name is supplied, this function returns the matching
+	 * LuCI.form.AbstractValue instance only.
+	 *
+	 * @param {string} [option]
+	 * The name of the option object to obtain
+	 *
+	 * @returns {null|LuCI.form.AbstractValue|Object<string, LuCI.form.AbstractValue>}
+	 * Returns either a dictionary of option names and their corresponding
+	 * option instance objects or just a single object instance value,
+	 * depending on the amount of passed arguments.
+	 */
+	getOption: function(option) {
+		var rv = (arguments.length == 0) ? {} : null;
+
+		for (var i = 0, o; (o = this.children[i]) != null; i++)
+			if (rv)
+				rv[o.option] = o;
+			else if (o.option == option)
+				return o;
+
+		return rv;
+	},
+
 	/** @private */
 	renderUCISection: function(section_id) {
 		var renderTasks = [];
@@ -1118,6 +1269,9 @@ var CBIAbstractSection = CBIAbstractElement.extend(/** @lends LuCI.form.Abstract
 
 
 var isEqual = function(x, y) {
+	if (typeof(y) == 'object' && y instanceof RegExp)
+		return (x == null) ? false : y.test(x);
+
 	if (x != null && y != null && typeof(x) != typeof(y))
 		return false;
 
@@ -1198,6 +1352,7 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 		this.default = null;
 		this.size = null;
 		this.optional = false;
+		this.retain = false;
 	},
 
 	/**
@@ -1216,6 +1371,17 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 * or selected by the user.
 	 *
 	 * @name LuCI.form.AbstractValue.prototype#optional
+	 * @type boolean
+	 * @default false
+	 */
+
+	/**
+	 * If set to `true`, the underlying ui input widget value is not cleared
+	 * from the configuration on unsatisfied depedencies. The default behavior
+	 * is to remove the values of all options whose dependencies are not
+	 * fulfilled.
+	 *
+	 * @name LuCI.form.AbstractValue.prototype#retain
 	 * @type boolean
 	 * @default false
 	 */
@@ -1358,6 +1524,21 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 */
 
 	/**
+	 * Register a custom value change handler.
+	 *
+	 * If this property is set to a function value, the function is invoked
+	 * whenever the value of the underlying UI input element is changing.
+	 *
+	 * The invoked handler function will receive the DOM click element as
+	 * first and the underlying configuration section ID as well as the input
+	 * value as second and third argument respectively.
+	 *
+	 * @name LuCI.form.AbstractValue.prototype#onchange
+	 * @type function
+	 * @default null
+	 */
+
+	/**
 	 * Add a dependency contraint to the option.
 	 *
 	 * Dependency constraints allow making the presence of option elements
@@ -1414,6 +1595,10 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 *   Equivalent to the previous example.
 	 *  </li>
 	 *  <li>
+	 *   <code>opt.depends({ foo: /test/ })</code><br>
+	 *   Require the value of `foo` to match the regular expression `/test/`.
+	 *  </li>
+	 *  <li>
 	 *   <code>opt.depends({ foo: "test", bar: "qrx" })</code><br>
 	 *   Require the value of `foo` to be `test` and the value of `bar` to be
 	 *   `qrx`.
@@ -1435,11 +1620,11 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 *  </li>
 	 * </ul>
 	 *
-	 * @param {string|Object<string, string|boolean>} optionname_or_depends
+	 * @param {string|Object<string, string|RegExp>} optionname_or_depends
 	 * The name of the option to depend on or an object describing multiple
 	 * dependencies which must be satified (a logical "and" expression).
 	 *
-	 * @param {string} optionvalue
+	 * @param {string} optionvalue|RegExp
 	 * When invoked with a plain option name as first argument, this parameter
 	 * specifies the expected value. In case an object is passed as first
 	 * argument, this parameter is ignored.
@@ -1743,6 +1928,20 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	},
 
 	/**
+	 * Returns the current validation error for this input.
+	 *
+	 * @param {string} section_id
+	 * The configuration section ID
+	 *
+	 * @returns {string}
+	 * The validation error at this time
+	 */
+	getValidationError: function (section_id) {
+		var elem = this.getUIElement(section_id);
+		return elem ? elem.getValidationError() : '';
+	},
+
+	/**
 	 * Test whether the option element is currently active.
 	 *
 	 * An element is active when it is not hidden due to unsatisfied dependency
@@ -1797,27 +1996,37 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 * validation constraints.
 	 */
 	parse: function(section_id) {
-		var active = this.isActive(section_id),
-		    cval = this.cfgvalue(section_id),
-		    fval = active ? this.formvalue(section_id) : null;
+		var active = this.isActive(section_id);
 
 		if (active && !this.isValid(section_id)) {
-			var title = this.stripTags(this.title).trim();
-			return Promise.reject(new TypeError(_('Option "%s" contains an invalid input value.').format(title || this.option)));
+			var title = this.stripTags(this.title).trim(),
+			    error = this.getValidationError(section_id);
+
+			return Promise.reject(new TypeError(
+				_('Option "%s" contains an invalid input value.').format(title || this.option) + ' ' + error));
 		}
 
-		if (fval != '' && fval != null) {
-			if (this.forcewrite || !isEqual(cval, fval))
+		if (active) {
+			var cval = this.cfgvalue(section_id),
+			    fval = this.formvalue(section_id);
+
+			if (fval == null || fval == '') {
+				if (this.rmempty || this.optional) {
+					return Promise.resolve(this.remove(section_id));
+				}
+				else {
+					var title = this.stripTags(this.title).trim();
+
+					return Promise.reject(new TypeError(
+						_('Option "%s" must not be empty.').format(title || this.option)));
+				}
+			}
+			else if (this.forcewrite || !isEqual(cval, fval)) {
 				return Promise.resolve(this.write(section_id, fval));
+			}
 		}
-		else {
-			if (!active || this.rmempty || this.optional) {
-				return Promise.resolve(this.remove(section_id));
-			}
-			else if (!isEqual(cval, fval)) {
-				var title = this.stripTags(this.title).trim();
-				return Promise.reject(new TypeError(_('Option "%s" must not be empty.').format(title || this.option)));
-			}
+		else if (!this.retain) {
+			return Promise.resolve(this.remove(section_id));
 		}
 
 		return Promise.resolve();
@@ -1867,10 +2076,32 @@ var CBIAbstractValue = CBIAbstractElement.extend(/** @lends LuCI.form.AbstractVa
 	 * The configuration section ID
 	 */
 	remove: function(section_id) {
-		return this.map.data.unset(
-			this.uciconfig || this.section.uciconfig || this.map.config,
-			this.ucisection || section_id,
-			this.ucioption || this.option);
+		var this_cfg = this.uciconfig || this.section.uciconfig || this.map.config,
+		    this_sid = this.ucisection || section_id,
+		    this_opt = this.ucioption || this.option;
+
+		for (var i = 0; i < this.section.children.length; i++) {
+			var sibling = this.section.children[i];
+
+			if (sibling === this || sibling.ucioption == null)
+				continue;
+
+			var sibling_cfg = sibling.uciconfig || sibling.section.uciconfig || sibling.map.config,
+			    sibling_sid = sibling.ucisection || section_id,
+			    sibling_opt = sibling.ucioption || sibling.option;
+
+			if (this_cfg != sibling_cfg || this_sid != sibling_sid || this_opt != sibling_opt)
+				continue;
+
+			if (!sibling.isActive(section_id))
+				continue;
+
+			/* found another active option aliasing the same uci option name,
+			 * so we can't remove the value */
+			return;
+		}
+
+		this.map.data.unset(this_cfg, this_sid, this_opt);
 	}
 });
 
@@ -2013,10 +2244,8 @@ var CBITypedSection = CBIAbstractSection.extend(/** @lends LuCI.form.TypedSectio
 
 			dom.append(createEl, [
 				E('div', {}, nameEl),
-				E('input', {
+				E('button', {
 					'class': 'cbi-button cbi-button-add',
-					'type': 'submit',
-					'value': btn_title || _('Add'),
 					'title': btn_title || _('Add'),
 					'click': ui.createHandlerFn(this, function(ev) {
 						if (nameEl.classList.contains('cbi-input-invalid'))
@@ -2024,11 +2253,23 @@ var CBITypedSection = CBIAbstractSection.extend(/** @lends LuCI.form.TypedSectio
 
 						return this.handleAdd(ev, nameEl.value);
 					}),
-					'disabled': this.map.readonly || null
-				})
+					'disabled': this.map.readonly || true
+				}, [ btn_title || _('Add') ])
 			]);
 
-			ui.addValidator(nameEl, 'uciname', true, 'blur', 'keyup');
+			if (this.map.readonly !== true) {
+				ui.addValidator(nameEl, 'uciname', true, function(v) {
+					var button = createEl.querySelector('.cbi-section-create > .cbi-button-add');
+					if (v !== '') {
+						button.disabled = null;
+						return true;
+					}
+					else {
+						button.disabled = true;
+						return _('Expecting: %s').format(_('non-empty value'));
+					}
+				}, 'blur', 'keyup');
+			}
 		}
 
 		return createEl;
@@ -2036,10 +2277,7 @@ var CBITypedSection = CBIAbstractSection.extend(/** @lends LuCI.form.TypedSectio
 
 	/** @private */
 	renderSectionPlaceholder: function() {
-		return E([
-			E('em', _('This section contains no values yet')),
-			E('br'), E('br')
-		]);
+		return E('em', _('This section contains no values yet'));
 	},
 
 	/** @private */
@@ -2054,7 +2292,7 @@ var CBITypedSection = CBIAbstractSection.extend(/** @lends LuCI.form.TypedSectio
 			});
 
 		if (this.title != null && this.title != '')
-			sectionEl.appendChild(E('legend', {}, this.title));
+			sectionEl.appendChild(E('h3', {}, this.title));
 
 		if (this.description != null && this.description != '')
 			sectionEl.appendChild(E('div', { 'class': 'cbi-section-descr' }, this.description));
@@ -2138,39 +2376,6 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 	__name__: 'CBI.TableSection',
 
 	/**
-	 * If set to `true`, the user may add or remove instances from the form
-	 * section widget, otherwise only preexisting sections may be edited.
-	 * The default is `false`.
-	 *
-	 * @name LuCI.form.TableSection.prototype#addremove
-	 * @type boolean
-	 * @default false
-	 */
-
-	/**
-	 * If set to `true`, mapped section instances are treated as anonymous
-	 * UCI sections, which means that section instance elements will be
-	 * rendered without title element and that no name is required when adding
-	 * new sections. The default is `false`.
-	 *
-	 * @name LuCI.form.TableSection.prototype#anonymous
-	 * @type boolean
-	 * @default false
-	 */
-
-	/**
-	 * Override the caption used for the section add button at the bottom of
-	 * the section form element. If set to a string, it will be used as-is,
-	 * if set to a function, the function will be invoked and its return value
-	 * is used as caption, after converting it to a string. If this property
-	 * is not set, the default is `Add`.
-	 *
-	 * @name LuCI.form.TableSection.prototype#addbtntitle
-	 * @type string|function
-	 * @default null
-	 */
-
-	/**
 	 * Override the per-section instance title caption shown in the first
 	 * column of the table unless `anonymous` is set to true. If set to a
 	 * string, it will be used as `String.format()` pattern with the name of
@@ -2197,17 +2402,6 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 	 *
 	 * @name LuCI.form.TableSection.prototype#modaltitle
 	 * @type string|function
-	 * @default null
-	 */
-
-	/**
-	 * Override the UCI configuration name to read the section IDs from. By
-	 * default, the configuration name is inherited from the parent `Map`.
-	 * By setting this property, a deviating configuration may be specified.
-	 * The default is `null`, means inheriting from the parent form.
-	 *
-	 * @name LuCI.form.TableSection.prototype#uciconfig
-	 * @type string
 	 * @default null
 	 */
 
@@ -2289,13 +2483,15 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 		    config_name = this.uciconfig || this.map.config,
 		    max_cols = isNaN(this.max_cols) ? this.children.length : this.max_cols,
 		    has_more = max_cols < this.children.length,
+		    drag_sort = this.sortable && !('ontouchstart' in window),
+		    touch_sort = this.sortable && ('ontouchstart' in window),
 		    sectionEl = E('div', {
 				'id': 'cbi-%s-%s'.format(config_name, this.sectiontype),
 				'class': 'cbi-section cbi-tblsection',
 				'data-tab': (this.map.tabbed && !this.parentoption) ? this.sectiontype : null,
 				'data-tab-title': (this.map.tabbed && !this.parentoption) ? this.title || this.sectiontype : null
 			}),
-			tableEl = E('div', {
+			tableEl = E('table', {
 				'class': 'table cbi-section-table'
 			});
 
@@ -2313,18 +2509,20 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 			if (sectionname == null)
 				sectionname = cfgsections[i];
 
-			var trEl = E('div', {
+			var trEl = E('tr', {
 				'id': 'cbi-%s-%s'.format(config_name, cfgsections[i]),
 				'class': 'tr cbi-section-table-row',
 				'data-sid': cfgsections[i],
-				'draggable': this.sortable ? true : null,
-				'mousedown': this.sortable ? L.bind(this.handleDragInit, this) : null,
-				'dragstart': this.sortable ? L.bind(this.handleDragStart, this) : null,
-				'dragover': this.sortable ? L.bind(this.handleDragOver, this) : null,
-				'dragenter': this.sortable ? L.bind(this.handleDragEnter, this) : null,
-				'dragleave': this.sortable ? L.bind(this.handleDragLeave, this) : null,
-				'dragend': this.sortable ? L.bind(this.handleDragEnd, this) : null,
-				'drop': this.sortable ? L.bind(this.handleDrop, this) : null,
+				'draggable': (drag_sort || touch_sort) ? true : null,
+				'mousedown': drag_sort ? L.bind(this.handleDragInit, this) : null,
+				'dragstart': drag_sort ? L.bind(this.handleDragStart, this) : null,
+				'dragover': drag_sort ? L.bind(this.handleDragOver, this) : null,
+				'dragenter': drag_sort ? L.bind(this.handleDragEnter, this) : null,
+				'dragleave': drag_sort ? L.bind(this.handleDragLeave, this) : null,
+				'dragend': drag_sort ? L.bind(this.handleDragEnd, this) : null,
+				'drop': drag_sort ? L.bind(this.handleDrop, this) : null,
+				'touchmove': touch_sort ? L.bind(this.handleTouchMove, this) : null,
+				'touchend': touch_sort ? L.bind(this.handleTouchEnd, this) : null,
 				'data-title': (sectionname && (!this.anonymous || this.sectiontitle)) ? sectionname : null,
 				'data-section-id': cfgsections[i]
 			});
@@ -2341,9 +2539,8 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 		}
 
 		if (nodes.length == 0)
-			tableEl.appendChild(E('div', { 'class': 'tr cbi-section-table-row placeholder' },
-				E('div', { 'class': 'td' },
-					E('em', {}, _('This section contains no values yet')))));
+			tableEl.appendChild(E('tr', { 'class': 'tr cbi-section-table-row placeholder' },
+				E('td', { 'class': 'td' }, this.renderSectionPlaceholder())));
 
 		sectionEl.appendChild(tableEl);
 
@@ -2372,18 +2569,20 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 		}
 
 		if (has_titles) {
-			var trEl = E('div', {
+			var trEl = E('tr', {
 				'class': 'tr cbi-section-table-titles ' + anon_class,
-				'data-title': (!this.anonymous || this.sectiontitle) ? _('Name') : null
+				'data-title': (!this.anonymous || this.sectiontitle) ? _('Name') : null,
+				'click': this.sortable ? ui.createHandlerFn(this, 'handleSort') : null
 			});
 
 			for (var i = 0, opt; i < max_cols && (opt = this.children[i]) != null; i++) {
 				if (opt.modalonly)
 					continue;
 
-				trEl.appendChild(E('div', {
+				trEl.appendChild(E('th', {
 					'class': 'th cbi-section-table-cell',
-					'data-widget': opt.__name__
+					'data-widget': opt.__name__,
+					'data-sortable-row': this.sortable ? '' : null
 				}));
 
 				if (opt.width != null)
@@ -2401,7 +2600,7 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 			}
 
 			if (this.sortable || this.extedit || this.addremove || has_more || has_action)
-				trEl.appendChild(E('div', {
+				trEl.appendChild(E('th', {
 					'class': 'th cbi-section-table-cell cbi-section-actions'
 				}));
 
@@ -2409,7 +2608,7 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 		}
 
 		if (has_descriptions && !this.nodescriptions) {
-			var trEl = E('div', {
+			var trEl = E('tr', {
 				'class': 'tr cbi-section-table-descr ' + anon_class
 			});
 
@@ -2417,7 +2616,7 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 				if (opt.modalonly)
 					continue;
 
-				trEl.appendChild(E('div', {
+				trEl.appendChild(E('th', {
 					'class': 'th cbi-section-table-cell',
 					'data-widget': opt.__name__
 				}, opt.description));
@@ -2428,7 +2627,7 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 			}
 
 			if (this.sortable || this.extedit || this.addremove || has_more || has_action)
-				trEl.appendChild(E('div', {
+				trEl.appendChild(E('th', {
 					'class': 'th cbi-section-table-cell cbi-section-actions'
 				}));
 
@@ -2445,15 +2644,15 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 		if (!this.sortable && !this.extedit && !this.addremove && !more_label)
 			return E([]);
 
-		var tdEl = E('div', {
+		var tdEl = E('td', {
 			'class': 'td cbi-section-table-cell nowrap cbi-section-actions'
 		}, E('div'));
 
 		if (this.sortable) {
 			dom.append(tdEl.lastElementChild, [
-				E('div', {
+				E('button', {
 					'title': _('Drag to reorder'),
-					'class': 'btn cbi-button drag-handle center',
+					'class': 'cbi-button drag-handle center',
 					'style': 'cursor:move',
 					'disabled': this.map.readonly || null
 				}, '☰')
@@ -2597,17 +2796,268 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 	},
 
 	/** @private */
+	determineBackgroundColor: function(node) {
+		var r = 255, g = 255, b = 255;
+
+		while (node) {
+			var s = window.getComputedStyle(node),
+			    c = (s.getPropertyValue('background-color') || '').replace(/ /g, '');
+
+			if (c != '' && c != 'transparent' && c != 'rgba(0,0,0,0)') {
+				if (/^#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})$/i.test(c)) {
+					r = parseInt(RegExp.$1, 16);
+					g = parseInt(RegExp.$2, 16);
+					b = parseInt(RegExp.$3, 16);
+				}
+				else if (/^rgba?\(([0-9]+),([0-9]+),([0-9]+)[,)]$/.test(c)) {
+					r = +RegExp.$1;
+					g = +RegExp.$2;
+					b = +RegExp.$3;
+				}
+
+				break;
+			}
+
+			node = node.parentNode;
+		}
+
+		return [ r, g, b ];
+	},
+
+	/** @private */
+	handleTouchMove: function(ev) {
+		if (!ev.target.classList.contains('drag-handle'))
+			return;
+
+		var touchLoc = ev.targetTouches[0],
+		    rowBtn = ev.target,
+		    rowElem = dom.parent(rowBtn, '.tr'),
+		    htmlElem = document.querySelector('html'),
+		    dragHandle = document.querySelector('.touchsort-element'),
+		    viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+		if (!dragHandle) {
+			var rowRect = rowElem.getBoundingClientRect(),
+			    btnRect = rowBtn.getBoundingClientRect(),
+			    paddingLeft = btnRect.left - rowRect.left,
+			    paddingRight = rowRect.right - btnRect.right,
+			    colorBg = this.determineBackgroundColor(rowElem),
+			    colorFg = (colorBg[0] * 0.299 + colorBg[1] * 0.587 + colorBg[2] * 0.114) > 186 ? [ 0, 0, 0 ] : [ 255, 255, 255 ];
+
+			dragHandle = E('div', { 'class': 'touchsort-element' }, [
+				E('strong', [ rowElem.getAttribute('data-title') ]),
+				rowBtn.cloneNode(true)
+			]);
+
+			Object.assign(dragHandle.style, {
+				position: 'absolute',
+				boxShadow: '0 0 3px rgba(%d, %d, %d, 1)'.format(colorFg[0], colorFg[1], colorFg[2]),
+				background: 'rgba(%d, %d, %d, 0.8)'.format(colorBg[0], colorBg[1], colorBg[2]),
+				top: rowRect.top + 'px',
+				left: rowRect.left + 'px',
+				width: rowRect.width + 'px',
+				height: (rowBtn.offsetHeight + 4) + 'px'
+			});
+
+			Object.assign(dragHandle.firstElementChild.style, {
+				position: 'absolute',
+				lineHeight: dragHandle.style.height,
+				whiteSpace: 'nowrap',
+				overflow: 'hidden',
+				textOverflow: 'ellipsis',
+				left: (paddingRight > paddingLeft) ? '' : '5px',
+				right: (paddingRight > paddingLeft) ? '5px' : '',
+				width: (Math.max(paddingLeft, paddingRight) - 10) + 'px'
+			});
+
+			Object.assign(dragHandle.lastElementChild.style, {
+				position: 'absolute',
+				top: '2px',
+				left: paddingLeft + 'px',
+				width: rowBtn.offsetWidth + 'px'
+			});
+
+			document.body.appendChild(dragHandle);
+
+			rowElem.classList.remove('flash');
+			rowBtn.blur();
+		}
+
+		dragHandle.style.top = (touchLoc.pageY - (parseInt(dragHandle.style.height) / 2)) + 'px';
+
+		rowElem.parentNode.querySelectorAll('[draggable]').forEach(function(tr, i, trs) {
+			var trRect = tr.getBoundingClientRect(),
+			    yTop = trRect.top + window.scrollY,
+			    yBottom = trRect.bottom + window.scrollY,
+			    yMiddle = yTop + ((yBottom - yTop) / 2);
+
+			tr.classList.remove('drag-over-above', 'drag-over-below');
+
+			if ((i == 0 || touchLoc.pageY >= yTop) && touchLoc.pageY <= yMiddle)
+				tr.classList.add('drag-over-above');
+			else if ((i == (trs.length - 1) || touchLoc.pageY <= yBottom) && touchLoc.pageY > yMiddle)
+				tr.classList.add('drag-over-below');
+		});
+
+		/* prevent standard scrolling and scroll page when drag handle is
+		 * moved very close (~30px) to the viewport edge */
+
+		ev.preventDefault();
+
+		if (touchLoc.clientY < 30)
+			window.requestAnimationFrame(function() { htmlElem.scrollTop -= 30 });
+		else if (touchLoc.clientY > viewportHeight - 30)
+			window.requestAnimationFrame(function() { htmlElem.scrollTop += 30 });
+	},
+
+	/** @private */
+	handleTouchEnd: function(ev) {
+		var rowElem = dom.parent(ev.target, '.tr'),
+		    htmlElem = document.querySelector('html'),
+		    dragHandle = document.querySelector('.touchsort-element'),
+		    targetElem = rowElem.parentNode.querySelector('.drag-over-above, .drag-over-below'),
+		    viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+		if (!dragHandle)
+			return;
+
+		if (targetElem) {
+		    var isBelow = targetElem.classList.contains('drag-over-below');
+
+			rowElem.parentNode.insertBefore(rowElem, isBelow ? targetElem.nextElementSibling : targetElem);
+
+			this.map.data.move(
+				this.uciconfig || this.map.config,
+				rowElem.getAttribute('data-sid'),
+				targetElem.getAttribute('data-sid'),
+				isBelow);
+
+			window.requestAnimationFrame(function() {
+				var rowRect = rowElem.getBoundingClientRect();
+
+				if (rowRect.top < 50)
+					htmlElem.scrollTop = (htmlElem.scrollTop + rowRect.top - 50);
+				else if (rowRect.bottom > viewportHeight - 50)
+					htmlElem.scrollTop = (htmlElem.scrollTop + viewportHeight - 50 - rowRect.height);
+
+				rowElem.classList.add('flash');
+			});
+
+			targetElem.classList.remove('drag-over-above', 'drag-over-below');
+		}
+
+		document.body.removeChild(dragHandle);
+	},
+
+	/** @private */
 	handleModalCancel: function(modalMap, ev) {
-		return Promise.resolve(ui.hideModal());
+		var prevNode = this.getPreviousModalMap(),
+		    resetTasks = Promise.resolve();
+
+		if (prevNode) {
+			var heading = prevNode.parentNode.querySelector('h4'),
+			    prevMap = dom.findClassInstance(prevNode);
+
+			while (prevMap) {
+				resetTasks = resetTasks
+					.then(L.bind(prevMap.load, prevMap))
+					.then(L.bind(prevMap.reset, prevMap));
+
+				prevMap = prevMap.parent;
+			}
+
+			prevNode.classList.add('flash');
+			prevNode.classList.remove('hidden');
+			prevNode.parentNode.removeChild(prevNode.nextElementSibling);
+
+			heading.removeChild(heading.lastElementChild);
+
+			if (!this.getPreviousModalMap())
+				prevNode.parentNode
+					.querySelector('div.right > button')
+					.firstChild.data = _('Dismiss');
+		}
+		else {
+			ui.hideModal();
+		}
+
+		return resetTasks;
 	},
 
 	/** @private */
 	handleModalSave: function(modalMap, ev) {
-		return modalMap.save()
-			.then(L.bind(this.map.load, this.map))
-			.then(L.bind(this.map.reset, this.map))
-			.then(ui.hideModal)
+		var mapNode = this.getActiveModalMap(),
+		    activeMap = dom.findClassInstance(mapNode),
+		    saveTasks = activeMap.save(null, true);
+
+		while (activeMap.parent) {
+			activeMap = activeMap.parent;
+			saveTasks = saveTasks
+				.then(L.bind(activeMap.load, activeMap))
+				.then(L.bind(activeMap.reset, activeMap));
+		}
+
+		return saveTasks
+			.then(L.bind(this.handleModalCancel, this, modalMap, ev, true))
 			.catch(function() {});
+	},
+
+	/** @private */
+	handleSort: function(ev) {
+		if (!ev.target.matches('th[data-sortable-row]'))
+			return;
+
+		var th = ev.target,
+		    descending = (th.getAttribute('data-sort-direction') == 'desc'),
+		    config_name = this.uciconfig || this.map.config,
+		    index = 0,
+		    list = [];
+
+		ev.currentTarget.querySelectorAll('th').forEach(function(other_th, i) {
+			if (other_th !== th)
+				other_th.removeAttribute('data-sort-direction');
+			else
+				index = i;
+		});
+
+		ev.currentTarget.parentNode.querySelectorAll('tr.cbi-section-table-row').forEach(L.bind(function(tr, i) {
+			var sid = tr.getAttribute('data-sid'),
+			    opt = tr.childNodes[index].getAttribute('data-name'),
+			    val = this.cfgvalue(sid, opt);
+
+			tr.querySelectorAll('.flash').forEach(function(n) {
+				n.classList.remove('flash')
+			});
+
+			list.push([
+				ui.Table.prototype.deriveSortKey((val != null) ? val.trim() : ''),
+				tr
+			]);
+		}, this));
+
+		list.sort(function(a, b) {
+			return descending
+				? -L.naturalCompare(a[0], b[0])
+				: L.naturalCompare(a[0], b[0]);
+		});
+
+		window.requestAnimationFrame(L.bind(function() {
+			var ref_sid, cur_sid;
+
+			for (var i = 0; i < list.length; i++) {
+				list[i][1].childNodes[index].classList.add('flash');
+				th.parentNode.parentNode.appendChild(list[i][1]);
+
+				cur_sid = list[i][1].getAttribute('data-sid');
+
+				if (ref_sid)
+					this.map.data.move(config_name, cur_sid, ref_sid, true);
+
+				ref_sid = cur_sid;
+			}
+
+			th.setAttribute('data-sort-direction', descending ? 'asc' : 'desc');
+		}, this));
 	},
 
 	/**
@@ -2640,33 +3090,51 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 	},
 
 	/** @private */
-	renderMoreOptionsModal: function(section_id, ev) {
-		var parent = this.map,
-		    title = parent.title,
-		    name = null,
-		    m = new CBIMap(this.map.config, null, null),
-		    s = m.section(CBINamedSection, section_id, this.sectiontype);
+	getActiveModalMap: function() {
+		return document.querySelector('body.modal-overlay-active > #modal_overlay > .modal.cbi-modal > .cbi-map:not(.hidden)');
+	},
 
-		m.parent = parent;
-		m.readonly = parent.readonly;
+	/** @private */
+	getPreviousModalMap: function() {
+		var mapNode = this.getActiveModalMap(),
+		    prevNode = mapNode ? mapNode.previousElementSibling : null;
 
-		s.tabs = this.tabs;
-		s.tab_names = this.tab_names;
+		return (prevNode && prevNode.matches('.cbi-map.hidden')) ? prevNode : null;
+	},
 
-		if ((name = this.titleFn('modaltitle', section_id)) != null)
-			title = name;
-		else if ((name = this.titleFn('sectiontitle', section_id)) != null)
-			title = '%s - %s'.format(parent.title, name);
-		else if (!this.anonymous)
-			title = '%s - %s'.format(parent.title, section_id);
+	/** @private */
+	cloneOptions: function(src_section, dest_section) {
+		for (var i = 0; i < src_section.children.length; i++) {
+			var o1 = src_section.children[i];
 
-		for (var i = 0; i < this.children.length; i++) {
-			var o1 = this.children[i];
-
-			if (o1.modalonly === false)
+			if (o1.modalonly === false && src_section === this)
 				continue;
 
-			var o2 = s.option(o1.constructor, o1.option, o1.title, o1.description);
+			var o2;
+
+			if (o1.subsection) {
+				o2 = dest_section.option(o1.constructor, o1.option, o1.subsection.constructor, o1.subsection.sectiontype, o1.subsection.title, o1.subsection.description);
+
+				for (var k in o1.subsection) {
+					if (!o1.subsection.hasOwnProperty(k))
+						continue;
+
+					switch (k) {
+					case 'map':
+					case 'children':
+					case 'parentoption':
+						continue;
+
+					default:
+						o2.subsection[k] = o1.subsection[k];
+					}
+				}
+
+				this.cloneOptions(o1.subsection, o2.subsection);
+			}
+			else {
+				o2 = dest_section.option(o1.constructor, o1.option, o1.title, o1.description);
+			}
 
 			for (var k in o1) {
 				if (!o1.hasOwnProperty(k))
@@ -2678,6 +3146,7 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 				case 'option':
 				case 'title':
 				case 'description':
+				case 'subsection':
 					continue;
 
 				default:
@@ -2685,22 +3154,84 @@ var CBITableSection = CBITypedSection.extend(/** @lends LuCI.form.TableSection.p
 				}
 			}
 		}
+	},
 
-		return Promise.resolve(this.addModalOptions(s, section_id, ev)).then(L.bind(m.render, m)).then(L.bind(function(nodes) {
-			ui.showModal(title, [
-				nodes,
-				E('div', { 'class': 'right' }, [
-					E('button', {
-						'class': 'btn',
-						'click': ui.createHandlerFn(this, 'handleModalCancel', m)
-					}, [ _('Dismiss') ]), ' ',
-					E('button', {
-						'class': 'cbi-button cbi-button-positive important',
-						'click': ui.createHandlerFn(this, 'handleModalSave', m),
-						'disabled': m.readonly || null
-					}, [ _('Save') ])
-				])
-			], 'cbi-modal');
+	/** @private */
+	renderMoreOptionsModal: function(section_id, ev) {
+		var parent = this.map,
+		    sref = parent.data.get(parent.config, section_id),
+		    mapNode = this.getActiveModalMap(),
+		    activeMap = mapNode ? dom.findClassInstance(mapNode) : null,
+		    stackedMap = activeMap && (activeMap.parent !== parent || activeMap.section !== section_id);
+
+		return (stackedMap ? activeMap.save(null, true) : Promise.resolve()).then(L.bind(function() {
+			section_id = sref['.name'];
+
+			var m;
+
+			if (parent instanceof CBIJSONMap) {
+				m = new CBIJSONMap(null, null, null);
+				m.data = parent.data;
+			}
+			else {
+				m = new CBIMap(parent.config, null, null);
+			}
+
+			var s = m.section(CBINamedSection, section_id, this.sectiontype);
+
+			m.parent = parent;
+			m.section = section_id;
+			m.readonly = parent.readonly;
+
+			s.tabs = this.tabs;
+			s.tab_names = this.tab_names;
+
+			this.cloneOptions(this, s);
+
+			return Promise.resolve(this.addModalOptions(s, section_id, ev)).then(function() {
+				return m.render();
+			}).then(L.bind(function(nodes) {
+				var title = parent.title,
+				    name = null;
+
+				if ((name = this.titleFn('modaltitle', section_id)) != null)
+					title = name;
+				else if ((name = this.titleFn('sectiontitle', section_id)) != null)
+					title = '%s - %s'.format(parent.title, name);
+				else if (!this.anonymous)
+					title = '%s - %s'.format(parent.title, section_id);
+
+				if (stackedMap) {
+					mapNode.parentNode
+						.querySelector('h4')
+						.appendChild(E('span', title ? ' » ' + title : ''));
+
+					mapNode.parentNode
+						.querySelector('div.right > button')
+						.firstChild.data = _('Back');
+
+					mapNode.classList.add('hidden');
+					mapNode.parentNode.insertBefore(nodes, mapNode.nextElementSibling);
+
+					nodes.classList.add('flash');
+				}
+				else {
+					ui.showModal(title, [
+						nodes,
+						E('div', { 'class': 'right' }, [
+							E('button', {
+								'class': 'cbi-button',
+								'click': ui.createHandlerFn(this, 'handleModalCancel', m)
+							}, [ _('Dismiss') ]), ' ',
+							E('button', {
+								'class': 'cbi-button cbi-button-positive important',
+								'click': ui.createHandlerFn(this, 'handleModalSave', m),
+								'disabled': m.readonly || null
+							}, [ _('Save') ])
+						])
+					], 'cbi-modal');
+				}
+			}, this));
 		}, this)).catch(L.error);
 	}
 });
@@ -2781,26 +3312,33 @@ var CBIGridSection = CBITableSection.extend(/** @lends LuCI.form.GridSection.pro
 	/** @private */
 	handleAdd: function(ev, name) {
 		var config_name = this.uciconfig || this.map.config,
-		    section_id = this.map.data.add(config_name, this.sectiontype, name);
+		    section_id = this.map.data.add(config_name, this.sectiontype, name),
+		    mapNode = this.getPreviousModalMap(),
+		    prevMap = mapNode ? dom.findClassInstance(mapNode) : this.map;
 
-		this.addedSection = section_id;
+		prevMap.addedSection = section_id;
+
 		return this.renderMoreOptionsModal(section_id);
 	},
 
 	/** @private */
 	handleModalSave: function(/* ... */) {
-		return this.super('handleModalSave', arguments)
-			.then(L.bind(function() { this.addedSection = null }, this));
+		var mapNode = this.getPreviousModalMap(),
+		    prevMap = mapNode ? dom.findClassInstance(mapNode) : this.map;
+
+		return this.super('handleModalSave', arguments);
 	},
 
 	/** @private */
-	handleModalCancel: function(/* ... */) {
-		var config_name = this.uciconfig || this.map.config;
+	handleModalCancel: function(modalMap, ev, isSaving) {
+		var config_name = this.uciconfig || this.map.config,
+		    mapNode = this.getPreviousModalMap(),
+		    prevMap = mapNode ? dom.findClassInstance(mapNode) : this.map;
 
-		if (this.addedSection != null) {
-			this.map.data.remove(config_name, this.addedSection);
-			this.addedSection = null;
-		}
+		if (prevMap.addedSection != null && !isSaving)
+			this.map.data.remove(config_name, prevMap.addedSection);
+
+		delete prevMap.addedSection;
 
 		return this.super('handleModalCancel', arguments);
 	},
@@ -2833,12 +3371,12 @@ var CBIGridSection = CBITableSection.extend(/** @lends LuCI.form.GridSection.pro
 		    descr = this.stripTags(opt.description).trim(),
 		    value = opt.textvalue(section_id);
 
-		return E('div', {
+		return E('td', {
 			'class': 'td cbi-value-field',
 			'data-title': (title != '') ? title : null,
 			'data-description': (descr != '') ? descr : null,
 			'data-name': opt.option,
-			'data-widget': opt.typename || opt.__name__
+			'data-widget': 'CBI.DummyValue'
 		}, (value != null) ? value : E('em', _('none')));
 	},
 
@@ -2973,7 +3511,7 @@ var CBINamedSection = CBIAbstractSection.extend(/** @lends LuCI.form.NamedSectio
 			});
 
 		if (typeof(this.title) === 'string' && this.title !== '')
-			sectionEl.appendChild(E('legend', {}, this.title));
+			sectionEl.appendChild(E('h3', {}, this.title));
 
 		if (typeof(this.description) === 'string' && this.description !== '')
 			sectionEl.appendChild(E('div', { 'class': 'cbi-section-descr' }, this.description));
@@ -3103,6 +3641,20 @@ var CBIValue = CBIAbstractValue.extend(/** @lends LuCI.form.Value.prototype */ {
 	},
 
 	/** @private */
+	handleValueChange: function(section_id, state, ev) {
+		if (typeof(this.onchange) != 'function')
+			return;
+
+		var value = this.formvalue(section_id);
+
+		if (isEqual(value, state.previousValue))
+			return;
+
+		state.previousValue = value;
+		this.onchange.call(this, ev, section_id, value);
+	},
+
+	/** @private */
 	renderFrame: function(section_id, in_table, option_index, nodes) {
 		var config_name = this.uciconfig || this.section.uciconfig || this.map.config,
 		    depend_list = this.transformDepList(section_id),
@@ -3110,7 +3662,7 @@ var CBIValue = CBIAbstractValue.extend(/** @lends LuCI.form.Value.prototype */ {
 
 		if (in_table) {
 			var title = this.stripTags(this.title).trim();
-			optionEl = E('div', {
+			optionEl = E('td', {
 				'class': 'td cbi-value-field',
 				'data-title': (title != '') ? title : null,
 				'data-description': this.stripTags(this.description).trim(),
@@ -3166,13 +3718,16 @@ var CBIValue = CBIAbstractValue.extend(/** @lends LuCI.form.Value.prototype */ {
 
 		if (!in_table && typeof(this.description) === 'string' && this.description !== '')
 			dom.append(optionEl.lastChild || optionEl,
-				E('div', { 'class': 'cbi-value-description' }, this.description));
+				E('div', { 'class': 'cbi-value-description' }, this.description.trim()));
 
 		if (depend_list && depend_list.length)
 			optionEl.classList.add('hidden');
 
 		optionEl.addEventListener('widget-change',
 			L.bind(this.map.checkDepends, this.map));
+
+		optionEl.addEventListener('widget-change',
+			L.bind(this.handleValueChange, this, section_id, {}));
 
 		dom.bindClassInstance(optionEl, this);
 
@@ -3420,13 +3975,47 @@ var CBIFlagValue = CBIValue.extend(/** @lends LuCI.form.FlagValue.prototype */ {
 	 * @default 0
 	 */
 
+	/**
+	 * Set a tooltip for the flag option.
+	 *
+	 * If set to a string, it will be used as-is as a tooltip.
+	 *
+	 * If set to a function, the function will be invoked and the return
+	 * value will be shown as a tooltip. If the return value of the function
+	 * is `null` no tooltip will be set.
+	 *
+	 * @name LuCI.form.FlagValue.prototype#tooltip
+	 * @type string|function
+	 * @default null
+	 */
+
+	/**
+	 * Set a tooltip icon for the flag option.
+	 *
+	 * If set, this icon will be shown for the default one.
+	 * This could also be a png icon from the resources directory.
+	 *
+	 * @name LuCI.form.FlagValue.prototype#tooltipicon
+	 * @type string
+	 * @default 'ℹ️';
+	 */
+
 	/** @private */
 	renderWidget: function(section_id, option_index, cfgvalue) {
+		var tooltip = null;
+
+		if (typeof(this.tooltip) == 'function')
+			tooltip = this.tooltip.apply(this, [section_id]);
+		else if (typeof(this.tooltip) == 'string')
+			tooltip = (arguments.length > 1) ? ''.format.apply(this.tooltip, this.varargs(arguments, 1)) : this.tooltip;
+
 		var widget = new ui.Checkbox((cfgvalue != null) ? cfgvalue : this.default, {
 			id: this.cbid(section_id),
 			value_enabled: this.enabled,
 			value_disabled: this.disabled,
 			validate: L.bind(this.validate, this, section_id),
+			tooltip: tooltip,
+			tooltipicon: this.tooltipicon,
 			disabled: (this.readonly != null) ? this.readonly : this.map.readonly
 		});
 
@@ -3468,7 +4057,9 @@ var CBIFlagValue = CBIValue.extend(/** @lends LuCI.form.FlagValue.prototype */ {
 
 			if (!this.isValid(section_id)) {
 				var title = this.stripTags(this.title).trim();
-				return Promise.reject(new TypeError(_('Option "%s" contains an invalid input value.').format(title || this.option)));
+				var error = this.getValidationError(section_id);
+				return Promise.reject(new TypeError(
+					_('Option "%s" contains an invalid input value.').format(title || this.option) + ' ' + error));
 			}
 
 			if (fval == this.default && (this.optional || this.rmempty))
@@ -3476,7 +4067,7 @@ var CBIFlagValue = CBIValue.extend(/** @lends LuCI.form.FlagValue.prototype */ {
 			else
 				return Promise.resolve(this.write(section_id, fval));
 		}
-		else {
+		else if (!this.retain) {
 			return Promise.resolve(this.remove(section_id));
 		}
 	},
@@ -3713,11 +4304,21 @@ var CBIDummyValue = CBIValue.extend(/** @lends LuCI.form.DummyValue.prototype */
 	 * @default null
 	 */
 
+    /**
+	 * Render the UCI option value as hidden using the HTML display: none style property.
+	 *
+	 * By default, the value is displayed
+	 *
+	 * @name LuCI.form.DummyValue.prototype#hidden
+	 * @type boolean
+	 * @default null
+	 */
+
 	/** @private */
 	renderWidget: function(section_id, option_index, cfgvalue) {
 		var value = (cfgvalue != null) ? cfgvalue : this.default,
 		    hiddenEl = new ui.Hiddenfield(value, { id: this.cbid(section_id) }),
-		    outputEl = E('div');
+		    outputEl = E('div', { 'style': this.hidden ? 'display:none' : null });
 
 		if (this.href && !((this.readonly != null) ? this.readonly : this.map.readonly))
 			outputEl.appendChild(E('a', { 'href': this.href }));

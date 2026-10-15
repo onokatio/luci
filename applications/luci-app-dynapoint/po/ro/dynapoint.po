@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-11-22 19:53+0000\n"
-"Last-Translator: Simona Iacob <s@zp1.net>\n"
+"PO-Revision-Date: 2023-04-23 07:04+0000\n"
+"Last-Translator: olimpiumarius <oliver_magnum44@yahoo.com>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdynapoint/ro/>\n"
 "Language: ro\n"
@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 4.18-dev\n"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:90
 msgid "Activate this wVIF if status is:"
@@ -47,7 +47,7 @@ msgstr "Dispozitiv"
 msgid "Disabled"
 msgstr "Dezactivat"
 
-#: applications/luci-app-dynapoint/luasrc/controller/dynapoint.lua:7
+#: applications/luci-app-dynapoint/root/usr/share/luci/menu.d/luci-app-dynapoint.json:3
 msgid "DynaPoint"
 msgstr "DynaPunct"
 
@@ -57,7 +57,7 @@ msgstr "Manager dinamic de puncte de acces"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:67
 msgid "Enabled"
-msgstr "Activat"
+msgstr "activat"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:27
 msgid ""
@@ -66,6 +66,10 @@ msgid ""
 msgstr ""
 "Contor de eșec după câte încercări de descărcare eșuate, starea este "
 "considerată ca fiind offline"
+
+#: applications/luci-app-dynapoint/root/usr/share/rpcd/acl.d/luci-app-dynapoint.json:3
+msgid "Grant UCI access for luci-app-dynapoint"
+msgstr "Acordarea accesului UCI pentru luci-app-dynapoint"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:56
 msgid "List of Wireless Virtual Interfaces (wVIF)"

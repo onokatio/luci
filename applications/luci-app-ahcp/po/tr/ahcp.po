@@ -73,6 +73,10 @@ msgstr "Yönlendirici"
 msgid "General Setup"
 msgstr "Genel Kurulum"
 
+#: applications/luci-app-ahcp/root/usr/share/rpcd/acl.d/luci-app-ahcp.json:3
+msgid "Grant UCI access for luci-app-ahcp"
+msgstr "luci-app-ahcp için UCI erişimi verin"
+
 #: applications/luci-app-ahcp/luasrc/model/cbi/admin_network/proto_ahcp.lua:24
 #: applications/luci-app-ahcp/luasrc/model/cbi/ahcp.lua:61
 msgid "IPv4 and IPv6"

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2020-12-10 19:29+0000\n"
-"Last-Translator: Ryota <21ryotagamer@gmail.com>\n"
+"PO-Revision-Date: 2024-03-28 23:40+0000\n"
+"Last-Translator: Ioroi Kouhei <kouhei@ioroi.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/ja/>\n"
 "Language: ja\n"
@@ -10,14 +10,14 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:7
 msgid "A lightweight CalDAV/CardDAV server"
-msgstr ""
+msgstr "軽量なCalDAV/CardDAVサーバー"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:30
 msgid "Advanced Settings"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Authentication"
 msgstr "認証"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr ""
 
@@ -146,7 +146,7 @@ msgstr "一般設定"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
@@ -160,6 +160,10 @@ msgstr ""
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr ""
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "luci-app-radicale2にUCIアクセスを許可"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -215,7 +219,7 @@ msgid ""
 "Log configuration file (no file means default procd which ends up in syslog"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "ロギング"
@@ -394,7 +398,7 @@ msgstr ""
 msgid "Send debug information to logs"
 msgstr "デバッグ情報をログへ送信"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "サーバー設定"
@@ -403,7 +407,7 @@ msgstr "サーバー設定"
 msgid "Socket timeout (seconds)"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
@@ -419,7 +423,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:85
 msgid "This permanently deletes the cert, key, and configuration to use same."
-msgstr ""
+msgstr "証明書、キー、およびそれらを使用する構成が完全に削除されます。"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:182
 msgid "This permanently deletes the rights file and configuration to use same."

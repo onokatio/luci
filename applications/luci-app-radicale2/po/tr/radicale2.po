@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2021-05-15 14:32+0000\n"
-"Last-Translator: semih <semiht@gmail.com>\n"
+"PO-Revision-Date: 2024-03-31 19:53+0000\n"
+"Last-Translator: Oğuz Han <h4n.3545@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/tr/>\n"
 "Language: tr\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -31,7 +31,7 @@ msgstr "İzin Verilen Şifreler"
 msgid "Authentication"
 msgstr "Kimlik Doğrulama"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "Kimlik Doğrulama / Kullanıcılar"
 
@@ -77,7 +77,7 @@ msgstr "DNS Araması"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:26
 msgid "Debug"
-msgstr "Hata ayıklama"
+msgstr "Hata Ayıklama"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:15
 msgid "Default (htpasswd file from users below)"
@@ -126,7 +126,7 @@ msgstr "Şifreleme"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:23
 msgid "Filename"
-msgstr "Dosya adı"
+msgstr "Dosya Adı"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:19
 msgid "Folder"
@@ -146,12 +146,16 @@ msgstr "Genel Ayarlar"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
 "installed."
 msgstr ""
+"Apache htpasswd tarzı kimlik doğrulama dosyaları için bir oluşturucu "
+"kullanarak bu alanı oluşturun (yukarıda seçtiğiniz karma biçimi için) veya "
+"bu sayfada görünecek bir alana düz metni girerek karma oluşturma yeteneğini "
+"etkinleştirmek için python3-passlib'i kurun."
 
 #: applications/luci-app-radicale2/luasrc/view/cbi/raduigo.htm:24
 msgid "Go to Radicale 2.x Web UI"
@@ -160,6 +164,10 @@ msgstr "Radicale 2.x Web Kullanıcı Arayüzüne gidin"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "Radicale v2 Web Kullanıcı Arayüzüne gidin"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "luci-app-radicale2 için UCI erişimi verin"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -223,7 +231,7 @@ msgstr ""
 "Günlük yapılandırma dosyası (dosya yok, syslog'da sona eren varsayılan procd "
 "anlamına gelir"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "Günlükleme"
@@ -406,7 +414,7 @@ msgstr "Güvenli bir hash'i etkinleştirmek için yukarıda bcrypt'i seçin"
 msgid "Send debug information to logs"
 msgstr "Hata ayıklama bilgilerini günlüklere gönder"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "Sunucu Ayarları"
@@ -415,7 +423,7 @@ msgstr "Sunucu Ayarları"
 msgid "Socket timeout (seconds)"
 msgstr "Soket zaman aşımı (saniye)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
@@ -461,7 +469,7 @@ msgstr "Kullanıcı tabanlı ACL Ayarları"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:70
 msgid "Username"
-msgstr "Kullanıcı adı"
+msgstr "Kullanıcı Adı"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:66
 msgid "Users and Passwords"

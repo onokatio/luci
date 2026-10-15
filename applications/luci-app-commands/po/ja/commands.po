@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2020-12-10 19:29+0000\n"
-"Last-Translator: Ryota <21ryotagamer@gmail.com>\n"
+"PO-Revision-Date: 2023-11-17 09:29+0000\n"
+"Last-Translator: Scott Anecito <scott.anecito@linux.com>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationscommands/ja/>\n"
 "Language: ja\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4-dev\n"
+"X-Generator: Weblate 5.2\n"
 
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:16
 msgid "A short textual description of the configured command"
@@ -27,7 +27,7 @@ msgstr "事前認証なしでのコマンドの実行と、結果出力のダウ
 msgid "Allow the user to provide additional command line arguments"
 msgstr "コマンドラインに対する引数の追記を許可するか設定します"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:146
+#: applications/luci-app-commands/luasrc/view/commands.htm:162
 msgid "Arguments:"
 msgstr "引数:"
 
@@ -39,7 +39,7 @@ msgstr "バイナリデータは表示されずにダウンロードされます
 msgid "Code:"
 msgstr "コード:"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:164
+#: applications/luci-app-commands/luasrc/view/commands.htm:182
 msgid "Collecting data..."
 msgstr "データを収集中..."
 
@@ -67,7 +67,7 @@ msgstr "実行するコマンドラインを記載します"
 msgid "Command successful"
 msgstr "コマンド実行成功"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:144
+#: applications/luci-app-commands/luasrc/view/commands.htm:160
 msgid "Command:"
 msgstr "コマンド:"
 
@@ -77,7 +77,7 @@ msgstr "設定"
 
 #: applications/luci-app-commands/luasrc/controller/commands.lua:7
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:6
-#: applications/luci-app-commands/luasrc/view/commands.htm:138
+#: applications/luci-app-commands/luasrc/view/commands.htm:144
 msgid "Custom Commands"
 msgstr "カスタムコマンド"
 
@@ -93,11 +93,11 @@ msgstr "ダッシュボード"
 msgid "Description"
 msgstr "説明"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:150
+#: applications/luci-app-commands/luasrc/view/commands.htm:166
 msgid "Download"
 msgstr "ダウンロード"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Download execution result"
 msgstr "実行結果のダウンロード:"
 
@@ -105,7 +105,11 @@ msgstr "実行結果のダウンロード:"
 msgid "Failed to execute command!"
 msgstr "コマンドの実行に失敗しました！"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:152
+#: applications/luci-app-commands/root/usr/share/rpcd/acl.d/luci-app-commands.json:3
+msgid "Grant UCI access for luci-app-commands"
+msgstr "luci-app-commandsにUCIアクセスを許可"
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:168
 msgid "Link"
 msgstr "リンク"
 
@@ -113,7 +117,7 @@ msgstr "リンク"
 msgid "Loading"
 msgstr "読み込み中"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Or display result"
 msgstr "または結果の表示:"
 
@@ -121,7 +125,7 @@ msgstr "または結果の表示:"
 msgid "Public access"
 msgstr "パブリックアクセス"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:149
+#: applications/luci-app-commands/luasrc/view/commands.htm:165
 msgid "Run"
 msgstr "実行"
 
@@ -140,6 +144,10 @@ msgid ""
 msgstr ""
 "このページでは、ウェブインターフェースから簡単にシェルコマンドを実行すること"
 "ができます。"
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:150
+msgid "This section contains no values yet"
+msgstr "このセクションはまだ設定されていません"
 
 #: applications/luci-app-commands/luasrc/view/commands.htm:54
 msgid "Waiting for command to complete..."

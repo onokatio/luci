@@ -1,179 +1,117 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2019-11-13 13:08+0000\n"
-"Last-Translator: Le Van Uoc <kunkun3012@gmail.com>\n"
+"PO-Revision-Date: 2023-06-20 01:38+0000\n"
+"Last-Translator: Cường Quang <haonguyen93056@gmail.com>\n"
 "Language-Team: Vietnamese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsadvanced-reboot/vi/>\n"
 "Language: vi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 3.10-dev\n"
+"X-Generator: Weblate 4.18.1\n"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:188
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:171
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:10
 #: applications/luci-app-advanced-reboot/root/usr/share/luci/menu.d/luci-app-advanced-reboot.json:3
 msgid "Advanced Reboot"
 msgstr "Khởi động nâng cao"
 
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:36
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:60
-msgid "Alternative"
-msgstr "Thay thế"
-
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:53
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:136
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/alternative_reboot.htm:24
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/power_off.htm:20
 msgid "Cancel"
-msgstr "Hủy bỏ"
-
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:42
-msgid "Changes applied."
-msgstr "Các thay đổi đã được áp dụng."
+msgstr "Hủy lệnh"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:163
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:131
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:132
 msgid "Compressed"
-msgstr ""
+msgstr "Đã nén"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:125
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/alternative_reboot.htm:10
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/power_off.htm:10
 msgid "Confirm"
 msgstr "Xác nhận"
-
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:36
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:60
-msgid "Current"
-msgstr "Hiện tại"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:77
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:106
 msgid "Device unreachable! Still waiting for device..."
-msgstr ""
+msgstr "Thiết bị không thể kết nối! Vẫn đang chờ đợi thiết bị..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:198
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:18
 msgid "ERROR:"
 msgstr "Lỗi:"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:206
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:28
 msgid "Firmware"
-msgstr ""
+msgstr "Firmware"
 
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:45
-msgid "Loading"
-msgstr "Đang tải"
+#: applications/luci-app-advanced-reboot/root/usr/share/rpcd/acl.d/luci-app-advanced-reboot.json:3
+msgid "Grant UCI and file access for luci-app-advanced-reboot"
+msgstr ""
+"Cấp quyền truy cập UCI và tệp tin cho ứng dụng luci-app-advanced-reboot"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:122
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:213
 msgid "No access to fw_printenv or fw_printenv!"
 msgstr "Không thể truy cập tới fw_printenv!"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:204
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:26
 msgid "Partition"
 msgstr "Phân vùng"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:200
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:23
 msgid "Partitions"
 msgstr "Phân vùng"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:226
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:94
 msgid "Perform power off..."
 msgstr "Thực hiện tắt nguồn..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:46
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/power_off.htm:10
 msgid "Power Off Device"
 msgstr "Tắt nguồn thiết bị"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:57
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:140
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/alternative_reboot.htm:25
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/power_off.htm:21
 msgid "Proceed"
 msgstr "Tiến trình"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:207
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:29
 msgid "Reboot"
-msgstr ""
+msgstr "Khởi động lại"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:125
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/alternative_reboot.htm:10
 msgid "Reboot Device to an Alternative Partition"
 msgstr "Khởi động lại thiết bị vào phân vùng thay thế"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:157
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:50
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:74
 msgid "Reboot to alternative partition..."
 msgstr "Đang khởi động vào phân vùng thay thế..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:154
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:45
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:69
 msgid "Reboot to current partition"
 msgstr "Khởi động lại vào phần vùng hiện tại"
-
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:192
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:264
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:9
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:39
-msgid "Rebooting..."
-msgstr "Đang khởi động lại..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:70
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:75
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:99
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:104
 msgid "Rebooting…"
-msgstr ""
+msgstr "Đang khởi động lại…"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:38
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:297
 msgid "Shutting down..."
 msgstr "Đang tắt nguồn..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:205
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:27
 msgid "Status"
 msgstr "Trạng thái"
 
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:39
-msgid "System"
-msgstr "Hệ thống"
-
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:12
 msgid "The Dual Boot Flag Partition: %s is not a block device."
-msgstr ""
+msgstr "Phân vùng Dual Boot Flag: %s không phải là một thiết bị khối."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:66
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:95
 msgid "The reboot command failed with code %d"
-msgstr ""
-
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:193
-msgid ""
-"The system is rebooting now.<br /> DO NOT POWER OFF THE DEVICE!<br /> Wait a "
-"few minutes before you try to reconnect. It might be necessary to renew the "
-"address of your computer to reach the device again, depending on your "
-"settings."
-msgstr ""
-"Hệ thống sẽ được khởi động lại ngay.<br /> VUI LÒNG KHÔNG TẮT NGUỒN THIẾT BỊ!"
-"<br /> Vui lòng chờ một vài phút trước khi thử kết nối lại. Bạn có thể cần "
-"phải cập nhật lại địa chỉ máy tính để kết nối lại với thiết bị, phụ thuộc "
-"vào cài đặt máy tính."
+msgstr "Lệnh khởi động lại (reboot) không thành công, mã lỗi: %d"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:100
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:265
 msgid ""
 "The system is rebooting to an alternative partition now.<br /> DO NOT POWER "
 "OFF THE DEVICE!<br /> Wait a few minutes before you try to reconnect. It "
@@ -186,7 +124,6 @@ msgstr ""
 "với thiết bị, phụ thuộc vào cài đặt máy tính."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:39
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:298
 msgid ""
 "The system is shutting down now.<br /> DO NOT POWER OFF THE DEVICE!<br /> It "
 "might be necessary to renew the address of your computer to reach the device "
@@ -198,48 +135,30 @@ msgstr ""
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:10
 msgid "Unable to find Device Board Name."
-msgstr ""
+msgstr "Không thể tìm thấy tên bo mạch thiết bị."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:11
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:144
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:145
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:248
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:249
 msgid "Unable to find Dual Boot Flag Partition."
 msgstr "Không tìm thấy phân vùng khởi động kép."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:14
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:220
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:221
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:234
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:235
 msgid "Unable to obtain firmware environment variable: %s."
-msgstr ""
+msgstr "Không thể lấy được biến môi trường firmware: %s."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:13
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:256
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:257
 msgid "Unable to set Dual Boot Flag Partition entry for partition: %s."
 msgstr ""
+"Không thể thiết lập mục nhập Dual Boot Flag Partition cho phân vùng: %s."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:15
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:226
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:227
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:240
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:241
 msgid "Unable to set firmware environment variable: %s to %s."
-msgstr ""
+msgstr "Không thể đặt biến môi tường của firmware: %s thành %s."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:163
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:126
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:127
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:131
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:132
 msgid "Unknown"
-msgstr ""
+msgstr "Không xác định"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:126
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/alternative_reboot.htm:12
 msgid ""
 "WARNING: An alternative partition might have its own settings and completely "
 "different firmware.<br /><br /> As your network configuration and WiFi SSID/"
@@ -250,49 +169,42 @@ msgid ""
 "back to the currently active partition.<br /><br /> Click \"Proceed\" below "
 "to reboot device to an alternative partition."
 msgstr ""
+"CẢNH BÁO: Một phân vùng thay thế có thể có các thiết lập riêng và firmware "
+"hoàn toàn khác nhau.<br /><br /> Vì cấu hình mạng và tên SSID/mật khẩu WiFi "
+"trên phân vùng thay thế có thể khác nhau, bạn có thể phải điều chỉnh cài đặt "
+"máy tính của bạn để có thể truy cập vào thiết bị sau khi nó khởi động lại."
+"<br /><br /> Xin lưu ý rằng firmware của phân vùng thay thế có thể không "
+"cung cấp cách dễ dàng để chuyển đổi phân vùng hoạt động và khởi động trở lại "
+"phân vùng hiện đang hoạt động.<br /><br /> Bấm vào \"Tiếp tục\" bên dưới để "
+"khởi động lại thiết bị sang một phân vùng thay thế."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:47
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/power_off.htm:12
 msgid ""
 "WARNING: Power off might result in a reboot on a device which doesn't "
 "support power off.<br /><br /> Click \"Proceed\" below to power off your "
 "device."
 msgstr ""
-
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/applyreboot.htm:46
-msgid "Waiting for changes to be applied..."
-msgstr "Vui lòng chờ để áp dụng các thay đổi..."
+"CẢNH BÁO: Tắt nguồn sẽ dẫn đến khởi động lại trên thiết bị không hỗ trợ tắt "
+"nguồn.<br /><br /> Nhấn \"Tiếp tục\" dưới đây để tắt nguồn thiết bị của bạn."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:71
 msgid "Waiting for device..."
-msgstr ""
+msgstr "Đang đợi thiết bị..."
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:216
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:83
 msgid "Warning: Device (%s) is unknown or isn't a dual-partition device!"
 msgstr ""
 "Cảnh báo: Không thể nhận diện thiết bị (%s) hoặc không phải là thiết bị có "
 "hai phân vùng!"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:193
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:14
 msgid "Warning: There are unsaved changes that will get lost on reboot!"
 msgstr "Cảnh báo: Những thay đổi chưa được lưu sẽ bị xóa khi khởi động lại!"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:229
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:97
 msgid "Warning: This system does not support powering off!"
 msgstr "Cảnh báo: Hệ thống không hỗ trợ việc tắt nguồn!"
 
 #: applications/luci-app-advanced-reboot/htdocs/luci-static/resources/view/system/advanced_reboot.js:217
-#: applications/luci-app-advanced-reboot/luasrc/view/advanced_reboot/advanced_reboot.htm:85
 msgid "Warning: Unable to obtain device information!"
 msgstr "Cảnh báo: Không lấy được thông tin thiết bị!"
-
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:45
-msgid "attempting to mount alternative partition (mtd%s)"
-msgstr ""
-
-#: applications/luci-app-advanced-reboot/luasrc/controller/advanced_reboot.lua:54
-msgid "attempting to unmount alternative partition (mtd%s)"
-msgstr ""

@@ -1,13 +1,14 @@
 'use strict';
+'require view';
 'require fs';
 'require ui';
 
-return L.view.extend({
+return view.extend({
 	load: function() {
 		return L.resolveDefault(fs.read_direct('/etc/adblock/adblock.whitelist'), '');
 	},
 	handleSave: function(ev) {
-		var value = ((document.querySelector('textarea').value || '').trim().toLowerCase().replace(/\r\n/g, '\n').replace(/[^a-z0-9\.\-\#\n]/g, '')) + '\n';
+		var value = ((document.querySelector('textarea').value || '').trim().toLowerCase().replace(/\r\n/g, '\n')) + '\n';
 		return fs.write('/etc/adblock/adblock.whitelist', value)
 			.then(function(rc) {
 				document.querySelector('textarea').value = value;

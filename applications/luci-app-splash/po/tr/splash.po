@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-05-15 14:32+0000\n"
+"PO-Revision-Date: 2023-10-29 19:41+0000\n"
 "Last-Translator: semih <semiht@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationssplash/tr/>\n"
@@ -10,7 +10,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.2-dev\n"
+
+#: applications/luci-app-splash/luasrc/view/splash/splash.htm:53
+msgid "%s with the operator of this access point."
+msgstr "Bu erişim noktasının operatörüyle %s ."
 
 #: applications/luci-app-splash/luasrc/view/splash/splash.htm:65
 #: applications/luci-app-splash/luasrc/view/splash_splash/splash.htm:13
@@ -132,9 +136,8 @@ msgid "Clients upload speed is limited to this value (kbyte/s)"
 msgstr "İstemcilerin yükleme hızı bu değerle sınırlıdır (kbyte/s)"
 
 #: applications/luci-app-splash/luasrc/view/splash/blocked.htm:15
-#: applications/luci-app-splash/luasrc/view/splash/splash.htm:54
-msgid "Contact"
-msgstr ""
+msgid "Contact the owner"
+msgstr "Sahibiyle iletişime geçin"
 
 #: applications/luci-app-splash/luasrc/view/splash_splash/splash.htm:12
 msgid "Decline"
@@ -172,9 +175,13 @@ msgstr "Güvenlik duvarı bölgesi"
 msgid "General"
 msgstr "Genel"
 
-#: applications/luci-app-splash/luasrc/view/splash/splash.htm:53
-msgid "Get in %s with the operator of this access point."
-msgstr ""
+#: applications/luci-app-splash/luasrc/view/splash/splash.htm:54
+msgid "Get in contact"
+msgstr "İletişime geç"
+
+#: applications/luci-app-splash/root/usr/share/rpcd/acl.d/luci-app-splash.json:3
+msgid "Grant UCI access for luci-app-splash"
+msgstr "luci-app-splash için UCI erişimi verin"
 
 #: applications/luci-app-splash/luasrc/view/admin_status/splash.htm:205
 msgid "Hostname"
@@ -248,7 +255,7 @@ msgstr ""
 
 #: applications/luci-app-splash/luasrc/model/cbi/splash/splash.lua:77
 msgid "Netmask"
-msgstr "Ağ Maskesi"
+msgstr "Netmask"
 
 #: applications/luci-app-splash/luasrc/model/cbi/splash/splash.lua:37
 msgid "Network"

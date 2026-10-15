@@ -2,17 +2,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LuCI: tinyproxy\n"
 "POT-Creation-Date: 2012-08-15 20:24+0300\n"
-"PO-Revision-Date: 2020-07-04 17:41+0000\n"
-"Last-Translator: Artem <KovalevArtem.ru@gmail.com>\n"
+"PO-Revision-Date: 2024-01-23 10:05+0000\n"
+"Last-Translator: st7105 <st7105@gmail.com>\n"
 "Language-Team: Russian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationstinyproxy/ru/>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.2-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 5.4-dev\n"
 "Project-Info: Это технический перевод, не дословный. Главное-удобный русский "
 "интерфейс, все проверялось в графическом режиме, совместим с другими apps\n"
 
@@ -44,7 +44,7 @@ msgstr "Разрешенные<br />порты подключения"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:47
 msgid "Bind address"
-msgstr "Привязка адреса"
+msgstr "Адрес сервера"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:149
 msgid ""
@@ -86,7 +86,7 @@ msgstr ""
 "Может быть IP-адресом, диапазоном, именем домена или '.' для любого хоста "
 "без домена"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Конфигурация"
 
@@ -134,6 +134,10 @@ msgstr "Фильтрация и списки ACL"
 msgid "General settings"
 msgstr "Основные настройки"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "Предоставить UCI доступ для luci-app-tinyproxy"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Группа"
@@ -158,23 +162,23 @@ msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
-"Список разрешенных портов для опции 'CONNECT'. Значение '0' разрешает все "
-"порты"
+"Список разрешённых портов для метода CONNECT. Значение \"0\" выключает "
+"CONNECT полностью. Пустой список разрешает для всех портов"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
-msgstr "Адрес"
+msgstr "Адрес сервера"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:31
 msgid "Listen port"
-msgstr "Порт"
+msgstr "Порт сервера"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:73
 msgid "Log file"
-msgstr "Файл журнала приложения"
+msgstr "Файл журнала"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:74
 msgid "Log file to use for dumping messages"
@@ -295,7 +299,7 @@ msgstr "Задайте имя группы, в которой работает T
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
 "Задайте внешний прокси-сервер, используемый для доступа к хосту назначения. "
 "В виде <code>'адрес:порт'</code>"
@@ -312,16 +316,16 @@ msgstr "Запустить запасные сервера"
 msgid "Statistics page"
 msgstr "Страница статистики"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
-msgstr "Состояние"
+msgstr "Статус"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:225
 msgid "Target host"
 msgstr "Хост назначения"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

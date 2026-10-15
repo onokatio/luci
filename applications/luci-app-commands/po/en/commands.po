@@ -29,7 +29,7 @@ msgstr ""
 msgid "Allow the user to provide additional command line arguments"
 msgstr "Allow the user to provide additional command line arguments"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:146
+#: applications/luci-app-commands/luasrc/view/commands.htm:162
 msgid "Arguments:"
 msgstr "Arguments:"
 
@@ -41,7 +41,7 @@ msgstr "Binary data not displayed, download instead."
 msgid "Code:"
 msgstr "Code:"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:164
+#: applications/luci-app-commands/luasrc/view/commands.htm:182
 msgid "Collecting data..."
 msgstr "Collecting data..."
 
@@ -69,7 +69,7 @@ msgstr "Command line to execute"
 msgid "Command successful"
 msgstr "Command successful"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:144
+#: applications/luci-app-commands/luasrc/view/commands.htm:160
 msgid "Command:"
 msgstr "Command:"
 
@@ -79,7 +79,7 @@ msgstr "Configure"
 
 #: applications/luci-app-commands/luasrc/controller/commands.lua:7
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:6
-#: applications/luci-app-commands/luasrc/view/commands.htm:138
+#: applications/luci-app-commands/luasrc/view/commands.htm:144
 msgid "Custom Commands"
 msgstr "Custom Commands"
 
@@ -95,11 +95,11 @@ msgstr "Dashboard"
 msgid "Description"
 msgstr "Description"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:150
+#: applications/luci-app-commands/luasrc/view/commands.htm:166
 msgid "Download"
 msgstr "Download"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Download execution result"
 msgstr "Download execution result"
 
@@ -107,7 +107,11 @@ msgstr "Download execution result"
 msgid "Failed to execute command!"
 msgstr "Failed to execute command!"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:152
+#: applications/luci-app-commands/root/usr/share/rpcd/acl.d/luci-app-commands.json:3
+msgid "Grant UCI access for luci-app-commands"
+msgstr "Grant UCI access for luci-app-commands"
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:168
 msgid "Link"
 msgstr "Link"
 
@@ -115,7 +119,7 @@ msgstr "Link"
 msgid "Loading"
 msgstr "Loading"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Or display result"
 msgstr "Or display result"
 
@@ -123,7 +127,7 @@ msgstr "Or display result"
 msgid "Public access"
 msgstr "Public access"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:149
+#: applications/luci-app-commands/luasrc/view/commands.htm:165
 msgid "Run"
 msgstr "Run"
 
@@ -142,6 +146,10 @@ msgid ""
 msgstr ""
 "This page allows you to configure custom shell commands which can be easily "
 "invoked from the web interface."
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:150
+msgid "This section contains no values yet"
+msgstr ""
 
 #: applications/luci-app-commands/luasrc/view/commands.htm:54
 msgid "Waiting for command to complete..."

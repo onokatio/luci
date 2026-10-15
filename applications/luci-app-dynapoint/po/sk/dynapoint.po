@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-06-09 21:41+0000\n"
-"Last-Translator: Miloš Leškanič <leskanic@gmail.com>\n"
+"PO-Revision-Date: 2022-09-19 10:18+0000\n"
+"Last-Translator: Jose Riha <jose1711@gmail.com>\n"
 "Language-Team: Slovak <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdynapoint/sk/>\n"
 "Language: sk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Weblate 4.1-dev\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:90
 msgid "Activate this wVIF if status is:"
@@ -43,7 +43,7 @@ msgstr "Zariadenie"
 msgid "Disabled"
 msgstr "Zakázané"
 
-#: applications/luci-app-dynapoint/luasrc/controller/dynapoint.lua:7
+#: applications/luci-app-dynapoint/root/usr/share/luci/menu.d/luci-app-dynapoint.json:3
 msgid "DynaPoint"
 msgstr ""
 
@@ -53,12 +53,16 @@ msgstr ""
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:67
 msgid "Enabled"
-msgstr "Povolené"
+msgstr "Zapnuté"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:27
 msgid ""
 "Failure counter after how many failed download attempts, the state is "
 "considered as offline"
+msgstr ""
+
+#: applications/luci-app-dynapoint/root/usr/share/rpcd/acl.d/luci-app-dynapoint.json:3
+msgid "Grant UCI access for luci-app-dynapoint"
 msgstr ""
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:56

@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-02-24 06:56+0000\n"
-"Last-Translator: Daniel Pawlik <pawlik.dan@gmail.com>\n"
+"PO-Revision-Date: 2024-06-12 12:23+0000\n"
+"Last-Translator: Matthaiks <kitynska@gmail.com>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsprivoxy/pl/>\n"
 "Language: pl\n"
@@ -9,15 +9,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 5.6-dev\n"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:236
 msgid ""
 "A URL to be displayed in the error page that users will see if access to an "
 "untrusted page is denied."
 msgstr ""
-"Adres URL, wyświetlany na stronie błędu, który użytkownicy zobaczą, jeśli "
-"dostęp do niezaufanej strony zostanie zablokowany."
+"Adres URL, wyświetlany na stronie błędu, który zobaczą użytkownicy, jeśli "
+"dostęp do podejrzanej strony zostanie zablokowany."
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:226
 msgid ""
@@ -170,6 +170,10 @@ msgstr "Aby uzyskać pomoc, skorzystaj z odnośnika w odpowiedniej opcji"
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:91
 msgid "Forwarding"
 msgstr "Przekazywanie"
+
+#: applications/luci-app-privoxy/root/usr/share/rpcd/acl.d/luci-app-privoxy.json:3
+msgid "Grant UCI access for luci-app-privoxy"
+msgstr "Przyznaj luci-app-privoxy dostęp do UCI"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:589
 msgid ""
@@ -368,7 +372,7 @@ msgstr ""
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:908
 msgid "Read / Reread log file"
-msgstr "Odczytaj/Ponownie odczytaj plik dziennika"
+msgstr "Wczytaj / Ponownie wczytaj plik dziennika"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:815
 msgid "Show I/O status"

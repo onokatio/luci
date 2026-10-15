@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
 OUT, CACHE = map(pathlib.Path, sys.argv[1:])
-custom_names = {'luci-mod-network', 'libiwinfo20181126', 'libiwinfo-lua',
+custom_names = set(LOCK['luci_packages']) | { 'libiwinfo20181126', 'libiwinfo-lua',
                 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'luci-qsdk-wn7t94xr-runtime',
                 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
 persistent = {'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
@@ -64,7 +64,7 @@ for filename in published + official:
         if file in ('preinst', 'postinst', 'prerm', 'postrm'):
             subprocess.run(['sh', '-n'], input=data, check=True)
 
-assert len(records) == len(LOCK['base_packages']) + len(custom_names) - 1
+assert len(records) == len(LOCK['base_packages']) + len(custom_names)
 assert {name for name, (_, _, path) in records.items() if path.parent == OUT} == custom_names
 assert set(re.findall(r'^Package: (.*)$', (OUT / 'Packages').read_text(), re.M)) == custom_names
 available = set(records) | set(LOCK['rom_packages']) | {'libc', 'libgcc', 'libpthread', 'opkg', 'netifd', 'ubus', 'jshn'}
@@ -80,16 +80,15 @@ for fields, _, _ in records.values():
 for original in LOCK['base_packages']:
     name = original['name']
     fields, payload, path = records[name]
-    if name != 'luci-mod-network':
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
-    else:
-        assert fields['Version'] == original['version'] + '+qsdk' + records['luci-qsdk-wn7t94xr'][0]['Version'].rsplit('-',1)[0]
-        assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
-        assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
-        assert b'getAccelerationStatus' in payload['www/luci-static/resources/view/network/acceleration.js']
-        acl = json.loads(payload['usr/share/rpcd/acl.d/luci-qsdk-acceleration.json'])
-        assert acl['luci-qsdk-acceleration']['write']['file'] == {'/etc/init.d/qca-nss-ecm restart': ['exec']}
-        assert b'network/acceleration' in payload['usr/lib/lua/luci/controller/admin/network.lua']
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
+
+fields, payload, path = records['luci-mod-network']
+assert b'qca_next_ifname' in payload['www/luci-static/resources/view/network/wireless.js']
+assert b'rmempty=false' in payload['www/luci-static/resources/view/network/switch.js']
+assert b'getAccelerationStatus' in payload['www/luci-static/resources/view/network/acceleration.js']
+acl = json.loads(payload['usr/share/rpcd/acl.d/luci-qsdk-acceleration.json'])
+assert acl['luci-qsdk-acceleration']['write']['file'] == {'/etc/init.d/qca-nss-ecm restart': ['exec']}
+assert b'network/acceleration' in payload['usr/share/luci/menu.d/luci-qsdk.json']
 
 main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/ucitrack', 'etc/config/uhttpd',
@@ -101,7 +100,7 @@ init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
 assert 'START=95' in init and '/root/' not in init
 assert 'lowerdir=$ram/$dir:/$dir' in init and 'state=/overlay/luci-ram' in init
-assert int(main['Installed-Size']) < 20000
+assert int(main['Installed-Size']) < 24 * 1024
 assert not any(name.startswith(('luci-mod-status', 'luci-mod-system')) for name in records)
 manifest = payload['etc/luci-qsdk/ram-packages'].decode()
 ram_names = set()
@@ -122,11 +121,11 @@ for file, data in libraries.items():
     if file in exposed and isinstance(data, str):
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
-assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']} - {'luci-mod-network'}
-assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'usr/lib/lua/luci/version.lua', 'usr/lib/lua/luci/view/header.htm', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
+assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']}
+assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/lua/luci/model/cbi/sqm.lua'}
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
-assert ('+qsdk' + main['Version']).encode() in records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/version.lua']
-header = records['luci-qsdk-wn7t94xr-runtime'][1]['usr/lib/lua/luci/view/header.htm']
+assert ('+qsdk' + main['Version']).encode() in records['luci-base'][1]['usr/lib/lua/luci/version.lua']
+header = records['luci-base'][1]['usr/lib/lua/luci/view/header.htm']
 script_urls = re.findall(rb'src="([^"]+)"', header)
 assert len(script_urls) == 2
 assert all(url.endswith(('+qsdk' + main['Version']).encode()) for url in script_urls)

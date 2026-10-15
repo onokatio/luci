@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2021-05-02 20:06+0000\n"
-"Last-Translator: Trevor <wowpapa3232@gmail.com>\n"
+"PO-Revision-Date: 2024-01-05 04:02+0000\n"
+"Last-Translator: Yuan Law <traverslombard@outlook.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsradicale2/zh_Hant/>\n"
 "Language: zh_Hant\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -31,7 +31,7 @@ msgstr "允許的密碼"
 msgid "Authentication"
 msgstr "認證"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "認證 / 使用者"
 
@@ -126,7 +126,7 @@ msgstr "加密(Encryption)"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:23
 msgid "Filename"
-msgstr "檔名"
+msgstr "檔案名稱"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:19
 msgid "Folder"
@@ -146,12 +146,15 @@ msgstr "一般設定"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
 "installed."
 msgstr ""
+"使用Apache htpasswd樣式的身份驗證文件的生成器（針對您在上面選擇的hash格式）生"
+"成此字段，或者安裝python3-passlib以通過在將出現在此頁面上的字段中輸入純文本來"
+"啟用創建哈希的功能如果已安裝python3-passlib。"
 
 #: applications/luci-app-radicale2/luasrc/view/cbi/raduigo.htm:24
 msgid "Go to Radicale 2.x Web UI"
@@ -160,6 +163,10 @@ msgstr "轉到Radicale 2.x版 網站用戶界面"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "轉到Radicale v2版 網站用戶界面"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "授予 luci-app-radicale2 擁有 UCI 存取的權限"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -218,7 +225,7 @@ msgid ""
 "Log configuration file (no file means default procd which ends up in syslog"
 msgstr "日誌組態檔（如未上傳檔案，則預設將 procd 的日誌寫入 syslog）"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "日誌"
@@ -397,7 +404,7 @@ msgstr "選擇上方的bcrypt以啟用安全雜湊函式"
 msgid "Send debug information to logs"
 msgstr "將除錯信息發送到日誌"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "伺服器設定值"
@@ -406,11 +413,11 @@ msgstr "伺服器設定值"
 msgid "Socket timeout (seconds)"
 msgstr "插槽逾時（秒）"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
-msgstr "儲存"
+msgstr "儲存空間使用"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:13
 msgid "Storage Type"
@@ -430,7 +437,7 @@ msgstr "這將永久刪除權限檔及其相關組態。"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:47
 msgid "Timeout"
-msgstr "逾時值"
+msgstr "逾時"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:25
 msgid "Use File Locks"

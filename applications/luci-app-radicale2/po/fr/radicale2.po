@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2021-11-21 18:56+0000\n"
-"Last-Translator: Felix Braun <f.bhelicopter@gmail.com>\n"
+"PO-Revision-Date: 2024-02-01 22:49+0000\n"
+"Last-Translator: ButterflyOfFire <boffire@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/fr/>\n"
 "Language: fr\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -31,7 +31,7 @@ msgstr "Chiffrements autorisés"
 msgid "Authentication"
 msgstr "Authentification"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "Authentification / Utilisateurs"
 
@@ -40,13 +40,12 @@ msgid "Authentication Type"
 msgstr "Type d'authentification"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:171
-#, fuzzy
 msgid "Based on settings in 'Rights File'"
-msgstr "Basé sur les paramètres du \"Rights File\"/\"Fichiers des droits\"."
+msgstr "Basé sur les paramètres du \"Rights File\"/\"Fichiers des droits\""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:128
 msgid "CORS"
-msgstr ""
+msgstr "CORS"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:62
 msgid "Certificate"
@@ -77,9 +76,8 @@ msgid "Confirm Plaintext Password"
 msgstr "Confirmer le mot de passe en texte clair"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:105
-#, fuzzy
 msgid "DNS Lookup"
-msgstr "DNS Lookup"
+msgstr "Recherche DNS"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:26
 msgid "Debug"
@@ -150,16 +148,21 @@ msgstr "Pour la vérification des certificats des clients"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:29
 msgid "General Settings"
-msgstr "Paramètres généraux"
+msgstr "Réglages généraux"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
 "installed."
 msgstr ""
+"Générez ce champ en utilisant un générateur de fichiers d'authentification "
+"de type htpasswd Apache (pour le format de hachage que vous avez choisi ci-"
+"dessus), ou installez python3-passlib pour permettre la création du hachage "
+"en entrant le texte en clair dans un champ qui apparaîtra sur cette page si "
+"python3-passlib est installé."
 
 #: applications/luci-app-radicale2/luasrc/view/cbi/raduigo.htm:24
 msgid "Go to Radicale 2.x Web UI"
@@ -168,6 +171,10 @@ msgstr "Aller vers l'interface web de Radicale 2.x"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "Aller vers l'interface web de Radicale v2"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -178,9 +185,8 @@ msgid "HTTP(S) Headers"
 msgstr "Entêtes HTTP(S)"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:32
-#, fuzzy
 msgid "HTTP(S) Listeners (address:port)"
-msgstr "HTTP(S) Listeners (address:port)"
+msgstr "Écoute HTTP(S) (adresse:port)"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:128
 msgid "Header: X-Access-Control-Allow-Origin"
@@ -191,8 +197,9 @@ msgid "Headers"
 msgstr "En-Têtes"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:44
+#, fuzzy
 msgid "Hook"
-msgstr ""
+msgstr "Hook"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:110
 msgid ""
@@ -234,7 +241,7 @@ msgstr ""
 "Fichier de configuration du journal (en l'absence de fichier, procd est "
 "utilisé par défaut et a pour cible syslog)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "Journalisation"
@@ -291,7 +298,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:32
 msgid "Plaintext"
-msgstr ""
+msgstr "Texte en clair"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:76
 msgid "Plaintext Password"
@@ -304,7 +311,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:66
 msgid "Private Key"
-msgstr "Clé privée"
+msgstr "Clé Privée"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:18
 msgid "REMOTE_USER from web server"
@@ -360,7 +367,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:136
 msgid "Request"
-msgstr ""
+msgstr "Demande"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:57
 msgid "Required time between a failed authentication attempt and trying again"
@@ -372,7 +379,7 @@ msgstr "Retard de réessai"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:162
 msgid "Rights"
-msgstr ""
+msgstr "Droits"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:176
 msgid "Rights File"
@@ -384,15 +391,15 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:33
 msgid "SHA1"
-msgstr ""
+msgstr "SHA1"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:34
 msgid "SSHA"
-msgstr ""
+msgstr "SSHA"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:52
 msgid "SSL"
-msgstr ""
+msgstr "SSL"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:102
 msgid "SSL not available"
@@ -414,7 +421,7 @@ msgstr ""
 msgid "Send debug information to logs"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "Paramètres du serveur"
@@ -423,11 +430,11 @@ msgstr "Paramètres du serveur"
 msgid "Socket timeout (seconds)"
 msgstr ""
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
-msgstr ""
+msgstr "Stockage"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:13
 msgid "Storage Type"
@@ -449,7 +456,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:47
 msgid "Timeout"
-msgstr "Épuisement de délai"
+msgstr "Délai d'attente"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:25
 msgid "Use File Locks"
@@ -489,11 +496,11 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:39
 msgid "bcrypt"
-msgstr ""
+msgstr "bcrypt"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:35
 msgid "crypt"
-msgstr ""
+msgstr "crypte"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:16
 msgid "htpasswd file (manually populated)"
@@ -505,4 +512,4 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:37
 msgid "md5"
-msgstr ""
+msgstr "md5"

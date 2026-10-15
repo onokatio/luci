@@ -73,6 +73,10 @@ msgstr "포워더"
 msgid "General Setup"
 msgstr "일반 설정"
 
+#: applications/luci-app-ahcp/root/usr/share/rpcd/acl.d/luci-app-ahcp.json:3
+msgid "Grant UCI access for luci-app-ahcp"
+msgstr "luci-app-ahcp에 UCI 권한 부여"
+
 #: applications/luci-app-ahcp/luasrc/model/cbi/admin_network/proto_ahcp.lua:24
 #: applications/luci-app-ahcp/luasrc/model/cbi/ahcp.lua:61
 msgid "IPv4 and IPv6"

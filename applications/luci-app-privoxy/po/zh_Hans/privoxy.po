@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-privoxy\n"
 "POT-Creation-Date: 2015-06-10 20:16+0100\n"
-"PO-Revision-Date: 2021-04-11 16:26+0000\n"
-"Last-Translator: xiazhang <xz@xia.plus>\n"
+"PO-Revision-Date: 2024-01-04 07:07+0000\n"
+"Last-Translator: Eric <zxmegaxqug@hldrive.com>\n"
 "Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsprivoxy/zh_Hans/>\n"
 "Language: zh_Hans\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.6-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:236
@@ -162,6 +162,10 @@ msgstr "点击相应选项的连接可获取帮助"
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:91
 msgid "Forwarding"
 msgstr "转发"
+
+#: applications/luci-app-privoxy/root/usr/share/rpcd/acl.d/luci-app-privoxy.json:3
+msgid "Grant UCI access for luci-app-privoxy"
+msgstr "授予UCI访问luci-app-privoxy的权限"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:589
 msgid ""
@@ -385,7 +389,7 @@ msgstr "启动标语和警告。"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:455
 msgid "Syntax:"
-msgstr "格式："
+msgstr "语法："
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:786
 msgid "Syntax: Client header names delimited by spaces."

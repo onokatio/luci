@@ -1,0 +1,66 @@
+{
+  "admin/network/wireless_diagnostics": {
+    "title": "Wireless diagnostics",
+    "order": 18,
+    "action": {
+      "type": "view",
+      "path": "network/wireless-diagnostics"
+    },
+    "depends": {
+      "acl": [
+        "luci-qsdk-wireless"
+      ],
+      "fs": {
+        "/lib/wifi/qcawificfg80211.sh": "file"
+      }
+    }
+  },
+  "admin/network/band_steering": {
+    "title": "Band steering",
+    "order": 19,
+    "action": {
+      "type": "view",
+      "path": "network/band-steering"
+    },
+    "depends": {
+      "acl": [
+        "luci-qsdk-steering"
+      ],
+      "fs": {
+        "/lib/wifi/qcawificfg80211.sh": "file"
+      }
+    }
+  },
+  "admin/network/switch_advanced": {
+    "title": "Advanced switch",
+    "order": 21,
+    "action": {
+      "type": "view",
+      "path": "network/switch-advanced"
+    },
+    "depends": {
+      "acl": [
+        "luci-qsdk-switch"
+      ],
+      "fs": {
+        "/lib/wifi/qcawificfg80211.sh": "file"
+      }
+    }
+  },
+  "admin/network/acceleration": {
+    "title": "Acceleration",
+    "order": 25,
+    "action": {
+      "type": "view",
+      "path": "network/acceleration"
+    },
+    "depends": {
+      "acl": [
+        "luci-qsdk-acceleration"
+      ],
+      "fs": {
+        "/lib/wifi/qcawificfg80211.sh": "file"
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-11-30 13:10+0000\n"
+"PO-Revision-Date: 2023-09-02 13:20+0000\n"
 "Last-Translator: Simona Iacob <s@zp1.net>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsmjpg-streamer/ro/>\n"
@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 5.0.1-dev\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Allow ringbuffer to exceed limit by this amount"
@@ -52,8 +52,8 @@ msgid "Don't initialize dynctrls"
 msgstr "Nu inițializați dynctrls"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
-msgstr ""
+msgid "Drop frames smaller than this limit"
+msgstr "Aruncă cadrele mai mici decât această limită"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enable MJPG-streamer"
@@ -65,7 +65,7 @@ msgstr "Activați formatul YUYV"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enabled"
-msgstr "Activat"
+msgstr "activat"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Exceed"
@@ -73,9 +73,11 @@ msgstr "Depășește"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr ""
+"Execută comanda după salvarea imaginii. Mjpg-streamer analizează numele "
+"fișierului ca prim parametru al scriptului."
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:34
 msgid "File output"
@@ -96,6 +98,10 @@ msgstr "Imagini pe secundă"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "Generale"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "Acordă acces UCI pentru luci-app-mjpg-streamer"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -126,7 +132,7 @@ msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr ""
 "Conectează ultima imagine din ringbuffer la fișierul cu nume fix furnizat."
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-streamer"
 

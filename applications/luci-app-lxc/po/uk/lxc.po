@@ -1,25 +1,33 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-09-01 09:46+0000\n"
-"Last-Translator: Руслан Дідук <rylsoft@gmail.com>\n"
+"PO-Revision-Date: 2022-07-25 17:15+0000\n"
+"Last-Translator: Artem <artem@molotov.work>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationslxc/uk/>\n"
 "Language: uk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.8.1-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.14-dev\n"
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
+"<b> Завбачте: </b> Контейнери LXC вимагають функцій, недоступних в образах "
+"OpenWrt для пристроїв з малою флеш-пам'ятю. <br />"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "Дії"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr ""
+"Також ви можете встановити \"kmod-veth\" для додаткової підтримки мережі."
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -65,6 +73,10 @@ msgstr "Поріг вільного місця"
 msgid "Free Temp Threshold"
 msgstr "Вільний поріг температури"
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr "Надати доступ до UCI для luci-app-lxc"
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -108,10 +120,3 @@ msgstr "Зупинити"
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
 msgstr "Шаблон"
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
-msgstr ""

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-06-10 03:40+0200\n"
-"PO-Revision-Date: 2020-06-25 19:08+0000\n"
+"PO-Revision-Date: 2023-06-24 21:54+0000\n"
 "Last-Translator: viking76 <liaudetgael@gmail.com>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationstinyproxy/fr/>\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.2-dev\n"
+"X-Generator: Weblate 4.18.1\n"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:219
 msgid ""
@@ -86,7 +86,7 @@ msgstr ""
 "Ce peut être soit une adresse ou une gamme d'adresses IP, un nom de domaine, "
 "ou \".\" pour n'importe quel nom d'hôte sans domaine"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Configuration"
 
@@ -134,6 +134,10 @@ msgstr "Filtrage et ACLs"
 msgid "General settings"
 msgstr "Réglages généraux"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "Accorder l’accès à l’UCI pour luci-app-tinyproxy"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Groupe"
@@ -160,11 +164,11 @@ msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
-"Liste des ports autorisés pour la méthode CONNECT. Une valeur \"0\" unique "
-"autorises tous les ports"
+"Liste des ports autorisés pour la méthode CONNECT. Une valeur unique \"0\" "
+"désactive complètement CONNECT, une liste vide autorise tous les ports"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
@@ -172,11 +176,11 @@ msgstr "Adresse d'écoute"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:31
 msgid "Listen port"
-msgstr "Puerto de escucha"
+msgstr "Port d'écoute"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:73
 msgid "Log file"
-msgstr "Fichier de journal"
+msgstr "Fichier journal"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:74
 msgid "Log file to use for dumping messages"
@@ -299,7 +303,7 @@ msgstr ""
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
 "Indique un mandataire amont à utiliser pour atteindre l'hôte cible. Le "
 "format est <code>adresse:port</code>"
@@ -317,7 +321,7 @@ msgstr "Serveurs en surplus au démarrage"
 msgid "Statistics page"
 msgstr "Page de statistiques"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "État"
 
@@ -325,8 +329,8 @@ msgstr "État"
 msgid "Target host"
 msgstr "Hôte de destination"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

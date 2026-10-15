@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2020-06-16 16:09+0000\n"
-"Last-Translator: Marcin Net <marcin.net@linux.pl>\n"
+"PO-Revision-Date: 2023-11-07 22:37+0000\n"
+"Last-Translator: Matthaiks <kitynska@gmail.com>\n"
 "Language-Team: Polish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/pl/>\n"
 "Language: pl\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
 "|| n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.1.1-dev\n"
+"X-Generator: Weblate 5.2-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -32,7 +32,7 @@ msgstr "Dozwolone szyfry"
 msgid "Authentication"
 msgstr "Uwierzytelnienie"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "Uwierzytelnianie/Użytkownicy"
 
@@ -147,12 +147,17 @@ msgstr "Ustawienia główne"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
 "installed."
 msgstr ""
+"Wygeneruj to pole za pomocą generatora plików uwierzytelniania w stylu "
+"Apache htpasswd (dla wybranego przez ciebie formatu skrótu) lub zainstaluj "
+"python3-passlib, aby umożliwić tworzenie skrótu przez wprowadzenie tekstu "
+"jawnego w polu, które pojawi się na tej stronie jeśli jest zainstalowany "
+"python3-passlib."
 
 #: applications/luci-app-radicale2/luasrc/view/cbi/raduigo.htm:24
 msgid "Go to Radicale 2.x Web UI"
@@ -161,6 +166,10 @@ msgstr "Przejdź do Radicale 2.x Web UI"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "Przejdź do Radicale v2 Web UI"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "Przyznaj luci-app-radicale2 dostęp do UCI"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -223,7 +232,7 @@ msgstr ""
 "Plik konfiguracyjny dziennika (brak pliku oznacza domyślny procd, który "
 "kończy się w dzienniku systemowym)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
 msgstr "Logowanie"
@@ -404,7 +413,7 @@ msgstr "Wybierz bcrypt powyżej, aby włączyć bezpieczny hash"
 msgid "Send debug information to logs"
 msgstr "Wyślij informacje debugowania do dzienników"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "Ustawienia serwera"
@@ -413,7 +422,7 @@ msgstr "Ustawienia serwera"
 msgid "Socket timeout (seconds)"
 msgstr "Limit czasu gniazda (sekundy)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"

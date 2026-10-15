@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-11-17 15:39+0000\n"
-"Last-Translator: Simona Iacob <s@zp1.net>\n"
+"PO-Revision-Date: 2023-04-23 07:03+0000\n"
+"Last-Translator: olimpiumarius <oliver_magnum44@yahoo.com>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsrp-pppoe-server/ro/>\n"
 "Language: ro\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.9.1-dev\n"
+"X-Generator: Weblate 4.18-dev\n"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:19
 msgid "Access Concentrator Name"
@@ -20,6 +20,10 @@ msgstr "Numele concentratorului de acces"
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:32
 msgid "First remote IP"
 msgstr "Primul IP la distanță"
+
+#: applications/luci-app-rp-pppoe-server/root/usr/share/rpcd/acl.d/luci-app-rp-pppoe-server.json:3
+msgid "Grant UCI access for luci-app-rp-pppoe-server"
+msgstr "Acordarea accesului UCI pentru luci-app-rp-pppoe-server"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:29
 msgid "IP of listening side"
@@ -72,7 +76,7 @@ msgstr "Numărul unității PPP"
 msgid "PPPoE Server Configuration"
 msgstr "Configurarea serverului PPPoE"
 
-#: applications/luci-app-rp-pppoe-server/luasrc/controller/rp-pppoe-server.lua:11
+#: applications/luci-app-rp-pppoe-server/root/usr/share/luci/menu.d/luci-app-rp-pppoe-server.json:3
 msgid "RP PPPoE Server"
 msgstr "Server RP PPPoE"
 
@@ -98,7 +102,7 @@ msgstr "Sincronizare"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:57
 msgid "Timeout"
-msgstr "Termen de expirare"
+msgstr "Pauză"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:47
 msgid "Unit"

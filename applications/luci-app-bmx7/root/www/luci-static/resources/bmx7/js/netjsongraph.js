@@ -170,7 +170,7 @@
              */
             redraw: function() {
                 panner.attr("transform",
-                    "translate(" + d3.event.translate + ") " +
+                    "trans"+"late(" + d3.event.translate + ") " +
                     "scale(" + d3.event.scale + ")"
                 );
             },
@@ -227,7 +227,7 @@
                 }
                 if(n.linkCount) { html += "<p><b>links</b>: " + n.linkCount + "</p>"; }
                 if(n.local_addresses) {
-                    html += "<p><b>local addresses</b>:<br>" + n.local_addresses.join('<br>') + "</p>";
+                    html += "<p><b>local addresses</b>:<br />" + n.local_addresses.join('<br />') + "</p>";
                 }
                 overlayInner.html(html);
                 overlay.classed("njg-hidden", false);
@@ -507,7 +507,7 @@
                     });
 
                     labels.attr("transform", function(d) {
-                        return "translate(" + d.x + "," + d.y + ")";
+                        return "trans"+"late(" + d.x + "," + d.y + ")";
                     });
                 })
                 .on("end", function(){

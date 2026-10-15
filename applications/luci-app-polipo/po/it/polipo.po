@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-05-19 19:36+0200\n"
-"PO-Revision-Date: 2021-03-15 10:03+0000\n"
-"Last-Translator: Giovanni Giacobbi <giovanni@giacobbi.net>\n"
+"PO-Revision-Date: 2024-06-30 15:21+0000\n"
+"Last-Translator: moreno matassini <morenomatassini95@gmail.com>\n"
 "Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationspolipo/it/>\n"
 "Language: it\n"
@@ -12,11 +12,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.5.2-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:121
 msgid "Advanced Settings"
-msgstr "Impostazioni Avanzate"
+msgstr "Impostazioni avanzate"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:35
 msgid "Allowed clients"
@@ -35,7 +35,7 @@ msgstr ""
 "Autenticazione base HTTP supportata. Fornire username e password in formato "
 "username:password."
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:13
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:24
 msgid "Configuration"
 msgstr "Configurazione"
 
@@ -72,21 +72,25 @@ msgstr "Dimensione del primo segmento PMM (in bytes)"
 msgid "General Settings"
 msgstr "Impostazioni Generali"
 
+#: applications/luci-app-polipo/root/usr/share/rpcd/acl.d/luci-app-polipo.json:3
+msgid "Grant UCI access for luci-app-polipo"
+msgstr "Concedere l'accesso a UCI per luci-app-polipo"
+
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:113
 msgid "How much RAM should Polipo use for its cache."
 msgstr "Quanta RAM dovrebbe Polipo usa come sua cache."
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:112
 msgid "In RAM cache size (in bytes)"
-msgstr "In RAM cache size (in bytes)"
+msgstr "Dimensione della cache in RAM (in byte)"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:18
 msgid "Listen address"
-msgstr "Indirizzi ip da \"ascoltare\""
+msgstr "Indirizzo in ascolto"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:26
 msgid "Listen port"
-msgstr "Porta"
+msgstr "Porta in ascolto"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:126
 msgid ""
@@ -104,7 +108,7 @@ msgstr "Percorso del file di log"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:96
 msgid "Log to syslog"
-msgstr "Pubblica il log nel syslog"
+msgstr "Registra su syslog"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:13
 msgid "Logging and RAM"
@@ -116,11 +120,11 @@ msgstr "Non usare mai DNS RESOLVER"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:119
 msgid "On-Disk Cache"
-msgstr "On-Disk Cache"
+msgstr "Cache su disco"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:169
 msgid "PMM segments size (in bytes)"
-msgstr "DImensione segmenti PMM  (in bytes)"
+msgstr "Dimensione segmenti PMM (in byte)"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:12
 msgid "Parent Proxy"
@@ -142,8 +146,8 @@ msgstr ""
 msgid "Parent proxy authentication"
 msgstr "Autentificazione Parent proxy"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:11
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:4
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:3
 msgid "Polipo"
 msgstr "Polipo"
 
@@ -185,7 +189,7 @@ msgstr "Richiesta DNS da parte dell'host"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:72
 msgid "Query DNS directly, fallback to system resolver"
-msgstr ""
+msgstr "Interrogazione diretta del DNS, fallback sul resolver di sistema"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:69
 msgid "Query DNS directly, for unknown hosts fall back to system resolver"
@@ -227,7 +231,7 @@ msgstr ""
 msgid "Size to which cached files should be truncated"
 msgstr ""
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:12
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:15
 msgid "Status"
 msgstr "Stato"
 

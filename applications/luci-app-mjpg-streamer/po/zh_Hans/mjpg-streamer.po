@@ -6,8 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-mjpg-streamer\n"
 "POT-Creation-Date: 2015-06-11 21:11+0100\n"
-"PO-Revision-Date: 2021-04-11 16:27+0000\n"
-"Last-Translator: xiazhang <xz@xia.plus>\n"
+"PO-Revision-Date: 2024-02-05 19:36+0000\n"
+"Last-Translator: 大王叫我来巡山 <hamburger2048@users.noreply.hosted.weblate."
+"org>\n"
 "Language-Team: Chinese (Simplified) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsmjpg-streamer/zh_Hans/>\n"
 "Language: zh_Hans\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.6-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
@@ -59,7 +60,7 @@ msgid "Don't initialize dynctrls"
 msgstr "不要初始化 dynctrls"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
+msgid "Drop frames smaller than this limit"
 msgstr "丢弃小于该尺寸限制的帧"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
@@ -80,7 +81,7 @@ msgstr "超出"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr "保存图片后执行命令。文件名将作为第一个参数传递给命令。"
 
@@ -102,7 +103,11 @@ msgstr "帧每秒"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
-msgstr "通用"
+msgstr "常规"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "授予UCI访问luci-app-mjpg-streamer的权限"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -132,7 +137,7 @@ msgstr "将最新的图片链接到固定文件名"
 msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr "将环缓冲区中的最后一张图片链接到提供的固定命名文件。"
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-streamer(网络摄像机串流)"
 
@@ -184,13 +189,13 @@ msgstr "设置时间间隔（毫秒）"
 msgid ""
 "Set the minimum size if the webcam produces small-sized garbage frames. May "
 "happen under low light conditions"
-msgstr "当光照不足时可能会产生无用帧，可在此设置帧的最小尺寸以过滤它。"
+msgstr "当光照不足时可能会产生无用帧，可在此设置帧的最小尺寸以过滤它"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:71
 msgid ""
 "Set the quality in percent. This setting activates YUYV format, disables "
 "MJPEG"
-msgstr "设置品质（百分比）。此设置会开启 YUYV 格式输出，关闭 MJPEG 输出。"
+msgstr "设置品质（百分比）。此设置会开启 YUYV 格式输出，关闭 MJPEG 输出"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:91
 msgid "TCP port for this HTTP server"
@@ -211,4 +216,4 @@ msgstr "WWW 文件夹"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:4
 msgid ""
 "mjpg streamer is a streaming application for Linux-UVC compatible webcams"
-msgstr "mjpg streamer 是一个视频流程序，用于 Linux-UVC 兼容的摄像头。"
+msgstr "mjpg streamer 是一个视频流程序，用于 Linux-UVC 兼容的摄像头"

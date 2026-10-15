@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2019-12-18 04:21+0000\n"
-"Last-Translator: Pusak Hitam <thegame.gamesky@gmail.com>\n"
+"PO-Revision-Date: 2024-01-22 09:21+0000\n"
+"Last-Translator: Abdul Muizz Bin Abdul Jalil <abmuizz@gmail.com>\n"
 "Language-Team: Malay <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationscommands/ms/>\n"
 "Language: ms\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 3.10-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:16
 msgid "A short textual description of the configured command"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "Allow the user to provide additional command line arguments"
 msgstr ""
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:146
+#: applications/luci-app-commands/luasrc/view/commands.htm:162
 msgid "Arguments:"
 msgstr ""
 
@@ -38,13 +38,13 @@ msgstr ""
 msgid "Code:"
 msgstr ""
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:164
+#: applications/luci-app-commands/luasrc/view/commands.htm:182
 msgid "Collecting data..."
 msgstr "Mengumpul data..."
 
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:18
 msgid "Command"
-msgstr ""
+msgstr "Arahan"
 
 #: applications/luci-app-commands/luasrc/view/commands_public.htm:30
 msgid "Command executed successfully."
@@ -56,7 +56,7 @@ msgstr ""
 
 #: applications/luci-app-commands/luasrc/view/commands.htm:73
 msgid "Command failed"
-msgstr ""
+msgstr "Arahan gagal"
 
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:19
 msgid "Command line to execute"
@@ -64,11 +64,11 @@ msgstr ""
 
 #: applications/luci-app-commands/luasrc/view/commands.htm:73
 msgid "Command successful"
-msgstr ""
+msgstr "Arahan berjaya"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:144
+#: applications/luci-app-commands/luasrc/view/commands.htm:160
 msgid "Command:"
-msgstr ""
+msgstr "Arahan:"
 
 #: applications/luci-app-commands/luasrc/controller/commands.lua:9
 msgid "Configure"
@@ -76,7 +76,7 @@ msgstr ""
 
 #: applications/luci-app-commands/luasrc/controller/commands.lua:7
 #: applications/luci-app-commands/luasrc/model/cbi/commands.lua:6
-#: applications/luci-app-commands/luasrc/view/commands.htm:138
+#: applications/luci-app-commands/luasrc/view/commands.htm:144
 msgid "Custom Commands"
 msgstr ""
 
@@ -92,11 +92,11 @@ msgstr ""
 msgid "Description"
 msgstr "Keterangan"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:150
+#: applications/luci-app-commands/luasrc/view/commands.htm:166
 msgid "Download"
-msgstr ""
+msgstr "Muat turun"
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Download execution result"
 msgstr ""
 
@@ -104,7 +104,11 @@ msgstr ""
 msgid "Failed to execute command!"
 msgstr ""
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:152
+#: applications/luci-app-commands/root/usr/share/rpcd/acl.d/luci-app-commands.json:3
+msgid "Grant UCI access for luci-app-commands"
+msgstr ""
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:168
 msgid "Link"
 msgstr ""
 
@@ -112,7 +116,7 @@ msgstr ""
 msgid "Loading"
 msgstr ""
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:119
+#: applications/luci-app-commands/luasrc/view/commands.htm:123
 msgid "Or display result"
 msgstr ""
 
@@ -120,7 +124,7 @@ msgstr ""
 msgid "Public access"
 msgstr ""
 
-#: applications/luci-app-commands/luasrc/view/commands.htm:149
+#: applications/luci-app-commands/luasrc/view/commands.htm:165
 msgid "Run"
 msgstr ""
 
@@ -136,6 +140,10 @@ msgstr ""
 msgid ""
 "This page allows you to configure custom shell commands which can be easily "
 "invoked from the web interface."
+msgstr ""
+
+#: applications/luci-app-commands/luasrc/view/commands.htm:150
+msgid "This section contains no values yet"
 msgstr ""
 
 #: applications/luci-app-commands/luasrc/view/commands.htm:54

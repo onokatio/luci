@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2021-01-12 22:25+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2024-05-25 19:30+0000\n"
+"Last-Translator: Hulen <shift0106@gmail.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsclamav/zh_Hant/>\n"
 "Language: zh_Hant\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4.1-dev\n"
+"X-Generator: Weblate 5.6-dev\n"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:143
 msgid "10"
@@ -63,8 +63,8 @@ msgstr "600"
 msgid "Block encrypted archives"
 msgstr "攔截加密的歸檔檔案"
 
-#: applications/luci-app-clamav/luasrc/controller/clamav.lua:21
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:22
+#: applications/luci-app-clamav/root/usr/share/luci/menu.d/luci-app-clamav.json:3
 msgid "ClamAV"
 msgstr "ClamAV防毒"
 
@@ -91,6 +91,10 @@ msgstr "跟隨目錄符號連結"
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:68
 msgid "Follow file symlinks"
 msgstr "跟隨檔案符號連結"
+
+#: applications/luci-app-clamav/root/usr/share/rpcd/acl.d/luci-app-clamav.json:3
+msgid "Grant UCI access for luci-app-clamav"
+msgstr "授予 luci-app-clamav 擁有 UCI 存取的權限"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:30
 msgid "Log"
@@ -137,7 +141,7 @@ msgstr "最大可掃描的檔案大小"
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:119
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:124
 msgid "No"
-msgstr "不"
+msgstr "否"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:136
 msgid "Port range, highest port"

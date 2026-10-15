@@ -84,12 +84,12 @@
 				<select id="instance_template" name="cbi.cts.<%=self.config%>.<%=self.sectiontype%>.select">
 					<option value="" selected="selected" disabled="disabled"><%:Select template ...%></option>
 					<%- for k, v in luci.util.kspairs(self.add_select_options) do %>
-						<option value="<%=k%>"><%=luci.util.pcdata(v)%></option>
+						<option value="<%=k%>"><%=luci.xml.pcdata(v)%></option>
 					<% end -%>
 				</select>
 			</div>
 			<div class="td left">
-				<input class="cbi-button cbi-button-add" type="submit" onclick="vpn_add(); return false;" value="<%:Add%>" title="<%:Add template based configuration%>" /><br />
+				<input class="btn cbi-button cbi-button-add" type="submit" onclick="vpn_add(); return false;" value="<%:Add%>" title="<%:Add template based configuration%>" /><br />
 			</div>
 		</div>
 		<h4><%:OVPN configuration file upload%></h4>
@@ -101,7 +101,7 @@
 				<input type="file" name="ovpn_file" id="ovpn_file" accept="application/x-openvpn-profile,.ovpn" />
 			</div>
 			<div class="td left">
-				<input class="cbi-button cbi-button-add" type="submit" onclick="vpn_upload(); return false;" value="<%:Upload%>" title="<%:Upload ovpn file%>" />
+				<input class="btn cbi-button cbi-button-add" type="submit" onclick="vpn_upload(); return false;" value="<%:Upload%>" title="<%:Upload ovpn file%>" />
 			</div>
 		</div>
 	</div>

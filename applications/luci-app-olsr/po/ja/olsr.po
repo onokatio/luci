@@ -38,7 +38,7 @@ msgstr "NATを使用するゲートウェイを選択可能にする"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:147
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:141
-msgid "Allow the selection of an outgoing ipv4 gateway with NAT"
+msgid "Allow the selection of an outgoing IPv4 gateway with NAT"
 msgstr "NATを介してパケットを送信するIPv4 ゲートウェイを選択可能にします"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:155
@@ -93,7 +93,7 @@ msgstr ""
 msgid "Device"
 msgstr "デバイス"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:75
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:76
 msgid "Display"
 msgstr "表示"
 
@@ -156,17 +156,17 @@ msgstr "FIB メトリック"
 msgid ""
 "FIBMetric controls the metric value of the host-routes OLSRd sets. \"flat\" "
 "means that the metric value is always 2. This is the preferred value because "
-"it helps the linux kernel routing to clean up older routes. \"correct\" uses "
-"the hopcount as the metric value. \"approx\" use the hopcount as the metric "
+"it helps the Linux kernel routing to clean up older routes. \"correct\" uses "
+"the hopcount as the metric value. \"approx\" uses the hopcount as the metric "
 "value too, but does only update the hopcount if the nexthop changes too. "
 "Default is \"flat\"."
 msgstr ""
 "FIB メトリックは、OLSRdが設定するホスト経路のメトリック値をコントロールしま"
 "す。\"flat\"を選択した場合、メトリック値は常に\"2\"となります。この設定は、"
-"Linuxカーネルが古い経路を消去するのに有効なため、好ましい設定です。\"correct"
-"\"はホップ数をメトリック値として使用します。\"approx\"も同様にホップ数をメト"
-"リック値として使用しますが、次ホップが変更した場合のみ更新を行います。標準設"
-"定は\"flat\"です。"
+"Linuxカーネルが古い経路を消去するのに有効なため、好ましい設定で"
+"す。\"correct\"はホップ数をメトリック値として使用します。\"approx\"も同様に"
+"ホップ数をメトリック値として使用しますが、次ホップが変更した場合のみ更新を行"
+"います。初期設定は\"flat\"です。"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:112
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:106
@@ -200,19 +200,23 @@ msgstr ""
 msgid "Good (30 > SNR > 20)"
 msgstr ""
 
+#: applications/luci-app-olsr/root/usr/share/rpcd/acl.d/luci-app-olsr.json:3
+msgid "Grant UCI access for luci-app-olsr"
+msgstr "luci-app-olsrにUCIアクセスを許可"
+
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:8
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:17
 msgid "Green"
 msgstr "緑"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:53
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:54
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:402
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:383
 #: applications/luci-app-olsr/luasrc/view/status-olsr/overview.htm:178
 msgid "HNA"
 msgstr "HNA"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:25
 msgid "HNA Announcements"
 msgstr "HNA 通知"
 
@@ -230,7 +234,7 @@ msgstr "HNA 送信間隔"
 msgid "HNA validity time"
 msgstr "HNA 有効時間"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:25
 #, fuzzy
 msgid "HNA6 Announcements"
 msgstr "HNA 通知"
@@ -285,13 +289,13 @@ msgstr "ホスト名"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:8
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA messages."
 msgstr ""
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna6.lua:7
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA6 messages."
 msgstr ""
 
@@ -450,15 +454,15 @@ msgstr "インターフェース"
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface.lua:52
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface6.lua:52
 msgid ""
-"Interface Mode is used to prevent unnecessary packet forwarding on switched "
-"ethernet interfaces. valid Modes are \"mesh\" and \"ether\". Default is "
+"Interface mode is used to prevent unnecessary packet forwarding on switched "
+"ethernet interfaces. Valid modes are \"mesh\" and \"ether\". Default is "
 "\"mesh\"."
 msgstr ""
 "インターフェースモードは、スイッチ上のイーサネットインターフェースに不必要な"
-"パケットの送信を抑制するために使用します。有効なモードは\"mesh\"及び\"ether"
-"\"です。標準設定は\"mesh\"です。"
+"パケットの送信を抑制するために使用します。有効なモードは\"mesh\"及び"
+"\"ether\"です。初期設定は\"mesh\"です。"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:70
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:71
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:354
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:335
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:14
@@ -618,7 +622,7 @@ msgstr "リンク数の合計"
 msgid "Local interface IP"
 msgstr "ローカルインターフェース IP"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:58
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:59
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:395
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:376
 msgid "MID"
@@ -708,7 +712,7 @@ msgstr "隣接ノード"
 msgid "Neighbour IP"
 msgstr "隣接ノード IP"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:37
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:38
 msgid "Neighbours"
 msgstr "隣接ノード"
 
@@ -833,8 +837,8 @@ msgstr "ネットワーク内のスマート・ゲートウェイ一覧"
 msgid "Plugin configuration"
 msgstr "プラグイン設定"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:29
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:29
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:30
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:30
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins.lua:240
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins6.lua:240
 msgid "Plugins"
@@ -882,7 +886,7 @@ msgstr ""
 "使用している場合、ページの読み込み速度が極端に遅くなります。その場合はこの機"
 "能を無効にしてください。"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:43
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:44
 msgid "Routes"
 msgstr "ルート"
 
@@ -928,7 +932,7 @@ msgstr "IPv6 を表示"
 msgid "Signal Noise Ratio in dB"
 msgstr ""
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:64
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:65
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:44
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:44
 msgid "SmartGW"
@@ -1060,7 +1064,7 @@ msgstr ""
 msgid "Timing and Validity"
 msgstr "送信間隔及び有効時間"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:48
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:49
 msgid "Topology"
 msgstr "トポロジー"
 
@@ -1186,8 +1190,8 @@ msgstr "下へ"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:30
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:134
-msgid "infinate"
-msgstr ""
+msgid "infinite"
+msgstr "無限"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:40
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:29

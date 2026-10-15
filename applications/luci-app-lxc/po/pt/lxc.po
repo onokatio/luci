@@ -1,26 +1,31 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-05-03 15:02+0000\n"
-"Last-Translator: Hannu Nyman <hannu.nyman@iki.fi>\n"
+"PO-Revision-Date: 2024-01-08 01:06+0000\n"
+"Last-Translator: ssantos <ssantos@web.de>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationslxc/pt/>\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.1-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
-"<b>Por favor note:</b> Para Conentores LXC precisa de uma imagem do OpenWrt "
-"personalizada.<br />"
+"<b>Por favor note:</b> LXC Containers requerem recursos não disponíveis nas "
+"imagens do OpenWrt para aparelhos com flash pequeno.<br />"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "Ações"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr "Também pode instalar 'kmod-veth' para suportar redes opcionais."
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -66,6 +71,10 @@ msgstr "Limiar de Espaço Livre"
 msgid "Free Temp Threshold"
 msgstr "Limiar de Temperatura Livre"
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr "Conceder acesso UCI para luci-app-lxc"
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -107,13 +116,3 @@ msgstr "Parar"
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
 msgstr "Modelo"
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
-msgstr ""
-"A imagem deve incluir pelo menos suporte para 'kernel cgroups', 'kernel "
-"namespaces' e 'miscellaneous LXC related options' mais 'kmod-veth' para "
-"suporte de rede opcional."

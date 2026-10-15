@@ -12,8 +12,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 4.4-dev\n"
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:6
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:10
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:23
 msgid "Configuration"
 msgstr "設定"
 
@@ -21,8 +20,11 @@ msgstr "設定"
 msgid "Daily traffic"
 msgstr "毎日のトラフィック"
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:5
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:9
+#: applications/luci-app-vnstat/root/usr/share/rpcd/acl.d/luci-app-vnstat.json:3
+msgid "Grant UCI access for luci-app-vnstat"
+msgstr "luci-app-vnstatにUCIアクセスを許可"
+
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:14
 msgid "Graphs"
 msgstr "グラフ"
 
@@ -70,8 +72,7 @@ msgstr "VnStat"
 msgid "VnStat Graphs"
 msgstr "VnStatグラフ"
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:4
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:8
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:3
 msgid "VnStat Traffic Monitor"
 msgstr "VnStatトラフィックモニター"
 

@@ -12,13 +12,18 @@ msgstr ""
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "क्रिया"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -64,6 +69,10 @@ msgstr "फ्री स्पेस थ्रेशोल्ड"
 msgid "Free Temp Threshold"
 msgstr "फ्री स्पेस थ्रेशोल्ड"
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr ""
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -105,10 +114,3 @@ msgstr "थांबा"
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
 msgstr "टेम्पलेट"
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
-msgstr ""

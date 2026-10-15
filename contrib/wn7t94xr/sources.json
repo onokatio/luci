@@ -1,148 +1,62 @@
 {
-  "forks": {
-    "netifd": "61ec92e000a8e33868f1b2cb24f5748615123d48",
-    "iwinfo": "04aa42fadd438d32d97282d54d32bad693b7b65c"
-  },
-  "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
   "base_packages": [
     {
-      "name": "cgi-io",
-      "feed": "packages",
-      "version": "2021-09-08-98cef9dd-20",
-      "filename": "cgi-io_2021-09-08-98cef9dd-20_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "b7068a06212587704c967aabb3eb284693e2736eb6feb243ecdcc5b0dfaa57e3",
       "depends": "libc, libubox20191228, libubus20210603",
-      "license": "GPL-2.0-or-later"
+      "feed": "packages",
+      "filename": "cgi-io_2021-09-08-98cef9dd-20_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "GPL-2.0-or-later",
+      "name": "cgi-io",
+      "sha256": "b7068a06212587704c967aabb3eb284693e2736eb6feb243ecdcc5b0dfaa57e3",
+      "version": "2021-09-08-98cef9dd-20"
     },
     {
-      "name": "liblucihttp-lua",
-      "feed": "luci",
-      "version": "2019-07-05-a34a17d5-1",
-      "filename": "liblucihttp-lua_2019-07-05-a34a17d5-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "c4409cacc8b768d89359118471b0d9d4d59b6455618ba652e06307e464a5e084",
-      "depends": "libc, liblucihttp0, liblua5.1.5",
-      "license": "ISC"
-    },
-    {
-      "name": "liblucihttp0",
-      "feed": "luci",
-      "version": "2019-07-05-a34a17d5-1",
-      "filename": "liblucihttp0_2019-07-05-a34a17d5-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "bb149872e98a0ee4ec19124c252095fc4d6214224ff048b7c60810698738680c",
-      "depends": "libc",
-      "license": "ISC"
-    },
-    {
-      "name": "luci-app-opkg",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-app-opkg_git-22.115.68448-712bc8e-1_all.ipk",
-      "sha256": "ba522ded02fe98ea1249ce74f580dbdcd0ae46c88e716ed756275c8a2fbf0674",
-      "depends": "libc, opkg",
-      "license": ""
-    },
-    {
-      "name": "luci-base",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-base_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "bb4819011c44fbc12f0b8ca12c2377aedbc9cddcbb6fee54427654b097700e4c",
-      "depends": "libc, lua, luci-lib-nixio, luci-lib-ip, rpcd, libubus-lua, luci-lib-jsonc, liblucihttp-lua, rpcd-mod-file, rpcd-mod-luci, cgi-io",
-      "license": "MIT"
-    },
-    {
-      "name": "luci-lib-ip",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-lib-ip_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "3bf1ae7c01a469a6610f3d5462aaffea9ba4d3f559c179099bbe2b624abcf303",
-      "depends": "libc, liblua5.1.5, libnl-tiny",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "luci-lib-jsonc",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-lib-jsonc_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "8111083c33e80d49f58792e7bb4f8512f1bd311db4c8f68962129377d3e45184",
-      "depends": "libc, liblua5.1.5, libjson-c2",
-      "license": ""
-    },
-    {
-      "name": "luci-lib-nixio",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-lib-nixio_git-22.115.68448-712bc8e-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "14793dc9c91e822b638426d15efd548b2becb229a98a0546ea5550c6a400d139",
-      "depends": "libc, liblua5.1.5",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "luci-mod-network",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-mod-network_git-22.115.68448-712bc8e-1_all.ipk",
-      "sha256": "98df6e1138301c02b4086703b742fbd1970e59a4c30ef72ca1d86df0620e38ab",
-      "depends": "libc, luci-base, libiwinfo-lua, rpcd-mod-iwinfo",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "luci-theme-bootstrap",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-theme-bootstrap_git-22.115.68448-712bc8e-1_all.ipk",
-      "sha256": "aa699dfd7550c991f2563eed02002ad6426740c9ab4e6852f4e12c8523277351",
-      "depends": "libc",
-      "license": "Apache-2.0"
-    },
-    {
-      "name": "uhttpd",
-      "feed": "base",
-      "version": "2020-10-01-3abcc891-1",
-      "filename": "uhttpd_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "089bb730a68477e336e4d00826fa1b4edfb39f7b8515ec447af06ee99fd37171",
       "depends": "libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2",
-      "license": "ISC"
-    },
-    {
-      "name": "uhttpd-mod-ubus",
       "feed": "base",
-      "version": "2020-10-01-3abcc891-1",
-      "filename": "uhttpd-mod-ubus_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "sha256": "936c8888d1b9c3375fe135a14fc6d9a1742a41e2e3028857a8277b48d9fb50be",
+      "filename": "uhttpd_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "ISC",
+      "name": "uhttpd",
+      "sha256": "089bb730a68477e336e4d00826fa1b4edfb39f7b8515ec447af06ee99fd37171",
+      "version": "2020-10-01-3abcc891-1"
+    },
+    {
       "depends": "libc, uhttpd, libubus20210603, libblobmsg-json",
-      "license": "ISC"
+      "feed": "base",
+      "filename": "uhttpd-mod-ubus_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
+      "license": "ISC",
+      "name": "uhttpd-mod-ubus",
+      "sha256": "936c8888d1b9c3375fe135a14fc6d9a1742a41e2e3028857a8277b48d9fb50be",
+      "version": "2020-10-01-3abcc891-1"
     },
     {
-      "name": "sqm-scripts",
-      "feed": "packages",
-      "version": "1.4.0-2",
-      "filename": "sqm-scripts_1.4.0-2_all.ipk",
-      "sha256": "8ca4cfe83c098f395ba8c692708601b6263effa52f951d32ce4827d10a55e43b",
       "depends": "libc, tc, kmod-sched-core, kmod-sched-cake, kmod-ifb, iptables, iptables-mod-ipopt, iptables-mod-conntrack-extra",
-      "license": "GPLv2"
-    },
-    {
-      "name": "luci-app-sqm",
       "feed": "packages",
-      "version": "1.4.0-2",
-      "filename": "luci-app-sqm_1.4.0-2_all.ipk",
-      "sha256": "d0d31c0a9dd8b9ba238d90b2f537da5518a6c7f90d5d11ff4efa3fa0598c75d7",
-      "depends": "libc, lua, luci-base, luci-compat, sqm-scripts",
-      "license": "GPLv2"
+      "filename": "sqm-scripts_1.4.0-2_all.ipk",
+      "license": "GPLv2",
+      "name": "sqm-scripts",
+      "sha256": "8ca4cfe83c098f395ba8c692708601b6263effa52f951d32ce4827d10a55e43b",
+      "version": "1.4.0-2"
     },
     {
-      "name": "luci-compat",
-      "feed": "luci",
-      "version": "git-22.115.68448-712bc8e-1",
-      "filename": "luci-compat_git-22.115.68448-712bc8e-1_all.ipk",
-      "sha256": "fb0f611eb9b0afdb1f3851268ce57e1c51fc47bedec0466deb6d9fb250b04eaa",
-      "depends": "libc, luci-base",
-      "license": ""
+      "depends": "libc, lua, luci-base, luci-compat, sqm-scripts",
+      "feed": "packages",
+      "filename": "luci-app-sqm_1.4.0-2_all.ipk",
+      "license": "GPLv2",
+      "name": "luci-app-sqm",
+      "sha256": "d0d31c0a9dd8b9ba238d90b2f537da5518a6c7f90d5d11ff4efa3fa0598c75d7",
+      "version": "1.4.0-2"
     }
   ],
+  "forks": {
+    "iwinfo": "04aa42fadd438d32d97282d54d32bad693b7b65c",
+    "netifd": "61ec92e000a8e33868f1b2cb24f5748615123d48"
+  },
   "rom_packages": {
     "curl": "7.80.0",
+    "iptables": "1.8.3-1",
+    "iptables-mod-conntrack-extra": "1.8.3-1",
+    "iptables-mod-ipopt": "1.8.3-1",
+    "kmod-ifb": "5.4.213-1",
+    "kmod-sched-core": "5.4.213-1",
     "libblobmsg-json": "2020-05-25-66195aee-1",
     "libjson-c2": "0.12.1-3.1",
     "libjson-script": "2020-05-25-66195aee-1",
@@ -156,13 +70,83 @@
     "rpcd": "2020-05-26-67c8a3fd-1",
     "rpcd-mod-file": "2020-05-26-67c8a3fd-1",
     "rpcd-mod-rrdns": "20170710",
-    "uci": "2019-09-01-415f9e48-4",
-    "usign": "2020-05-23-f1f65026-1",
     "tc": "5.0.0-2.1",
-    "iptables": "1.8.3-1",
-    "iptables-mod-ipopt": "1.8.3-1",
-    "iptables-mod-conntrack-extra": "1.8.3-1",
-    "kmod-sched-core": "5.4.213-1",
-    "kmod-ifb": "5.4.213-1"
+    "uci": "2019-09-01-415f9e48-4",
+    "usign": "2020-05-23-f1f65026-1"
+  },
+  "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
+  "luci_upstream": "7a420e0c069d2257213136151c9c21565feced49",
+  "luci_packages": {
+    "luci-base": {
+      "source": "modules/luci-base",
+      "depends": "lua, luci-lib-base, luci-lib-nixio, luci-lib-ip, rpcd, libubus-lua, luci-lib-jsonc, liblucihttp-lua, rpcd-mod-file, rpcd-mod-luci, cgi-io",
+      "native": {
+        "usr/lib/lua/luci/template/parser.so": "usr/lib/lua/luci/template/parser.so"
+      },
+      "license": "MIT"
+    },
+    "luci-lib-base": {
+      "source": "libs/luci-lib-base",
+      "depends": "lua, luci-lib-nixio, luci-lib-ip, luci-lib-jsonc, liblucihttp-lua"
+    },
+    "luci-lib-nixio": {
+      "source": "libs/luci-lib-nixio",
+      "depends": "libc, liblua5.1.5",
+      "native": {
+        "usr/lib/lua/nixio.so": "usr/lib/lua/nixio.so"
+      }
+    },
+    "luci-lib-ip": {
+      "source": "libs/luci-lib-ip",
+      "depends": "libc, liblua5.1.5, libnl-tiny",
+      "native": {
+        "usr/lib/lua/luci/ip.so": "usr/lib/lua/luci/ip.so"
+      }
+    },
+    "luci-lib-jsonc": {
+      "source": "libs/luci-lib-jsonc",
+      "depends": "libc, liblua5.1.5, libjson-c2",
+      "native": {
+        "usr/lib/lua/luci/jsonc.so": "usr/lib/lua/luci/jsonc.so"
+      }
+    },
+    "luci-mod-network": {
+      "source": "modules/luci-mod-network",
+      "depends": "luci-base, rpcd-mod-iwinfo"
+    },
+    "luci-theme-bootstrap": {
+      "source": "themes/luci-theme-bootstrap",
+      "depends": "luci-base"
+    },
+    "luci-app-opkg": {
+      "source": "applications/luci-app-opkg",
+      "depends": "luci-base, opkg"
+    },
+    "luci-compat": {
+      "source": "modules/luci-compat",
+      "depends": "luci-base"
+    },
+    "liblucihttp0": {
+      "depends": "libc",
+      "version": "2023-03-15-9b5b683f-1",
+      "license": "ISC",
+      "native": {
+        "usr/lib/liblucihttp.so": "usr/lib/liblucihttp.so",
+        "usr/lib/liblucihttp.so.0": "usr/lib/liblucihttp.so.0"
+      }
+    },
+    "liblucihttp-lua": {
+      "depends": "libc, liblucihttp0, liblua5.1.5",
+      "version": "2023-03-15-9b5b683f-1",
+      "license": "ISC",
+      "native": {
+        "usr/lib/lua/lucihttp.so": "usr/lib/lua/lucihttp.so"
+      }
+    }
+  },
+  "lucihttp": {
+    "revision": "9b5b683fbb2bb0010aa031d620d0ab8105516757",
+    "url": "https://sources.openwrt.org/lucihttp-2023-03-15-9b5b683f.tar.xz",
+    "sha256": "82698fcf1ac47b14ea44b26eccfb11596b6eda4e9f68d016405ebd8a66dc816e"
   }
 }

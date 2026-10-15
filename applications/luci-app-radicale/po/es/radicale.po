@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-05-10 09:32+0000\n"
-"Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
+"PO-Revision-Date: 2024-07-17 00:19+0000\n"
+"Last-Translator: brodrigueznu <brodrigueznu@hotmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale/es/>\n"
 "Language: es\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:268
 msgid ""
@@ -27,22 +27,6 @@ msgstr ""
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:272
 msgid "AUTO"
 msgstr "AUTO"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:734
-msgid "Access-Control-Allow-Headers"
-msgstr "Acceso-Control-Permitir-Encabezados"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:726
-msgid "Access-Control-Allow-Methods"
-msgstr "Acceso-Control-Permitir-Métodos"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:718
-msgid "Access-Control-Allow-Origin"
-msgstr "Acceso-Control-Permitir-Origen"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:742
-msgid "Access-Control-Expose-Headers"
-msgstr "Acceso-Control-Exponer-Encabezados"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:706
 msgid "Additional HTTP headers"
@@ -67,7 +51,7 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:352
 msgid "Authentication method"
-msgstr "Método de autentificación"
+msgstr "Método de autenticación"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:342
 msgid "Authentication method to allow access to Radicale server."
@@ -241,6 +225,10 @@ msgstr "Ruta completa y nombre de archivo del certificado"
 msgid "Full path and file name of private key"
 msgstr "Ruta completa y nombre de archivo de clave privada"
 
+#: applications/luci-app-radicale/root/usr/share/rpcd/acl.d/luci-app-radicale.json:3
+msgid "Grant UCI access for luci-app-radicale"
+msgstr "Conceder acceso a UCI para luci-app-radicale"
+
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:549
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:571
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:593
@@ -275,7 +263,7 @@ msgstr "Tamaño del archivo de registro"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:533
 msgid "Logging"
-msgstr "Inicio de sesión"
+msgstr "Inicio sesión"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:235
 msgid "Logon message"

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2022-01-10 18:54+0000\n"
-"Last-Translator: CRISTIAN ANDREI <cristianvdr@gmail.com>\n"
+"PO-Revision-Date: 2023-08-26 23:26+0000\n"
+"Last-Translator: Simona Iacob <s@zp1.net>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsolsr/ro/>\n"
 "Language: ro\n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10.1\n"
+"X-Generator: Weblate 5.0.1-dev\n"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/mid.htm:13
 msgid "Active MID announcements"
@@ -37,8 +37,8 @@ msgstr "Permiteți gateway-urile cu NAT"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:147
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:141
-msgid "Allow the selection of an outgoing ipv4 gateway with NAT"
-msgstr ""
+msgid "Allow the selection of an outgoing IPv4 gateway with NAT"
+msgstr "Permiteți selectarea unui gateway IPv4 de ieșire cu NAT"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:155
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:149
@@ -94,7 +94,7 @@ msgstr ""
 msgid "Device"
 msgstr "Dispozitiv"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:75
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:76
 msgid "Display"
 msgstr "Afișare"
 
@@ -122,7 +122,7 @@ msgstr "ETX"
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins.lua:15
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins6.lua:15
 msgid "Enable"
-msgstr "Activați"
+msgstr "Activează"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:140
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:134
@@ -141,7 +141,7 @@ msgstr "Activează această interfaţă."
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins.lua:249
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins6.lua:249
 msgid "Enabled"
-msgstr "Activat"
+msgstr "activat"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:5
 msgid "Expected retransmission count"
@@ -157,11 +157,18 @@ msgstr "Metrică FIB"
 msgid ""
 "FIBMetric controls the metric value of the host-routes OLSRd sets. \"flat\" "
 "means that the metric value is always 2. This is the preferred value because "
-"it helps the linux kernel routing to clean up older routes. \"correct\" uses "
-"the hopcount as the metric value. \"approx\" use the hopcount as the metric "
+"it helps the Linux kernel routing to clean up older routes. \"correct\" uses "
+"the hopcount as the metric value. \"approx\" uses the hopcount as the metric "
 "value too, but does only update the hopcount if the nexthop changes too. "
 "Default is \"flat\"."
 msgstr ""
+"FIBMetric controlează valoarea metrică a seturilor de rute-gazdă OLSRd. "
+"\"flat\" înseamnă că valoarea metrică este întotdeauna 2. Aceasta este "
+"valoarea preferată, deoarece ajută nucleul Linux de rutare să curețe rutele "
+"mai vechi. \"correct\" utilizează numărul de salturi ca valoare metrică. "
+"\"approx\" utilizează hopcount-ul ca valoare metrică, dar actualizează "
+"hopcount-ul numai dacă se schimbă și hopcount-ul următor. Valoarea implicită "
+"este \"flat\"."
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:112
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:106
@@ -197,19 +204,23 @@ msgstr "Bun (2 < ETX < 4)"
 msgid "Good (30 > SNR > 20)"
 msgstr "Bun (30 > SNR > 20)"
 
+#: applications/luci-app-olsr/root/usr/share/rpcd/acl.d/luci-app-olsr.json:3
+msgid "Grant UCI access for luci-app-olsr"
+msgstr "Acordă acces la UCI pentru luci-app-olsr"
+
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:8
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:17
 msgid "Green"
 msgstr "Verde"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:53
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:54
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:402
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:383
 #: applications/luci-app-olsr/luasrc/view/status-olsr/overview.htm:178
 msgid "HNA"
 msgstr "HNA"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:25
 msgid "HNA Announcements"
 msgstr "Anunțuri HNA"
 
@@ -227,7 +238,7 @@ msgstr "Intervalul HNA"
 msgid "HNA validity time"
 msgstr "Timp de valabilitate HNA"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:25
 msgid "HNA6 Announcements"
 msgstr "Anunțuri HNA6"
 
@@ -281,15 +292,19 @@ msgstr "Numele gazdei ( hostname )"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:8
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA messages."
 msgstr ""
+"Gazdele dintr-o rețea rutată OLSR pot anunța conectivitatea cu rețelele "
+"externe prin intermediul mesajelor HNA."
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna6.lua:7
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA6 messages."
 msgstr ""
+"Gazdele dintr-o rețea rutată OLSR pot anunța conectivitatea cu rețelele "
+"externe prin intermediul mesajelor HNA6."
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:117
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:111
@@ -447,12 +462,15 @@ msgstr "Interfață"
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface.lua:52
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface6.lua:52
 msgid ""
-"Interface Mode is used to prevent unnecessary packet forwarding on switched "
-"ethernet interfaces. valid Modes are \"mesh\" and \"ether\". Default is "
+"Interface mode is used to prevent unnecessary packet forwarding on switched "
+"ethernet interfaces. Valid modes are \"mesh\" and \"ether\". Default is "
 "\"mesh\"."
 msgstr ""
+"Modul interfață este utilizat pentru a preveni redirecționarea inutilă a "
+"pachetelor pe interfețele ethernet comutate. Modurile valabile sunt \"mesh\" "
+"și \"ether\". Valoarea implicită este \"mesh\"."
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:70
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:71
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:354
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:335
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:14
@@ -619,7 +637,7 @@ msgstr "Total legături"
 msgid "Local interface IP"
 msgstr "Interfața locală IP"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:58
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:59
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:395
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:376
 msgid "MID"
@@ -716,14 +734,14 @@ msgstr "Vecini"
 msgid "Neighbour IP"
 msgstr "IP vecin"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:37
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:38
 msgid "Neighbours"
 msgstr "Vecini"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:21
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:29
 msgid "Netmask"
-msgstr "Masca de rețea"
+msgstr "Mască de rețea"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:373
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:354
@@ -842,8 +860,8 @@ msgstr "Prezentare generală a gateway-urilor inteligente din această rețea"
 msgid "Plugin configuration"
 msgstr "Configurația plugin-ului"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:29
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:29
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:30
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:30
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins.lua:240
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins6.lua:240
 msgid "Plugins"
@@ -892,7 +910,7 @@ msgstr ""
 "configurare DNS instabilă, atunci paginile respective se vor încărca foarte "
 "încet. În acest caz, dezactivați-o aici."
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:43
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:44
 msgid "Routes"
 msgstr "Rute"
 
@@ -937,7 +955,7 @@ msgstr "Arată IPv6"
 msgid "Signal Noise Ratio in dB"
 msgstr "Raport zgomot semnal în dB"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:64
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:65
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:44
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:44
 msgid "SmartGW"
@@ -1075,7 +1093,7 @@ msgstr ""
 msgid "Timing and Validity"
 msgstr "Calendarul și Validitatea"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:48
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:49
 msgid "Topology"
 msgstr "Topologie"
 
@@ -1114,7 +1132,7 @@ msgstr "Timpul de valabilitate"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/overview.htm:200
 msgid "Version"
-msgstr "Versiunea"
+msgstr "Versiune"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:8
 msgid "Very good (ETX < 2)"
@@ -1202,8 +1220,8 @@ msgstr "jos"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:30
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:134
-msgid "infinate"
-msgstr ""
+msgid "infinite"
+msgstr "infinit"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:40
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:29

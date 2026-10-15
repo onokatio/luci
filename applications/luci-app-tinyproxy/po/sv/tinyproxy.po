@@ -82,7 +82,7 @@ msgstr ""
 "Kan antingen vara en IP-adress eller räckvidd, ett domännamn eller \".\" för "
 "någon värd utan en domän"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Konfiguration"
 
@@ -130,6 +130,10 @@ msgstr "Filtrering och ACL:er"
 msgid "General settings"
 msgstr "Generella inställningar"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr ""
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Grupp"
@@ -153,8 +157,8 @@ msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
@@ -279,7 +283,7 @@ msgstr "Anger gruppnamnet som Tinyproxy-processen körs som"
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
 "Anger uppström-proxyn att använda för åtkomst till målvärden. Formatet är "
 "<code>adress:port</code>"
@@ -296,7 +300,7 @@ msgstr "Starta reserv-servrar"
 msgid "Statistics page"
 msgstr "Sida för statistik"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "Status"
 
@@ -304,8 +308,8 @@ msgstr "Status"
 msgid "Target host"
 msgstr "Målvärd"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

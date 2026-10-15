@@ -8,7 +8,8 @@ local ena, mcf, lci, lsv
 local rlh, rpv, vld, nvd, eds, prt, tlm
 local ctl, dlk, dom, dty, lfq, wfq, exa
 local dp6, d64, pfx, qry, qrs
-local pro, tgr, rsc, rsn, ag2, stt
+local pro, rsc, rsn, ag2, stt
+local tgr, ifc, wfc
 local rpn, din, ath
 
 local ut = require "luci.util"
@@ -18,7 +19,7 @@ local ds = require "luci.dispatcher"
 local ucl = luci.model.uci.cursor()
 local valman = ucl:get_first("unbound", "unbound", "manual_conf")
 local dhcplk = ucl:get_first("unbound", "unbound", "dhcp_link")
-local lstrig = ucl:get_first("dhcp", "odhcpd", "leasetrigger")
+local lstrig = ucl:get_first("dhcp", "odhcpd", "leasetrigger") or "undefined"
 
 m1 = Map("unbound")
 s1 = m1:section(TypedSection, "unbound", translate("Recursive DNS"),
@@ -125,7 +126,25 @@ if (valman == "0") then
     ag2:value("24", "24")
     ag2:value("99", "99 ("..translate("never")..")")
 
-    tgr = s1:taboption("advanced", Value, "trigger_interface",
+    ifc = s1:taboption("advanced", Value, "iface_lan",
+        translate("LAN Networks"),
+        translate("Networks to consider LAN (served) beyond those served by DHCP"))
+    ifc.template = "cbi/network_netlist"
+    ifc.widget = "checkbox"
+    ifc.rmempty = true
+    ifc.cast = "string"
+    ifc.nocreate = true
+
+    wfc = s1:taboption("advanced", Value, "iface_wan",
+        translate("WAN Networks"),
+        translate("Networks to consider WAN (unserved)"))
+    wfc.template = "cbi/network_netlist"
+    wfc.widget = "checkbox"
+    wfc.rmempty = true
+    wfc.cast = "string"
+    wfc.nocreate = true
+
+    tgr = s1:taboption("advanced", Value, "iface_trig",
         translate("Trigger Networks"),
         translate("Networks that may trigger Unbound to reload (avoid wan6)"))
     tgr.template = "cbi/network_netlist"
@@ -216,7 +235,7 @@ if (valman == "0") then
 
     pro = s1:taboption("resource", ListValue, "protocol",
         translate("Recursion Protocol"),
-        translate("Chose the IP versions used upstream and downstream"))
+        translate("Choose the IP versions used upstream and downstream"))
     pro:value("default", translate("Default"))
     pro:value("ip4_only", translate("IP4 Only"))
     pro:value("ip6_local", translate("IP4 All and IP6 Local"))

@@ -1,8 +1,14 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2024-01-22 09:21+0000\n"
+"Last-Translator: Abdul Muizz Bin Abdul Jalil <abmuizz@gmail.com>\n"
+"Language-Team: Malay <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsradicale/ms/>\n"
 "Language: ms\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:268
 msgid ""
@@ -16,23 +22,7 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:272
 msgid "AUTO"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:734
-msgid "Access-Control-Allow-Headers"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:726
-msgid "Access-Control-Allow-Methods"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:718
-msgid "Access-Control-Allow-Origin"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:742
-msgid "Access-Control-Expose-Headers"
-msgstr ""
+msgstr "AUTO"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:706
 msgid "Additional HTTP headers"
@@ -40,7 +30,7 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:222
 msgid "Address:Port"
-msgstr ""
+msgstr "Alamat:Port"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:80
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:341
@@ -212,6 +202,10 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:310
 msgid "Full path and file name of private key"
+msgstr ""
+
+#: applications/luci-app-radicale/root/usr/share/rpcd/acl.d/luci-app-radicale.json:3
+msgid "Grant UCI access for luci-app-radicale"
 msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:549

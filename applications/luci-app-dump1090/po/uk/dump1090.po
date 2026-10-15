@@ -1,23 +1,23 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-02-18 11:31+0000\n"
-"Last-Translator: Olexandr Nesterenko <olexn@ukr.net>\n"
+"PO-Revision-Date: 2024-02-25 06:41+0000\n"
+"Last-Translator: Костянтин Серьогін <seryoginki@gmail.com>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdump1090/uk/>\n"
 "Language: uk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 3.11\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:123
 msgid "Absolute maximum range for position decoding"
-msgstr ""
+msgstr "Абсолютний максимальний діапазон для декодування позиції"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:184
 msgid "Accuracy of receiver location in json metadata"
-msgstr ""
+msgstr "Точність розташування отримувача в метаданих json"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:112
 msgid "Allow forwarding of received mlat results to output ports"
@@ -46,7 +46,7 @@ msgstr ""
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:39
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:185
 msgid "Default"
-msgstr "Типова"
+msgstr "За замовчуванням"
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:133
 msgid "Disable messages with broken CRC"
@@ -102,6 +102,10 @@ msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:23
 msgid "Gain (-10 for auto-gain)"
+msgstr ""
+
+#: applications/luci-app-dump1090/root/usr/share/rpcd/acl.d/luci-app-dump1090.json:3
+msgid "Grant UCI access for luci-app-dump1090"
 msgstr ""
 
 #: applications/luci-app-dump1090/luasrc/model/cbi/dump1090.lua:65
@@ -224,7 +228,7 @@ msgstr ""
 msgid "Write json output every t seconds"
 msgstr ""
 
-#: applications/luci-app-dump1090/luasrc/controller/dump1090.lua:11
+#: applications/luci-app-dump1090/root/usr/share/luci/menu.d/luci-app-dump1090.json:3
 msgid "dump1090"
 msgstr ""
 

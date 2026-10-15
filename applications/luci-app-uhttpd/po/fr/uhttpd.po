@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-04-11 16:26+0000\n"
-"Last-Translator: SRay <seb@isostorm.com>\n"
+"PO-Revision-Date: 2024-02-01 22:49+0000\n"
+"Last-Translator: ButterflyOfFire <boffire@users.noreply.hosted.weblate.org>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsuhttpd/fr/>\n"
 "Language: fr\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.6-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:135
 msgid ""
@@ -63,7 +63,7 @@ msgstr ""
 msgid "Connection reuse"
 msgstr "Réutilisation de connexion"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:229
 msgid "Country"
 msgstr "Pays"
 
@@ -112,23 +112,32 @@ msgstr "Chemin réel complet vers le gestionnaire de scripts Lua"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:18
 msgid "General Settings"
-msgstr "Paramètres généraux"
+msgstr "Réglages généraux"
+
+#: applications/luci-app-uhttpd/root/usr/share/rpcd/acl.d/luci-app-uhttpd.json:3
+msgid "Grant UCI access for luci-app-uhttpd"
+msgstr "Accorder l’accès à l’UCI pour luci-app-uhttpd"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:22
 msgid "HTTP listeners (address:port)"
 msgstr "Écouteurs HTTP (adresse:port)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:94
-msgid "HTTPS Certificate (DER Encoded)"
-msgstr "Certificat HTTPS (encodé DER)"
+msgid "HTTPS Certificate (DER or PEM format)"
+msgstr "Certificat HTTPS (format DER ou PEM)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:96
-msgid "HTTPS Private Key (DER Encoded)"
-msgstr "Clé privée HTTPS (codée DER)"
+msgid "HTTPS Private Key (DER or PEM format)"
+msgstr "Clé Privée HTTPS (format DER ou PEM)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:50
 msgid "HTTPS listener (address:port)"
 msgstr "Écouteur HTTPS (adresse:port)"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "If empty, a random/unique value is used in cert generation"
+msgstr ""
+"Si vide, une valeur aléatoire/unique est utilisée pour la génération Cert"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:90
 msgid "Ignore private IPs on public interface"
@@ -150,7 +159,7 @@ msgstr ""
 msgid "Length of key in bits"
 msgstr "Longueur de la clé en bits"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:227
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:223
 msgid "Location"
 msgstr "Emplacement"
 
@@ -169,6 +178,10 @@ msgstr "Temps d’attente maximal pour l’exécution de Lua, CGI ou ubus"
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:182
 msgid "Maximum wait time for network activity"
 msgstr "Temps d’attente maximal pour l’activité du réseau"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "Organization"
+msgstr "Organisation"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:166
 msgid "Override path for ubus socket"
@@ -213,7 +226,7 @@ msgstr ""
 "Paramètres qui sont rarement nécessaires ou qui affectent le service de "
 "l'interface Web"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:224
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:226
 msgid "State"
 msgstr "État"
 
@@ -255,8 +268,8 @@ msgstr "N’utilisera pas l’authentification HTTP si elle n’est pas présent
 msgid "a.k.a CommonName"
 msgstr "alias CommonName"
 
-#: applications/luci-app-uhttpd/luasrc/controller/uhttpd/uhttpd.lua:13
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:6
+#: applications/luci-app-uhttpd/root/usr/share/luci/menu.d/luci-app-uhttpd.json:3
 msgid "uHTTPd"
 msgstr "uHTTPd"
 

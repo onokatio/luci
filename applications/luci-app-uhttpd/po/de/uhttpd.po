@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-02-24 06:56+0000\n"
-"Last-Translator: ssantos <ssantos@web.de>\n"
+"PO-Revision-Date: 2024-05-24 06:13+0000\n"
+"Last-Translator: David <dawin@users.noreply.hosted.weblate.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsuhttpd/de/>\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 5.6-dev\n"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:135
 msgid ""
@@ -58,7 +58,7 @@ msgstr "Konfigurationsdatei (z.B. für Zugangssaten bei Basic Auth)"
 msgid "Connection reuse"
 msgstr "Verbindung wiederverwenden"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:229
 msgid "Country"
 msgstr "Land"
 
@@ -107,21 +107,31 @@ msgstr "Vollständiger Pfad für handler von LUA Scripten"
 msgid "General Settings"
 msgstr "Allgemeine Einstellungen"
 
+#: applications/luci-app-uhttpd/root/usr/share/rpcd/acl.d/luci-app-uhttpd.json:3
+msgid "Grant UCI access for luci-app-uhttpd"
+msgstr "UCI-Zugriff für luci-app-uhttpd erlauben"
+
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:22
 msgid "HTTP listeners (address:port)"
 msgstr "HTTP listener (Adresse:Port)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:94
-msgid "HTTPS Certificate (DER Encoded)"
-msgstr "HTTPS Zertifikat (DER kodiert)"
+msgid "HTTPS Certificate (DER or PEM format)"
+msgstr "HTTPS Zertifikat (DER oder PEM Format)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:96
-msgid "HTTPS Private Key (DER Encoded)"
-msgstr "HTTPS Private Key (DER kodiert)"
+msgid "HTTPS Private Key (DER or PEM format)"
+msgstr "privater HTTPS Schlüssel (DER oder PEM Format)"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:50
 msgid "HTTPS listener (address:port)"
 msgstr "HTTPS Listener (Adresse:Port)"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "If empty, a random/unique value is used in cert generation"
+msgstr ""
+"Wenn leer, wird bei der Zertifikatserstellung ein zufälliger/einmaliger Wert "
+"verwendet"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:90
 msgid "Ignore private IPs on public interface"
@@ -143,9 +153,9 @@ msgstr ""
 msgid "Length of key in bits"
 msgstr "Länge des Keys in Bits"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:227
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:223
 msgid "Location"
-msgstr "Ort"
+msgstr "Standort"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:197
 msgid "Maximum number of connections"
@@ -162,6 +172,10 @@ msgstr "Maximale Wartezeit für LUA, CGI oder ubus Aufrufe"
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:182
 msgid "Maximum wait time for network activity"
 msgstr "Maximale Wartezeit für Netwerk"
+
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:221
+msgid "Organization"
+msgstr "Organisation"
 
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:166
 msgid "Override path for ubus socket"
@@ -206,7 +220,7 @@ msgstr ""
 "Einstellungen die entweder kaum gebraucht werden, oder auch die WebUI "
 "beeinflussen"
 
-#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:224
+#: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:226
 msgid "State"
 msgstr "Zustand"
 
@@ -246,8 +260,8 @@ msgstr "Nutzt keine HTTP Authentifizierung falls nicht vorhanden"
 msgid "a.k.a CommonName"
 msgstr "a.k.a CommonName"
 
-#: applications/luci-app-uhttpd/luasrc/controller/uhttpd/uhttpd.lua:13
 #: applications/luci-app-uhttpd/luasrc/model/cbi/uhttpd/uhttpd.lua:6
+#: applications/luci-app-uhttpd/root/usr/share/luci/menu.d/luci-app-uhttpd.json:3
 msgid "uHTTPd"
 msgstr "uHTTPd"
 

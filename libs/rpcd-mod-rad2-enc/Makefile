@@ -8,7 +8,6 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rpcd-mod-rad2-enc
 PKG_VERSION:=20190109
-PKG_MAINTAINER:=Daniel Dickinson <cshored@thecshore.com>
 
 PKG_LICENSE:=Apache-2.0
 
@@ -42,8 +41,7 @@ endef
 
 define Package/rpcd-mod-rad2-enc/postinst
 #!/bin/sh
-killall -HUP rpcd 2>/dev/null
-exit 0
+[ -n "$$IPKG_INSTROOT" ] || /etc/init.d/rpcd reload
 endef
 
 $(eval $(call BuildPackage,rpcd-mod-rad2-enc))

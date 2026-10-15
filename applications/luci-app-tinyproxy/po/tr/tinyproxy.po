@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-05-15 14:32+0000\n"
-"Last-Translator: semih <semiht@gmail.com>\n"
+"PO-Revision-Date: 2022-05-03 22:19+0000\n"
+"Last-Translator: Oğuz Ersen <oguz@ersen.moe>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationstinyproxy/tr/>\n"
 "Language: tr\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 4.12.1\n"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:219
 msgid ""
@@ -83,7 +83,7 @@ msgstr ""
 "Bir IP adresi veya aralığı, bir alan adı veya etki alanı olmayan herhangi "
 "bir ana bilgisayar için \".\" olabilir"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Yapılandırma"
 
@@ -131,6 +131,10 @@ msgstr "Filtreleme ve ACL'ler"
 msgid "General settings"
 msgstr "Genel Ayarlar"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "luci-app-tinyproxy için UCI erişimi verin"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Grup"
@@ -156,11 +160,12 @@ msgstr ""
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
 "CONNECT yöntemi için izin verilen bağlantı noktalarının listesi. Tek bir "
-"\"0\" değeri tüm bağlantı noktalarına izin verir"
+"\"0\" değeri CONNECT yöntemini tamamen devre dışı bırakır, boş bir liste tüm "
+"bağlantı noktalarına izin verir"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
@@ -290,7 +295,7 @@ msgstr "Tinyproxy işleminin çalıştığı grup adını belirtir"
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
 "Hedef ana bilgisayara erişmek için kullanılacak yukarı akış proxy'sini "
 "belirtir. Biçim, <code>address:port</code> şeklindedir"
@@ -307,7 +312,7 @@ msgstr "Yedek sunucuları başlat"
 msgid "Statistics page"
 msgstr "İstatistikler sayfası"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "Durum"
 
@@ -315,8 +320,8 @@ msgstr "Durum"
 msgid "Target host"
 msgstr "Hedef ana bilgisayar"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

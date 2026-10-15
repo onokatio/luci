@@ -62,27 +62,27 @@ var CBIZoneSelect = form.ListValue.extend({
 		if (this.allowlocal) {
 			choices[''] = E('span', {
 				'class': 'zonebadge',
-				'style': 'background-color:' + firewall.getColorForName(null)
+				'style': firewall.getZoneColorStyle(null)
 			}, [
 				E('strong', _('Device')),
 				(this.allowany || this.allowlocal)
-					? ' (%s)'.format(this.option != 'dest' ? _('output') : _('input')) : ''
+					? E('span', ' (%s)'.format(this.option != 'dest' ? _('output') : _('input'))) : ''
 			]);
 		}
 		else if (!this.multiple && (this.rmempty || this.optional)) {
 			choices[''] = E('span', {
 				'class': 'zonebadge',
-				'style': 'background-color:' + firewall.getColorForName(null)
+				'style': firewall.getZoneColorStyle(null)
 			}, E('em', _('unspecified')));
 		}
 
 		if (this.allowany) {
 			choices['*'] = E('span', {
 				'class': 'zonebadge',
-				'style': 'background-color:' + firewall.getColorForName(null)
+				'style': firewall.getZoneColorStyle(null)
 			}, [
 				E('strong', _('Any zone')),
-				(this.allowany && this.allowlocal && !isOutputOnly) ? ' (%s)'.format(_('forward')) : ''
+				(this.allowany && this.allowlocal && !isOutputOnly) ? E('span', ' (%s)'.format(_('forward'))) : ''
 			]);
 		}
 
@@ -125,7 +125,7 @@ var CBIZoneSelect = form.ListValue.extend({
 
 			choices[name] = E('span', {
 				'class': 'zonebadge',
-				'style': 'background-color:' + zone.getColor()
+				'style': firewall.getZoneColorStyle(zone)
 			}, [ E('strong', name) ].concat(ifaces));
 		}
 
@@ -187,12 +187,13 @@ var CBIZoneSelect = form.ListValue.extend({
 						emptyval.setAttribute('data-value', '');
 					}
 
-					L.dom.content(emptyval.querySelector('span'), [
-						E('strong', _('Device')), ' (%s)'.format(_('input'))
-					]);
+					if (opt[0].allowlocal)
+						L.dom.content(emptyval.querySelector('span'), [
+							E('strong', _('Device')), E('span', ' (%s)'.format(_('input')))
+						]);
 
 					L.dom.content(anyval.querySelector('span'), [
-						E('strong', _('Any zone')), ' (%s)'.format(_('forward'))
+						E('strong', _('Any zone')), E('span', ' (%s)'.format(_('forward')))
 					]);
 
 					anyval.parentNode.insertBefore(emptyval, anyval);
@@ -283,7 +284,7 @@ var CBIZoneForwards = form.DummyValue.extend({
 
 		return E('label', {
 			'class': 'zonebadge cbi-tooltip-container',
-			'style': 'background-color:' + zone.getColor()
+			'style': firewall.getZoneColorStyle(zone)
 		}, [
 			E('strong', name),
 			E('div', { 'class': 'cbi-tooltip' }, ifaces)
@@ -372,7 +373,10 @@ var CBINetworkSelect = form.ListValue.extend({
 			var network = this.networks[i],
 			    name = network.getName();
 
-			if (name == 'loopback' || name == this.exclude || !this.filter(section_id, name))
+			if (name == this.exclude || !this.filter(section_id, name))
+				continue;
+
+			if (name == 'loopback' && !this.loopback)
 				continue;
 
 			if (this.novirtual && network.isVirtual())
@@ -533,7 +537,7 @@ var CBIDeviceSelect = form.ListValue.extend({
 		}
 
 		if (!this.nocreate) {
-			var keys = Object.keys(checked).sort();
+			var keys = Object.keys(checked).sort(L.naturalCompare);
 
 			for (var i = 0; i < keys.length; i++) {
 				if (choices.hasOwnProperty(keys[i]))
@@ -581,6 +585,8 @@ var CBIUserSelect = form.ListValue.extend({
 
 	load: function(section_id) {
 		return getUsers().then(L.bind(function(users) {
+			delete this.keylist;
+			delete this.vallist;
 			for (var i = 0; i < users.length; i++) {
 				this.value(users[i]);
 			}

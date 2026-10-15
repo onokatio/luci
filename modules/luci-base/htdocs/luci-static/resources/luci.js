@@ -655,7 +655,7 @@
 		 * Provides a password for HTTP basic authentication.
 		 *
 		 * @property {number} [timeout]
-		 * Specifies the request timeout in seconds.
+		 * Specifies the request timeout in milliseconds.
 		 *
 		 * @property {boolean} [credentials=false]
 		 * Whether to include credentials such as cookies in the request.
@@ -672,12 +672,12 @@
 		 * if it is an object, it will be converted to JSON, in all other
 		 * cases it is converted to a string.
 		 *
-	     * @property {Object<string, string>} [header]
-	     * Specifies HTTP headers to set for the request.
-	     *
-	     * @property {function} [progress]
-	     * An optional request callback function which receives ProgressEvent
-	     * instances as sole argument during the HTTP request transfer.
+		 * @property {Object<string, string>} [header]
+		 * Specifies HTTP headers to set for the request.
+		 *
+		 * @property {function} [progress]
+		 * An optional request callback function which receives ProgressEvent
+		 * instances as sole argument during the HTTP request transfer.
 		 */
 
 		/**
@@ -765,7 +765,7 @@
 					if (opt.content != null) {
 						switch (typeof(opt.content)) {
 						case 'function':
-							content = opt.content(xhr);
+							content = opt.content(opt.xhr);
 							break;
 
 						case 'object':
@@ -984,12 +984,13 @@
 						if (!Poll.active())
 							return;
 
+						var res_json = null;
 						try {
-							callback(res, res.json(), res.duration);
+							res_json = res.json();
 						}
-						catch (err) {
-							callback(res, null, res.duration);
-						}
+						catch (err) {}
+
+						callback(res, res_json, res.duration);
 					});
 				};
 
@@ -2151,7 +2152,23 @@
 		 * methods are overwritten with `null`.
 		 */
 		addFooter: function() {
-			var footer = E([]);
+			var footer = E([]),
+			    vp = document.getElementById('view'),
+			    hasmap = false,
+			    readonly = true;
+
+			vp.querySelectorAll('.cbi-map').forEach(function(map) {
+				var m = DOM.findClassInstance(map);
+				if (m) {
+					hasmap = true;
+
+					if (!m.readonly)
+						readonly = false;
+				}
+			});
+
+			if (!hasmap)
+				readonly = !LuCI.prototype.hasViewPermission();
 
 			var saveApplyBtn = this.handleSaveApply ? new classes.ui.ComboButton('0', {
 				0: [ _('Save & Apply') ],
@@ -2161,19 +2178,22 @@
 					0: 'btn cbi-button cbi-button-apply important',
 					1: 'btn cbi-button cbi-button-negative important'
 				},
-				click: classes.ui.createHandlerFn(this, 'handleSaveApply')
+				click: classes.ui.createHandlerFn(this, 'handleSaveApply'),
+				disabled: readonly || null
 			}).render() : E([]);
 
 			if (this.handleSaveApply || this.handleSave || this.handleReset) {
-				footer.appendChild(E('div', { 'class': 'cbi-page-actions control-group' }, [
+				footer.appendChild(E('div', { 'class': 'cbi-page-actions' }, [
 					saveApplyBtn, ' ',
 					this.handleSave ? E('button', {
 						'class': 'cbi-button cbi-button-save',
-						'click': classes.ui.createHandlerFn(this, 'handleSave')
+						'click': classes.ui.createHandlerFn(this, 'handleSave'),
+						'disabled': readonly || null
 					}, [ _('Save') ]) : '', ' ',
 					this.handleReset ? E('button', {
 						'class': 'cbi-button cbi-button-reset',
-						'click': classes.ui.createHandlerFn(this, 'handleReset')
+						'click': classes.ui.createHandlerFn(this, 'handleReset'),
+						'disabled': readonly || null
 					}, [ _('Reset') ]) : ''
 				]));
 			}
@@ -2199,6 +2219,8 @@
 		session: Session,
 		view: View
 	};
+
+	var naturalCompare = new Intl.Collator(undefined, { numeric: true }).compare;
 
 	var LuCI = Class.extend(/** @lends LuCI.prototype */ {
 		__name__: 'LuCI',
@@ -2527,10 +2549,16 @@
 				rpcBaseURL = Session.getLocalData('rpcBaseURL');
 
 			if (rpcBaseURL == null) {
+				var msg = {
+					jsonrpc: '2.0',
+					id:      'init',
+					method:  'list',
+					params:  undefined
+				};
 				var rpcFallbackURL = this.url('admin/ubus');
 
-				rpcBaseURL = Request.get(env.ubuspath).then(function(res) {
-					return (rpcBaseURL = (res.status == 400) ? env.ubuspath : rpcFallbackURL);
+				rpcBaseURL = Request.post(env.ubuspath, msg, { nobatch: true }).then(function(res) {
+					return (rpcBaseURL = res.status == 200 ? env.ubuspath : rpcFallbackURL);
 				}, function() {
 					return (rpcBaseURL = rpcFallbackURL);
 				}).then(function(url) {
@@ -2939,15 +2967,52 @@
 			}).filter(function(e) {
 				return (e[1] != null);
 			}).sort(function(a, b) {
-				if (a[1] < b[1])
-					return -1;
-				else if (a[1] > b[1])
-					return 1;
-				else
-					return 0;
+				return naturalCompare(a[1], b[1]);
 			}).map(function(e) {
 				return e[0];
 			});
+		},
+
+		/**
+		 * Compares two values numerically and returns -1, 0 or 1 depending
+		 * on whether the first value is smaller, equal to or larger than the
+		 * second one respectively.
+		 *
+		 * This function is meant to be used as comparator function for
+		 * Array.sort().
+		 *
+		 * @type {function}
+		 *
+		 * @param {*} a
+		 * The first value
+		 *
+		 * @param {*} b
+		 * The second value.
+		 *
+		 * @return {number}
+		 * Returns -1 if the first value is smaller than the second one.
+		 * Returns 0 if both values are equal.
+		 * Returns 1 if the first value is larger than the second one.
+		 */
+		naturalCompare: naturalCompare,
+
+		/**
+		 * Converts the given value to an array using toArray() if needed,
+		 * performs a numerical sort using naturalCompare() and returns the
+		 * result. If the input already is an array, no copy is being made
+		 * and the sorting is performed in-place.
+		 *
+		 * @see toArray
+		 * @see naturalCompare
+		 *
+		 * @param {*} val
+		 * The input value to sort (and convert to an array if needed).
+		 *
+		 * @return {Array<*>}
+		 * Returns the resulting, numerically sorted array.
+		 */
+		sortedArray: function(val) {
+			return this.toArray(val).sort(naturalCompare);
 		},
 
 		/**

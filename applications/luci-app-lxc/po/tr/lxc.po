@@ -1,24 +1,32 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-05-15 14:32+0000\n"
-"Last-Translator: semih <semiht@gmail.com>\n"
+"PO-Revision-Date: 2024-03-31 19:53+0000\n"
+"Last-Translator: Oğuz Han <h4n.3545@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationslxc/tr/>\n"
 "Language: tr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
+"<b> Lütfen unutmayın: </b> LXC Kapsayıcıları, küçük flaşlı aygıtlar için "
+"OpenWrt görüntülerinde bulunmayan özellikler gerektirir. <br />"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "Eylemler"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr ""
+"Ayrıca isteğe bağlı ağ desteği için 'kmod-veth' i kurmak isteyebilirsiniz."
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -64,6 +72,10 @@ msgstr "Boş Alan Eşiği"
 msgid "Free Temp Threshold"
 msgstr "Serbest Sıcaklık Eşiği"
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr "luci-app-lxc için UCI erişimi verin"
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -85,7 +97,7 @@ msgstr ""
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:27
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:45
 msgid "Name"
-msgstr "Ad"
+msgstr "İsim"
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:22
 msgid "Options"
@@ -101,15 +113,8 @@ msgstr "Durum"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:132
 msgid "Stop"
-msgstr "Durdur"
+msgstr "Dur"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
 msgstr "Şablon"
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
-msgstr ""

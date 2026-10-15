@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-11-05 14:38+0000\n"
-"Last-Translator: Paul Dee <itsascambutmailmeanyway+weblate@gmail.com>\n"
+"PO-Revision-Date: 2023-10-02 03:20+0000\n"
+"Last-Translator: Kristoffer Grundström <swedishsailfishosuser@tutanota.com>\n"
 "Language-Team: Swedish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsbmx7/sv/>\n"
 "Language: sv\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.9-dev\n"
+"X-Generator: Weblate 5.1-dev\n"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:33
 msgid "Announcements"
@@ -19,7 +19,7 @@ msgid "BMX7 revision"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:41
-msgid "Bandwith"
+msgid "Bandwidth"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/admin_status/index/bmx7_nodes.htm:3
@@ -53,7 +53,7 @@ msgid "Link key"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:61
-msgid "LinkLocal Ipv6"
+msgid "Link-local IPv6"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:71
@@ -150,7 +150,7 @@ msgid "Rating"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:78
-msgid "Remote linklocal IPv6"
+msgid "Remote link-local IPv6"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:82
@@ -175,7 +175,7 @@ msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:58
 msgid "State"
-msgstr "Skick"
+msgstr "Status"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:37
 msgid "Status"

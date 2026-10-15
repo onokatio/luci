@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-09-15 08:34+0000\n"
-"Last-Translator: Iskren Mihaylov <iskren.mihaylov91@gmail.com>\n"
+"PO-Revision-Date: 2024-01-15 20:14+0000\n"
+"Last-Translator: Boyan Alexiev <nneauu@gmail.com>\n"
 "Language-Team: Bulgarian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsrp-pppoe-server/bg/>\n"
 "Language: bg\n"
@@ -10,14 +10,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.9-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:19
 msgid "Access Concentrator Name"
-msgstr ""
+msgstr "Име на концентратора за достъп"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:32
 msgid "First remote IP"
+msgstr ""
+
+#: applications/luci-app-rp-pppoe-server/root/usr/share/rpcd/acl.d/luci-app-rp-pppoe-server.json:3
+msgid "Grant UCI access for luci-app-rp-pppoe-server"
 msgstr ""
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:29
@@ -35,7 +39,7 @@ msgstr "Интерфейс"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:15
 msgid "Interface on which to listen."
-msgstr ""
+msgstr "Интерфейс на който да слуша."
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:62
 msgid "MSS"
@@ -69,7 +73,7 @@ msgstr ""
 msgid "PPPoE Server Configuration"
 msgstr ""
 
-#: applications/luci-app-rp-pppoe-server/luasrc/controller/rp-pppoe-server.lua:11
+#: applications/luci-app-rp-pppoe-server/root/usr/share/luci/menu.d/luci-app-rp-pppoe-server.json:3
 msgid "RP PPPoE Server"
 msgstr ""
 
@@ -83,7 +87,7 @@ msgstr ""
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:11
 msgid "Server Configuration"
-msgstr ""
+msgstr "Сървърна Конфигурация"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:22
 msgid "Service Name"
@@ -91,11 +95,11 @@ msgstr ""
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:68
 msgid "Sync"
-msgstr ""
+msgstr "Синхронизация"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:57
 msgid "Timeout"
-msgstr ""
+msgstr "Таймаут"
 
 #: applications/luci-app-rp-pppoe-server/luasrc/model/cbi/rp-pppoe-server.lua:47
 msgid "Unit"

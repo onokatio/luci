@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-03-26 13:17+0000\n"
-"Last-Translator: dikastia <dikastia@gmail.com>\n"
+"PO-Revision-Date: 2023-10-04 07:12+0000\n"
+"Last-Translator: Wonchul Kang <teshi85@gmail.com>\n"
 "Language-Team: Korean <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsocserv/ko/>\n"
 "Language: ko\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12-dev\n"
+"X-Generator: Weblate 5.1-dev\n"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:124
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:80
@@ -61,7 +61,7 @@ msgstr ""
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:70
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:55
 msgid "Device"
-msgstr ""
+msgstr "장비"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:14
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:14
@@ -113,6 +113,10 @@ msgstr ""
 msgid "General Settings"
 msgstr "기본 설정"
 
+#: applications/luci-app-ocserv/root/usr/share/rpcd/acl.d/luci-app-ocserv.json:3
+msgid "Grant UCI access for luci-app-ocserv"
+msgstr ""
+
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:23
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:67
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:52
@@ -133,7 +137,7 @@ msgstr ""
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:128
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:53
 msgid "IP Address"
-msgstr ""
+msgstr "IP 주소"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:58
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:52
@@ -147,7 +151,7 @@ msgstr ""
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:22
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:151
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:131
@@ -163,7 +167,7 @@ msgstr ""
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:24
 msgid "Password"
-msgstr ""
+msgstr "패스워드"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:56
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:50
@@ -189,7 +193,7 @@ msgstr ""
 msgid "Routing table"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:19
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:20
 msgid "Server Settings"
 msgstr ""
 
@@ -200,7 +204,7 @@ msgstr ""
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:73
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:58
 msgid "Status"
-msgstr ""
+msgstr "상태"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:112
 msgid "The DNS servers to be provided to clients; can be either IPv6 or IPv4"
@@ -283,13 +287,13 @@ msgstr ""
 msgid "User Authentication"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:24
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:25
 msgid "User Settings"
 msgstr ""
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:66
 msgid "Username"
-msgstr ""
+msgstr "사용자명"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:115
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:72

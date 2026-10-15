@@ -59,7 +59,7 @@ msgid "Don't initialize dynctrls"
 msgstr "不要初始化 dynctrls"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
+msgid "Drop frames smaller than this limit"
 msgstr "丟棄小於該尺寸限制的幀"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
@@ -80,7 +80,7 @@ msgstr "超出"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr "儲存圖片後執行指令。檔名將作為第一個引數傳遞給指令。"
 
@@ -103,6 +103,10 @@ msgstr "幀每秒"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "一般"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "授予 luci-app-mjpg-streamer 擁有 UCI 存取的權限"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -132,7 +136,7 @@ msgstr "將最新的圖片連結到固定的檔案名稱"
 msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr "將環形緩衝區中的最後一張圖片連結到自訂的固定檔案名稱。"
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-streamer(網路攝影機串流)"
 

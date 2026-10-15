@@ -3,19 +3,11 @@
 'require uci';
 'require rpc';
 'require form';
-'require tools.widgets as widgets';
+'require fs';
 
-var callLeds, callUSB;
-
-callLeds = rpc.declare({
+var callLeds = rpc.declare({
 	object: 'luci',
 	method: 'getLEDs',
-	expect: { '': {} }
-});
-
-callUSB = rpc.declare({
-	object: 'luci',
-	method: 'getUSBDevices',
 	expect: { '': {} }
 });
 
@@ -23,19 +15,44 @@ return view.extend({
 	load: function() {
 		return Promise.all([
 			callLeds(),
-			callUSB()
-		]);
+			L.resolveDefault(fs.list('/www' + L.resource('view/system/led-trigger')), [])
+		]).then(function(data) {
+			var plugins = data[1];
+			var tasks = [];
+
+			for (var i = 0; i < plugins.length; i++) {
+				var m = plugins[i].name.match(/^(.+)\.js$/);
+
+				if (plugins[i].type != 'file' || m == null)
+					continue;
+
+				tasks.push(L.require('view.system.led-trigger.' + m[1]).then(L.bind(function(name){
+					return L.resolveDefault(L.require('view.system.led-trigger.' + name)).then(function(form) {
+						return {
+							name: name,
+							form: form,
+						};
+					});
+				}, this, m[1])));
+			}
+
+			return Promise.all(tasks).then(function(plugins) {
+				var value = {};
+				value[0] = data[0];
+				value[1] = plugins;
+				return value;
+			});
+		});
 	},
 
-	render: function(results) {
-		var leds = results[0],
-		    usb = results[1],
-		    triggers = {},
-		    m, s, o;
+	render: function(data) {
+		var m, s, o, triggers = [];
+		var leds = data[0];
+		var plugins = data[1];
 
 		for (var k in leds)
 			for (var i = 0; i < leds[k].triggers.length; i++)
-				triggers[leds[k].triggers[i]] = true;
+				triggers[i] = leds[k].triggers[i];
 
 		m = new form.Map('system',
 			_('<abbr title="Light Emitting Diode">LED</abbr> Configuration'),
@@ -46,121 +63,77 @@ return view.extend({
 		s.addremove = true;
 		s.sortable = true;
 		s.addbtntitle = _('Add LED action');
+		s.nodescriptions = true;
 
 		s.option(form.Value, 'name', _('Name'));
 
 		o = s.option(form.ListValue, 'sysfs', _('<abbr title="Light Emitting Diode">LED</abbr> Name'));
-		Object.keys(leds).sort().forEach(function(name) { o.value(name) });
-
-		o = s.option(form.Flag, 'default', _('Default state'));
-		o.rmempty = false;
-		o.textvalue = function(section_id) {
-			var cval = this.cfgvalue(section_id);
-
-			if (cval == null)
-				cval = this.default;
-
-			return (cval == this.enabled) ? _('On') : _('Off');
-		};
+		Object.keys(leds).sort().forEach(function(name) {
+			o.value(name)
+		});
 
 		o = s.option(form.ListValue, 'trigger', _('Trigger'));
-		if (usb.devices && usb.devices.length)
-			triggers['usbdev'] = true;
-		if (usb.ports && usb.ports.length)
-			triggers['usbport'] = true;
-		Object.keys(triggers).sort().forEach(function(t) { o.value(t, t.replace(/-/g, '')) });
+		for (var i = 0; i < plugins.length; i++) {
+			var plugin = plugins[i];
 
-		o = s.option(form.Value, 'delayon', _('On-State Delay'));
-		o.modalonly = true;
-		o.depends('trigger', 'timer');
-
-		o = s.option(form.Value, 'delayoff', _('Off-State Delay'));
-		o.modalonly = true;
-		o.depends('trigger', 'timer');
-
-		o = s.option(widgets.DeviceSelect, '_net_dev', _('Device'));
-		o.rmempty = true;
-		o.ucioption = 'dev';
-		o.modalonly = true;
-		o.noaliases = true;
-		o.depends('trigger', 'netdev');
-		o.remove = function(section_id) {
-			var topt = this.map.lookupOption('trigger', section_id),
-			    tval = topt ? topt[0].formvalue(section_id) : null;
-
-			if (tval != 'netdev' && tval != 'usbdev')
-				uci.unset('system', section_id, 'dev');
+			if ( plugin.form.kernel == false ) {
+				o.value(plugin.name, plugin.form.trigger);
+			}
+			else {
+				if (triggers.indexOf(plugin.name) >= 0)
+					o.value(plugin.name, plugin.form.trigger);
+			}
+		}
+		o.onchange = function(ev, section, value) {
+			for (var i = 0; i < plugins.length; i++) {
+				var plugin = plugins[i];
+				if ( plugin.name === value )
+					this.map.findElement('id', 'cbid.system.%s.trigger'.format(section))
+						.nextElementSibling.innerHTML = plugin.form.description || '';
+			}
+		}
+		o.load = function(section_id) {
+			var trigger = uci.get('system', section_id, 'trigger');
+			for (var i = 0; i < plugins.length; i++) {
+				var plugin = plugins[i];
+				if ( plugin.name === trigger)
+					this.description = plugin.form.description || ' ';
+			}
+			return trigger;
 		};
 
-		o = s.option(form.MultiValue, 'mode', _('Trigger Mode'));
-		o.rmempty = true;
-		o.modalonly = true;
-		o.depends('trigger', 'netdev');
-		o.value('link', _('Link On'));
-		o.value('tx', _('Transmit'));
-		o.value('rx', _('Receive'));
-
-		if (usb.devices && usb.devices.length) {
-			o = s.option(form.ListValue, '_usb_dev', _('USB Device'));
-			o.depends('trigger', 'usbdev');
-			o.rmempty = true;
-			o.ucioption = 'dev';
-			o.modalonly = true;
-			o.remove = function(section_id) {
-				var topt = this.map.lookupOption('trigger', section_id),
-				    tval = topt ? topt[0].formvalue(section_id) : null;
-
-				if (tval != 'netdev' && tval != 'usbdev')
-					uci.unset('system', section_id, 'dev');
+		s.addModalOptions = function(s) {
+			for (var i = 0; i < plugins.length; i++) {
+				var plugin = plugins[i];
+				plugin.form.addFormOptions(s);
 			}
-			o.value('');
-			usb.devices.forEach(function(usbdev) {
-				o.value(usbdev.id, '%s (%s - %s)'.format(usbdev.id, usbdev.vendor || '?', usbdev.product || '?'));
-			});
-		}
 
-		if (usb.ports && usb.ports.length) {
-			o = s.option(form.MultiValue, 'port', _('USB Ports'));
-			o.depends('trigger', 'usbport');
-			o.rmempty = true;
-			o.modalonly = true;
-			o.cfgvalue = function(section_id) {
-				var ports = [],
-				    value = uci.get('system', section_id, 'port');
+			var opts = s.getOption();
 
-				if (!Array.isArray(value))
-					value = String(value || '').split(/\s+/);
+			var removeIfNoneActive = function(original_remove_fn, section_id) {
+				var isAnyActive = false;
 
-				for (var i = 0; i < value.length; i++)
-					if (value[i].match(/^(\d+)-(\d+)$/))
-						ports.push('usb%d-port%d'.format(Regexp.$1, Regexp.$2));
-					else
-						ports.push(value[i]);
+				for (var optname in opts) {
+					if (opts[optname].ucioption != this.ucioption)
+						continue;
 
-				return ports;
+					if (!opts[optname].isActive(section_id))
+						continue;
+
+					isAnyActive = true;
+					break;
+				}
+
+				if (!isAnyActive)
+					original_remove_fn.call(this, section_id);
 			};
-			usb.ports.forEach(function(usbport) {
-				var dev = (usbport.device && Array.isArray(usb.devices))
-					? usb.devices.filter(function(d) { return d.id == usbport.device })[0] : null;
 
-				var label = _('Port %s').format(usbport.port);
-
-				if (dev)
-					label += ' (%s - %s)'.format(dev.vendor || '?', dev.product || '?');
-
-				o.value(usbport.port, label);
-			});
-		}
-
-		o = s.option(form.Value, 'port_mask', _('Switch Port Mask'));
-		o.modalonly = true;
-		o.depends('trigger', 'switch0');
-		o.depends('trigger', 'switch1');
-
-		o = s.option(form.Value, 'speed_mask', _('Switch Speed Mask'));
-		o.modalonly = true;
-		o.depends('trigger', 'switch0');
-		o.depends('trigger', 'switch1');
+			for (var optname in opts) {
+				if (!opts[optname].ucioption || optname == opts[optname].ucioption)
+					continue;
+				opts[optname].remove = removeIfNoneActive.bind(opts[optname], opts[optname].remove);
+			}
+		};
 
 		return m.render();
 	}

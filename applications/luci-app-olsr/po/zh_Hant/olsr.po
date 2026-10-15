@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2022-02-05 09:21+0000\n"
-"Last-Translator: Hulen <shift0106@gmail.com>\n"
+"PO-Revision-Date: 2024-01-05 04:02+0000\n"
+"Last-Translator: Yuan Law <traverslombard@outlook.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsolsr/zh_Hant/>\n"
 "Language: zh_Hant\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/mid.htm:13
 msgid "Active MID announcements"
@@ -39,7 +39,7 @@ msgstr "允許帶 NAT 的閘道器"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:147
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:141
-msgid "Allow the selection of an outgoing ipv4 gateway with NAT"
+msgid "Allow the selection of an outgoing IPv4 gateway with NAT"
 msgstr "允許選擇有 NAT 的 IPv4 閘道器"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:155
@@ -96,7 +96,7 @@ msgstr ""
 msgid "Device"
 msgstr "裝置"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:75
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:76
 msgid "Display"
 msgstr "顯示"
 
@@ -159,8 +159,8 @@ msgstr "FIB 度量"
 msgid ""
 "FIBMetric controls the metric value of the host-routes OLSRd sets. \"flat\" "
 "means that the metric value is always 2. This is the preferred value because "
-"it helps the linux kernel routing to clean up older routes. \"correct\" uses "
-"the hopcount as the metric value. \"approx\" use the hopcount as the metric "
+"it helps the Linux kernel routing to clean up older routes. \"correct\" uses "
+"the hopcount as the metric value. \"approx\" uses the hopcount as the metric "
 "value too, but does only update the hopcount if the nexthop changes too. "
 "Default is \"flat\"."
 msgstr ""
@@ -201,19 +201,23 @@ msgstr "好（2 < ETX < 4）"
 msgid "Good (30 > SNR > 20)"
 msgstr "好（30 > SNR > 20）"
 
+#: applications/luci-app-olsr/root/usr/share/rpcd/acl.d/luci-app-olsr.json:3
+msgid "Grant UCI access for luci-app-olsr"
+msgstr "授予 luci-app-olsr 擁有 UCI 存取的權限"
+
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:8
 #: applications/luci-app-olsr/luasrc/view/status-olsr/legend.htm:17
 msgid "Green"
 msgstr "綠"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:53
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:54
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:402
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:383
 #: applications/luci-app-olsr/luasrc/view/status-olsr/overview.htm:178
 msgid "HNA"
 msgstr "HNA"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:25
 msgid "HNA Announcements"
 msgstr "HNA 公告"
 
@@ -231,7 +235,7 @@ msgstr "HNA 間隔"
 msgid "HNA validity time"
 msgstr "HNA 有效時長"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:24
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:25
 msgid "HNA6 Announcements"
 msgstr "HNA6 公告"
 
@@ -285,13 +289,13 @@ msgstr "主機名稱"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:8
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA messages."
 msgstr "OLSR 路由網路中的主機可以使用 HNA 訊息通告與外部網路的連線。"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna6.lua:7
 msgid ""
-"Hosts in a OLSR routed network can announce connecitivity to external "
+"Hosts in an OLSR routed network can announce connectivity to external "
 "networks using HNA6 messages."
 msgstr "OLSR 路由網路中的主機可以使用 HNA6 訊息通告與外部網路的連線。"
 
@@ -435,14 +439,14 @@ msgstr "介面"
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface.lua:52
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface6.lua:52
 msgid ""
-"Interface Mode is used to prevent unnecessary packet forwarding on switched "
-"ethernet interfaces. valid Modes are \"mesh\" and \"ether\". Default is "
+"Interface mode is used to prevent unnecessary packet forwarding on switched "
+"ethernet interfaces. Valid modes are \"mesh\" and \"ether\". Default is "
 "\"mesh\"."
 msgstr ""
 "介面模式用於防止乙太網交換機介面上不必要的資料包轉發。有效模式"
 "是“mesh”和“ether”。預設為“mesh”。"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:70
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:71
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:354
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:335
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:14
@@ -596,7 +600,7 @@ msgstr "連結總數"
 msgid "Local interface IP"
 msgstr "本地介面 IP"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:58
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:59
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:395
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:376
 msgid "MID"
@@ -656,8 +660,8 @@ msgid ""
 "nodes on this interface by 20%: default 0.8"
 msgstr ""
 "使用此處給出的因子放大路由 LQ。允許值介於0.01和1.0之間。它僅在 LQ-Level 大於0"
-"時使用。示例：<br />將到 192.168.0.1 的 LQ 減半：192.168.0.1 0.5<br />將此接"
-"口到所有節點的 LQ 減少20％：default 0.8"
+"時使用。範例：<br />將到 192.168.0.1 的 LQ 減半：192.168.0.1 0.5<br />將此介"
+"面到所有節點的 LQ 減少20%：default 0.8"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:240
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface6.lua:71
@@ -668,8 +672,8 @@ msgid ""
 "LQ to all nodes on this interface by 20%: default 0.8"
 msgstr ""
 "使用此處給出的因子放大路由 LQ。允許值介於0.01和1.0之間。它僅在 LQ-Level 大於0"
-"時使用。示例：<br />將到 fd91:662e:3c58::1 的 LQ 減半：fd91:662e:3c58::1 "
-"0.5<br />將此介面到所有節點的 LQ 減少20％：default 0.8"
+"時使用。範例：<br />將到 fd91:662e:3c58::1 的 LQ 減半：fd91:662e:3c58::1 "
+"0.5<br />將此介面到所有節點的 LQ 減少20%：default 0.8"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:201
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:195
@@ -689,14 +693,14 @@ msgstr "鄰居"
 msgid "Neighbour IP"
 msgstr "鄰居 IP"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:37
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:38
 msgid "Neighbours"
-msgstr "網路芳鄰"
+msgstr "鄰居"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:21
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:29
 msgid "Netmask"
-msgstr "子網路遮罩"
+msgstr "網路遮罩"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:373
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:354
@@ -710,7 +714,7 @@ msgstr "網路"
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna.lua:34
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdhna6.lua:16
 msgid "Network address"
-msgstr "網路位址"
+msgstr "網路地址"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:59
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:53
@@ -813,8 +817,8 @@ msgstr "此網路中的智慧閘道器概覽"
 msgid "Plugin configuration"
 msgstr "外掛配置"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:29
-#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:29
+#: applications/luci-app-olsr/luasrc/controller/olsr4.lua:30
+#: applications/luci-app-olsr/luasrc/controller/olsr6.lua:30
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins.lua:240
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdplugins6.lua:240
 msgid "Plugins"
@@ -860,7 +864,7 @@ msgstr ""
 "解析狀態頁面上的主機名。通常允許這樣做是安全的，但如果您使用公共 IP，且具有不"
 "穩定的 DNS 設定，則這些頁面的載入速度會非常慢。這種情況下，在此禁用它。"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:43
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:44
 msgid "Routes"
 msgstr "路由"
 
@@ -903,7 +907,7 @@ msgstr "顯示 IPv6"
 msgid "Signal Noise Ratio in dB"
 msgstr "信噪比（dB）"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:64
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:65
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:44
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:44
 msgid "SmartGW"
@@ -1036,7 +1040,7 @@ msgstr ""
 msgid "Timing and Validity"
 msgstr "時間和有效性"
 
-#: applications/luci-app-olsr/luasrc/controller/olsr.lua:48
+#: applications/luci-app-olsr/luasrc/controller/olsr.lua:49
 msgid "Topology"
 msgstr "拓撲"
 
@@ -1101,7 +1105,7 @@ msgstr ""
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface.lua:60
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrdiface6.lua:60
 msgid "Weight"
-msgstr "重量"
+msgstr "權重"
 
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd.lua:236
 #: applications/luci-app-olsr/luasrc/model/cbi/olsr/olsrd6.lua:230
@@ -1155,8 +1159,8 @@ msgstr "未連接"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:30
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:134
-msgid "infinate"
-msgstr ""
+msgid "infinite"
+msgstr "無限"
 
 #: applications/luci-app-olsr/luasrc/view/status-olsr/interfaces.htm:40
 #: applications/luci-app-olsr/luasrc/view/status-olsr/smartgw.htm:29

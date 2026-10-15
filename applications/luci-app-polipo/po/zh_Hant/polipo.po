@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-01-15 12:32+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2024-05-25 19:30+0000\n"
+"Last-Translator: Hulen <shift0106@gmail.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationspolipo/zh_Hant/>\n"
 "Language: zh_Hant\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.6-dev\n"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:121
 msgid "Advanced Settings"
@@ -33,7 +33,7 @@ msgid ""
 "username:password format."
 msgstr "支援 HTTP 基本身份驗證。提供使用者名稱和密碼格式為：使用者名稱:密碼。"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:13
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:24
 msgid "Configuration"
 msgstr "組態"
 
@@ -70,6 +70,10 @@ msgstr "第一 PMM 段大小（以位元組表示）"
 msgid "General Settings"
 msgstr "一般設定"
 
+#: applications/luci-app-polipo/root/usr/share/rpcd/acl.d/luci-app-polipo.json:3
+msgid "Grant UCI access for luci-app-polipo"
+msgstr "授予 luci-app-polipo 擁有 UCI 存取的權限"
+
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:113
 msgid "How much RAM should Polipo use for its cache."
 msgstr "Polipo應該為其快取使用多少RAM."
@@ -80,11 +84,11 @@ msgstr "RAM 快取大小（以位元組表示）"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:18
 msgid "Listen address"
-msgstr "監聽地址"
+msgstr "監聽位址"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:26
 msgid "Listen port"
-msgstr "監聽埠"
+msgstr "監聽連接埠"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:126
 msgid ""
@@ -137,8 +141,8 @@ msgstr "Polipo 應該轉發請求所到的上層代理（以 主機:埠號 格�
 msgid "Parent proxy authentication"
 msgstr "上層代理位址驗證"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:11
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:4
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:3
 msgid "Polipo"
 msgstr "Polipo輕量級代理伺服器"
 
@@ -194,7 +198,7 @@ msgstr "查詢 IPv4 和 IPv6，IPv4 優先"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:58
 msgid "Query IPv4 and IPv6, prefer IPv6"
-msgstr "查詢 IPv4 和 IPv6，IPv6 優先"
+msgstr "查詢 IPv4 和 IPv6，首選 IPv6"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:57
 msgid "Query only IPv6"
@@ -222,7 +226,7 @@ msgstr "第一個 PMM 段的大小，若未定義，預設為兩倍 PMM 段的�
 msgid "Size to which cached files should be truncated"
 msgstr "快取檔案應截斷為的大小"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:12
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:15
 msgid "Status"
 msgstr "狀態"
 

@@ -77,4 +77,3 @@ static bool qsdk_exec_capture(const char *const argv[], char *text, size_t size,
 {
 	return qsdk_exec_capture_pid(argv, text, size, timeout, capture_stderr, NULL);
 }
-

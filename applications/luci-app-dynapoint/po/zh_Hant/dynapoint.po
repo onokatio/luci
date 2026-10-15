@@ -3,15 +3,15 @@
 #
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-01-17 20:54+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2022-04-17 15:06+0000\n"
+"Last-Translator: 王攀 <41330784@qq.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsdynapoint/zh_Hant/>\n"
 "Language: zh_Hant\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 4.12-dev\n"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:90
 msgid "Activate this wVIF if status is:"
@@ -35,7 +35,7 @@ msgstr "組態"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:44
 msgid "Curl is currently not installed. Please install the package in the"
-msgstr "目前尚未安裝 Curl。請在以下連結中安裝："
+msgstr "當前未安裝 Curl。 請在安裝包"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:71
 msgid "Device"
@@ -46,9 +46,9 @@ msgstr "裝置"
 msgid "Disabled"
 msgstr "已停用"
 
-#: applications/luci-app-dynapoint/luasrc/controller/dynapoint.lua:7
+#: applications/luci-app-dynapoint/root/usr/share/luci/menu.d/luci-app-dynapoint.json:3
 msgid "DynaPoint"
-msgstr "DynaPoint"
+msgstr "動態點"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:54
 msgid "Dynamic Access Point Manager"
@@ -63,6 +63,10 @@ msgid ""
 "Failure counter after how many failed download attempts, the state is "
 "considered as offline"
 msgstr "下載嘗試失敗幾次後，將視為離線狀態"
+
+#: applications/luci-app-dynapoint/root/usr/share/rpcd/acl.d/luci-app-dynapoint.json:3
+msgid "Grant UCI access for luci-app-dynapoint"
+msgstr "授予 luci-app-dynapoint 擁有 UCI 存取的權限"
 
 #: applications/luci-app-dynapoint/luasrc/model/cbi/dynapoint.lua:56
 msgid "List of Wireless Virtual Interfaces (wVIF)"

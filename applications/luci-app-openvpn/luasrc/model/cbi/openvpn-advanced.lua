@@ -6,12 +6,13 @@ local fs = require("nixio.fs")
 local knownParams = {
 	--
 	--Widget
-	--	Name
+	--	ID
+	--	Display name
 	--	Default(s)
 	--	Description
 	--	Option(s)
 
-	{ "Service", {
+	{ "service", translate("Service"), {
 	-- initialisation and daemon options
 		{ ListValue,
 			"verb",
@@ -128,7 +129,7 @@ local knownParams = {
 		{ Value,
 			"ipchange",
 			"/usr/bin/ovpn-ipchange",
-			translate("Execute shell command on remote ip change"),
+			translate("Execute shell command on remote IP change"),
 			{ mode="p2p" } },
 		{ DynamicList,
 			"setenv",
@@ -160,11 +161,11 @@ local knownParams = {
 			translate("Policy level over usage of external programs and scripts") },
 		{ ListValue,
 			"compress",
-			{ "lzo", "lz4" },
-			translate("Enable a compression algorithm") },
+			{ "frames_only", "lzo", "lz4", "stub-v2"},
+			translate("Security recommendation: It is recommended to not enable compression and set this parameter to `stub-v2`") },
 	} },
 
-	{ "Networking", {
+	{ "networking", translate("Networking"), {
 	-- socket config
 		{ ListValue,
 			"mode",
@@ -173,7 +174,7 @@ local knownParams = {
 		{ Value,
 			"local",
 			"0.0.0.0",
-			translate("Local host name or ip address") },
+			translate("Local host name or IP address") },
 		{ Value,
 			"port",
 			1194,
@@ -186,6 +187,10 @@ local knownParams = {
 			"rport",
 			1194,
 			translate("TCP/UDP port # for remote (default=1194)") },
+		{ ListValue,
+			"proto",
+			{ "udp", "tcp-client", "tcp-server" },
+			translate("Use protocol") },
 		{ Flag,
 			"float",
 			0,
@@ -194,6 +199,10 @@ local knownParams = {
 			"nobind",
 			0,
 			translate("Do not bind to local address and port") },
+		{ Flag,
+			"multihome",
+			0,
+			translate("When you have more than one IP address (e.g. multiple interfaces, or secondary IP addresses), and do not use --local to force binding to one specific address only") },
 		{ Value,
 			"dev",
 			"tun0",
@@ -253,7 +262,7 @@ local knownParams = {
 		{ ListValue,
 			"comp_lzo",
 			{ "yes", "no", "adaptive" },
-			translate("Use fast LZO compression") },
+			translate("Security recommendation: It is recommended to not enable compression and set this parameter to `no`")},
 		{ Flag,
 			"comp_noadapt",
 			0,
@@ -278,7 +287,7 @@ local knownParams = {
 			{ proto="udp" } },
 		{ Value,
 			"mssfix",
-			1500,
+			1450,
 			translate("Set upper bound on TCP MSS"),
 			{ proto="udp" } },
 		{ Value,
@@ -362,9 +371,13 @@ local knownParams = {
 			{ "net30", "p2p", "subnet" },
 			translate("'net30', 'p2p', or 'subnet'"),
 			{dev_type="tun" } },
+		{ Flag,
+			"disable_dco",
+			0,
+			translate("Disable Data Channel Offloading (DCO) support") },
 	} },
 
-	{ "VPN", {
+	{ "vpn", translate("VPN"), {
 		{ Value,
 			"server",
 			"10.200.200.0 255.255.255.0",
@@ -497,16 +510,11 @@ local knownParams = {
 		{ DynamicList,
 			"remote",
 			"1.2.3.4",
-			translate("Remote host name or ip address") },
+			translate("Remote host name or IP address") },
 		{ Flag,
 			"remote_random",
 			0,
 			translate("Randomly choose remote server"),
-			{ client="1" } },
-		{ ListValue,
-			"proto",
-			{ "udp", "tcp-client", "tcp-server" },
-			translate("Use protocol"),
 			{ client="1" } },
 		{ Value,
 			"connect_retry",
@@ -560,7 +568,7 @@ local knownParams = {
 			translate("Specify whether the client is required to supply a valid certificate") },
 	} },
 
-	{ "Cryptography", {
+	{ "cryptography", translate("Cryptography"), {
 		{ FileUpload,
 			"secret",
 			"/etc/openvpn/secret.key",
@@ -658,7 +666,7 @@ local knownParams = {
 		{ FileUpload,
 			"dh",
 			"/etc/easy-rsa/keys/dh1024.pem",
-			translate("Diffie Hellman parameters") },
+			translate("Diffie-Hellman parameters") },
 		{ FileUpload,
 			"cert",
 			"/etc/easy-rsa/keys/some-client.crt",
@@ -678,25 +686,27 @@ local knownParams = {
 		{ DynamicList,
 			"tls_cipher",
 			{
-				"DHE-RSA-AES256-SHA",
-				"DHE-DSS-AES256-SHA",
-				"AES256-SHA",
-				"EDH-RSA-DES-CBC3-SHA",
-				"EDH-DSS-DES-CBC3-SHA",
-				"DES-CBC3-SHA",
-				"DHE-RSA-AES128-SHA",
-				"DHE-DSS-AES128-SHA",
-				"AES128-SHA",
-				"RC4-SHA",
-				"RC4-MD5",
-				"EDH-RSA-DES-CBC-SHA",
-				"EDH-DSS-DES-CBC-SHA",
-				"DES-CBC-SHA",
-				"EXP-EDH-RSA-DES-CBC-SHA",
-				"EXP-EDH-DSS-DES-CBC-SHA",
-				"EXP-DES-CBC-SHA",
-				"EXP-RC2-CBC-MD5",
-				"EXP-RC4-MD5"
+				"TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384",
+				"TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384",
+				"TLS-DHE-RSA-WITH-AES-256-GCM-SHA384",
+				"TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256",
+				"TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256",
+				"TLS-DHE-RSA-WITH-CHACHA20-POLY1305-SHA256",
+				"TLS-ECDHE-ECDSA-WITH-AES-128-GCM-SHA256",
+				"TLS-ECDHE-RSA-WITH-AES-128-GCM-SHA256",
+				"TLS-DHE-RSA-WITH-AES-128-GCM-SHA256",
+				"TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA384",
+				"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA384",
+				"TLS-DHE-RSA-WITH-AES-256-CBC-SHA256",
+				"TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA256",
+				"TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA256",
+				"TLS-DHE-RSA-WITH-AES-128-CBC-SHA256",
+				"TLS-ECDHE-ECDSA-WITH-AES-256-CBC-SHA",
+				"TLS-ECDHE-RSA-WITH-AES-256-CBC-SHA",
+				"TLS-DHE-RSA-WITH-AES-256-CBC-SHA",
+				"TLS-ECDHE-ECDSA-WITH-AES-128-CBC-SHA",
+				"TLS-ECDHE-RSA-WITH-AES-128-CBC-SHA",
+				"TLS-DHE-RSA-WITH-AES-128-CBC-SHA"
 			},
 			translate("TLS cipher") },
 		{ DynamicList,
@@ -787,9 +797,21 @@ local knownParams = {
 			"ncp_disable",
 			0,
 			translate("This completely disables cipher negotiation") },
-		{ Value,
+		{ DynamicList,
 			"ncp_ciphers",
-			"AES-256-GCM:AES-128-GCM",
+			{
+				"AES-256-GCM",
+				"AES-128-GCM"
+			},
+			translate("Restrict the allowed ciphers to be negotiated") },
+		{ DynamicList,
+			"data_ciphers",
+			{
+				"CHACHA20-POLY1305",
+				"AES-256-GCM",
+				"AES-128-GCM",
+				"AES-256-CBC"
+			},
 			translate("Restrict the allowed ciphers to be negotiated") },
 	} }
 }
@@ -797,6 +819,7 @@ local knownParams = {
 
 local cts = { }
 local params = { }
+local title = ""
 
 local m = Map("openvpn")
 m.redirect = luci.dispatcher.build_url("admin", "vpn", "openvpn")
@@ -806,22 +829,23 @@ local p = m:section( SimpleSection )
 p.template = "openvpn/pageswitch"
 p.mode     = "advanced"
 p.instance = arg[1]
-p.category = arg[2] or "Service"
+p.category = arg[2] or knownParams[1][1]
 
 for _, c in ipairs(knownParams) do
-	cts[#cts+1] = c[1]
-	if c[1] == p.category then params = c[2] end
+	cts[#cts+1] = { id = c[1], title = c[2] }
+	if c[1] == p.category then
+		title = c[2]
+		params = c[3]
+	end
 end
 
 p.categories = cts
 
 
 local s = m:section(
-	NamedSection, arg[1], "openvpn",
-	translate("%s" % arg[2])
+	NamedSection, arg[1], "openvpn", title
 )
 
-s.title     = translate("%s" % arg[2])
 s.addremove = false
 s.anonymous = true
 

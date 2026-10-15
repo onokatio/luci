@@ -2,12 +2,39 @@
   "luci-qsdk-wireless": {
     "description": "Manage the native QSDK wireless services",
     "read": {
-      "uci": ["wireless"],
-      "ubus": {"hostapd.*": ["wps_status", "rrm_nr_list", "get_clients", "get_status", "get_features"], "luci-rpc": ["getWirelessSettings", "getWirelessDiagnostics", "getWirelessDscpMap", "getWirelessWmm"]}
+      "ubus": {
+        "hostapd.*": [
+          "wps_status",
+          "rrm_nr_list",
+          "get_clients",
+          "get_status",
+          "get_features"
+        ],
+        "luci-rpc": [
+          "getWirelessSettings",
+          "getWirelessDiagnostics",
+          "getWirelessDscpMap",
+          "getWirelessWmm"
+        ]
+      },
+      "uci": [
+        "wireless"
+      ]
     },
     "write": {
-      "uci": ["wireless"],
-      "ubus": {"hostapd.*": ["wps_start", "wps_cancel", "bss_transition_request", "rrm_beacon_req", "qsdk_rrm_nr_add", "qsdk_rrm_nr_remove"]}
+      "ubus": {
+        "hostapd.*": [
+          "wps_start",
+          "wps_cancel",
+          "bss_transition_request",
+          "rrm_beacon_req",
+          "qsdk_rrm_nr_add",
+          "qsdk_rrm_nr_remove"
+        ]
+      },
+      "uci": [
+        "wireless"
+      ]
     }
   }
 }

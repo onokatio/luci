@@ -119,6 +119,10 @@ msgstr "Zona Firewall"
 msgid "General Settings"
 msgstr "Setări generale"
 
+#: applications/luci-app-ocserv/root/usr/share/rpcd/acl.d/luci-app-ocserv.json:3
+msgid "Grant UCI access for luci-app-ocserv"
+msgstr "Acordarea accesului UCI pentru luci-app-ocserv"
+
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:23
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:67
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:52
@@ -200,7 +204,7 @@ msgstr ""
 msgid "Routing table"
 msgstr "Tabel de rutare"
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:19
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:20
 msgid "Server Settings"
 msgstr "Setări server"
 
@@ -310,7 +314,7 @@ msgstr "Utilizator"
 msgid "User Authentication"
 msgstr "Autentificarea utilizatorului"
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:24
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:25
 msgid "User Settings"
 msgstr "Setări utilizator"
 

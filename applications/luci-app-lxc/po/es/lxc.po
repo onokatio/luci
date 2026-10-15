@@ -15,15 +15,23 @@ msgstr ""
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
-"<b>Tenga en cuenta:</b> Para los contenedores LXC necesita una imagen "
-"OpenWrt personalizada.<br />"
+"<b>Tenga en cuenta:</b> los contenedores LXC requieren funciones que no "
+"están disponibles en las imágenes OpenWrt para dispositivos con poco "
+"almacenamiento.<br />"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "Acciones"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr ""
+"También es posible que desee instalar 'kmod-veth' para soporte de red "
+"opcional."
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -69,6 +77,10 @@ msgstr "Umbral de espacio libre"
 msgid "Free Temp Threshold"
 msgstr "Umbral de temperatura libre"
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr "Conceder acceso UCI para luci-app-lxc"
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -113,13 +125,3 @@ msgstr "Detener"
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
 msgstr "Plantilla"
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
-msgstr ""
-"La imagen debe incluir al menos soporte para 'kernel cgroups', 'kernel "
-"namespaces' y 'miscellaneous LXC related options' más 'kmod-veth' para "
-"soporte de red opcional."

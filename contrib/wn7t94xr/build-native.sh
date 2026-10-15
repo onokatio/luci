@@ -28,6 +28,42 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
+
+# Keep the 22.03 Lua modules on the same libc and Lua ABI as the native QSDK services.
+for package in modules/luci-base libs/luci-lib-nixio libs/luci-lib-ip libs/luci-lib-jsonc; do
+	make -C "$luci/$package/src" clean
+	case "$package" in modules/luci-base) target=parser.so;; *) target=compile;; esac
+	make -C "$luci/$package/src" "$target" CC="$cc" FPIC=-fPIC \
+		CFLAGS="-Os -mfloat-abi=hard -I$stage/usr/include" LUA_CFLAGS="-I$stage/usr/include" \
+		LDFLAGS="-L$stage/usr/lib -Wl,-z,relro,-z,now" NIXIO_TLS=
+done
+mkdir -p "$output/usr/lib/lua/luci/template"
+cp "$luci/modules/luci-base/src/parser.so" "$output/usr/lib/lua/luci/template/"
+cp "$luci/libs/luci-lib-nixio/src/nixio.so" "$output/usr/lib/lua/"
+cp "$luci/libs/luci-lib-ip/src/ip.so" "$luci/libs/luci-lib-jsonc/src/jsonc.so" "$output/usr/lib/lua/luci/"
+"$strip" "$output/usr/lib/lua/luci/template/parser.so" "$output/usr/lib/lua/nixio.so" \
+	"$output/usr/lib/lua/luci/ip.so" "$output/usr/lib/lua/luci/jsonc.so"
+
+http_source="$output/lucihttp-source"
+python3 - "$luci/contrib/wn7t94xr/sources.json" "$http_source" <<'HTTP'
+import hashlib, json, pathlib, subprocess, sys
+lock = json.loads(pathlib.Path(sys.argv[1]).read_text())['lucihttp']
+target = pathlib.Path(sys.argv[2])
+target.mkdir(parents=True, exist_ok=True)
+archive = target / 'source.tar.xz'
+if not archive.exists():
+    subprocess.run(['curl', '-fsSL', '--retry', '2', lock['url'], '-o', str(archive)], check=True)
+assert hashlib.sha256(archive.read_bytes()).hexdigest() == lock['sha256']
+subprocess.run(['tar', '-xJf', str(archive), '--strip-components=1', '-C', str(target)], check=True)
+HTTP
+"$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard -I"$http_source/include" \
+	"$http_source/lib/utils.c" "$http_source/lib/multipart-parser.c" "$http_source/lib/urlencoded-parser.c" \
+	-Wl,-soname,liblucihttp.so.0,-z,relro,-z,now -o "$output/usr/lib/liblucihttp.so.0"
+ln -sf liblucihttp.so.0 "$output/usr/lib/liblucihttp.so"
+"$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard -I"$http_source/include" -I"$stage/usr/include" \
+	"$http_source/lib/lua.c" -L"$output/usr/lib" -llucihttp -L"$stage/usr/lib" -llua \
+	-Wl,-z,relro,-z,now -o "$output/usr/lib/lua/lucihttp.so"
+"$strip" "$output/usr/lib/liblucihttp.so.0" "$output/usr/lib/lua/lucihttp.so"
 python3 - "$iwinfo" "$output" <<'RATE'
 import pathlib, sys
 source = (pathlib.Path(sys.argv[1]) / 'iwinfo_nl80211.c').read_text()
@@ -41,7 +77,7 @@ cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$output" -I"$iwinfo/inclu
 python3 - "$luci/libs/rpcd-mod-luci/src/luci.c" "$output/qsdk-switch.inc" <<'PY'
 import pathlib, sys
 source = pathlib.Path(sys.argv[1]).read_text()
-readstr = source[source.index('static char *\nreadstr('):source.index('static char *\nea2str(')]
+readstr = source[source.index('static char *\nreadstr('):source.index('static bool\nea_empty(')]
 switch = source[source.index('/* QSDK switch topology */'):source.index('/* End QSDK switch topology */')]
 pathlib.Path(sys.argv[2]).write_text(readstr + switch)
 PY

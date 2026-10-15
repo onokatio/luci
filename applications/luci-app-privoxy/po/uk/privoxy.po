@@ -1,27 +1,31 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-02-13 10:08+0000\n"
-"Last-Translator: Vova Buran <heneral@gmail.com>\n"
+"PO-Revision-Date: 2024-02-25 06:41+0000\n"
+"Last-Translator: Костянтин Серьогін <seryoginki@gmail.com>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsprivoxy/uk/>\n"
 "Language: uk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.11-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:236
 msgid ""
 "A URL to be displayed in the error page that users will see if access to an "
 "untrusted page is denied."
 msgstr ""
+"URL-адреса, що відображається на сторінці помилки, яку користувачі "
+"бачитимуть, якщо доступ до ненадійної сторінки заборонено."
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:226
 msgid ""
 "A URL to documentation about the local Privoxy setup, configuration or "
 "policies."
 msgstr ""
+"URL-адреса для доступу до документації про локальне налаштування, "
+"конфігурацію або політики Privoxy."
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:325
 msgid "A directory where Privoxy can create temporary files."
@@ -153,6 +157,10 @@ msgstr ""
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:91
 msgid "Forwarding"
+msgstr ""
+
+#: applications/luci-app-privoxy/root/usr/share/rpcd/acl.d/luci-app-privoxy.json:3
+msgid "Grant UCI access for luci-app-privoxy"
 msgstr ""
 
 #: applications/luci-app-privoxy/luasrc/model/cbi/privoxy.lua:589

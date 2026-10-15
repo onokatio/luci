@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2022-01-12 11:22+0000\n"
-"Last-Translator: CRISTIAN ANDREI <cristianvdr@gmail.com>\n"
+"PO-Revision-Date: 2023-03-09 19:13+0000\n"
+"Last-Translator: Simona Iacob <s@zp1.net>\n"
 "Language-Team: Romanian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale/ro/>\n"
 "Language: ro\n"
@@ -9,7 +9,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10.1\n"
+"X-Generator: Weblate 4.16.2-dev\n"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:268
 msgid ""
@@ -28,22 +28,6 @@ msgstr ""
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:272
 msgid "AUTO"
 msgstr "AUTOMAT"
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:734
-msgid "Access-Control-Allow-Headers"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:726
-msgid "Access-Control-Allow-Methods"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:718
-msgid "Access-Control-Allow-Origin"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:742
-msgid "Access-Control-Expose-Headers"
-msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:706
 msgid "Additional HTTP headers"
@@ -218,8 +202,9 @@ msgid ""
 "For example, for the 'user' key, '.+' means 'authenticated user' and '.*' "
 "means 'anybody' (including anonymous users)."
 msgstr ""
-"De exemplu, pentru cheia \"user\", \".+\" înseamnă \"utilizator autentificat"
-"\", iar \".*\" înseamnă \"oricine\" (inclusiv utilizatorii anonimi)."
+"De exemplu, pentru cheia \"user\", \".+\" înseamnă \"utilizator "
+"autentificat\", iar \".*\" înseamnă \"oricine\" (inclusiv utilizatorii "
+"anonimi)."
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:435
 msgid "Full access for Owner only"
@@ -240,6 +225,10 @@ msgstr "Calea completă și numele de fișier al certificatului"
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:310
 msgid "Full path and file name of private key"
 msgstr "Calea completă și numele de fișier al cheii private"
+
+#: applications/luci-app-radicale/root/usr/share/rpcd/acl.d/luci-app-radicale.json:3
+msgid "Grant UCI access for luci-app-radicale"
+msgstr "Acordă acces la UCI pentru luci-app-radicale"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:549
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:571
@@ -366,7 +355,7 @@ msgstr "Fișier RegExp"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:56
 msgid "Reload"
-msgstr "Reîncărcare"
+msgstr "Reîncărcați"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:688
 msgid "Response Encoding"
@@ -439,7 +428,7 @@ msgstr "Porniți/opriți serverul Radicale"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:473
 msgid "Storage"
-msgstr "Depozitare"
+msgstr "Stocare"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:697
 msgid "Storage Encoding"
@@ -504,7 +493,7 @@ msgstr "Valoare necesară ! Număr întreg >= 0 !"
 #: applications/luci-app-radicale/luasrc/controller/radicale.lua:42
 #: applications/luci-app-radicale/luasrc/controller/radicale.lua:45
 msgid "Version"
-msgstr "Versiunea"
+msgstr "Versiune"
 
 #: applications/luci-app-radicale/luasrc/controller/radicale.lua:38
 msgid "Version Information"

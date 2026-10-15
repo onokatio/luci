@@ -286,10 +286,16 @@ function net.conntrack(callback)
 
 	local line, connt = nil, (not callback) and { }
 	for line in nfct do
-		local fam, l3, l4, timeout, tuples =
-			line:match("^(ipv[46]) +(%d+) +%S+ +(%d+) +(%d+) +(.+)$")
+		local fam, l3, l4, rest =
+			line:match("^(ipv[46]) +(%d+) +%S+ +(%d+) +(.+)$")
 
-		if fam and l3 and l4 and timeout and not tuples:match("^TIME_WAIT ") then
+		local timeout, tuples = rest:match("^(%d+) +(.+)$")
+
+		if not tuples then
+			tuples = rest
+		end
+
+		if fam and l3 and l4 and not tuples:match("^TIME_WAIT ") then
 			l4 = nixio.getprotobynumber(l4)
 
 			local entry = {
@@ -509,7 +515,7 @@ user.getuser = nixio.getpw
 function user.getpasswd(username)
 	local pwe = nixio.getsp and nixio.getsp(username) or nixio.getpw(username)
 	local pwh = pwe and (pwe.pwdp or pwe.passwd)
-	if not pwh or #pwh < 1 or pwh == "!" or pwh == "x" then
+	if not pwh or #pwh < 1 then
 		return nil, pwe
 	else
 		return pwh, pwe

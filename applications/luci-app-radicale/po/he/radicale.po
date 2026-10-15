@@ -1,8 +1,15 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2023-09-07 08:58+0000\n"
+"Last-Translator: Yaron Shahrabani <sh.yaron@gmail.com>\n"
+"Language-Team: Hebrew <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsradicale/he/>\n"
 "Language: he\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n == 1) ? 0 : ((n == 2) ? 1 : ((n > 10 && "
+"n % 10 == 0) ? 2 : 3));\n"
+"X-Generator: Weblate 5.0.1-dev\n"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:268
 msgid ""
@@ -16,22 +23,6 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:272
 msgid "AUTO"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:734
-msgid "Access-Control-Allow-Headers"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:726
-msgid "Access-Control-Allow-Methods"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:718
-msgid "Access-Control-Allow-Origin"
-msgstr ""
-
-#: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:742
-msgid "Access-Control-Expose-Headers"
 msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:706
@@ -212,6 +203,10 @@ msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:310
 msgid "Full path and file name of private key"
+msgstr ""
+
+#: applications/luci-app-radicale/root/usr/share/rpcd/acl.d/luci-app-radicale.json:3
+msgid "Grant UCI access for luci-app-radicale"
 msgstr ""
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:549
@@ -482,7 +477,7 @@ msgstr ""
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:572
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:594
 msgid "Warning"
-msgstr ""
+msgstr "אזהרה"
 
 #: applications/luci-app-radicale/luasrc/model/cbi/radicale.lua:90
 msgid ""

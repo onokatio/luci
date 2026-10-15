@@ -1,7 +1,104 @@
+'use strict';
+'require view';
+'require fs';
+'require ui';
+'require rpc';
+
+var css = '								\
+	.controls {							\
+		display: flex;					\
+		margin: .5em 0 1em 0;			\
+		flex-wrap: wrap;				\
+		justify-content: space-around;	\
+	}									\
+										\
+	.controls > * {						\
+		padding: .25em;					\
+		white-space: nowrap;			\
+		flex: 1 1 33%;					\
+		box-sizing: border-box;			\
+		display: flex;					\
+		flex-wrap: wrap;				\
+	}									\
+										\
+	.controls > *:first-child,			\
+	.controls > * > label {				\
+		flex-basis: 100%;				\
+		min-width: 250px;				\
+	}									\
+										\
+	.controls > *:nth-child(2),			\
+	.controls > *:nth-child(3) {		\
+		flex-basis: 20%;				\
+	}									\
+										\
+	.controls > * > .btn {				\
+		flex-basis: 20px;				\
+		text-align: center;				\
+	}									\
+										\
+	.controls > * > * {					\
+		flex-grow: 1;					\
+		align-self: center;				\
+	}									\
+										\
+	.controls > div > input {			\
+		width: auto;					\
+	}									\
+										\
+	.td.version,						\
+	.td.size {							\
+		white-space: nowrap;			\
+	}									\
+										\
+	ul.deps, ul.deps ul, ul.errors {	\
+		margin-left: 1em;				\
+	}									\
+										\
+	ul.deps li, ul.errors li {			\
+		list-style: none;				\
+	}									\
+										\
+	ul.deps li:before {					\
+		content: "↳";					\
+		display: inline-block;			\
+		width: 1em;						\
+		margin-left: -1em;				\
+	}									\
+										\
+	ul.deps li > span {					\
+		white-space: nowrap;			\
+	}									\
+										\
+	ul.errors li {						\
+		color: #c44;					\
+		font-size: 90%;					\
+		font-weight: bold;				\
+		padding-left: 1.5em;			\
+	}									\
+										\
+	ul.errors li:before {				\
+		content: "⚠";					\
+		display: inline-block;			\
+		width: 1.5em;					\
+		margin-left: -1.5em;			\
+	}									\
+';
+
+var isReadonlyView = !L.hasViewPermission() || null;
+
+var callMountPoints = rpc.declare({
+	object: 'luci',
+	method: 'getMountPoints',
+	expect: { result: [] }
+});
+
 var packages = {
 	available: { providers: {}, pkgs: {} },
 	installed: { providers: {}, pkgs: {} }
 };
+
+var languages = ['en'];
 
 var currentDisplayMode = 'available', currentDisplayRows = [];
 
@@ -106,12 +203,23 @@ function display(pattern)
 {
 	var src = packages[currentDisplayMode === 'updates' ? 'installed' : currentDisplayMode],
 	    table = document.querySelector('#packages'),
-	    pager = document.querySelector('#pager');
+	    pagers = document.querySelectorAll('.controls > .pager'),
+	    i18n_filter = null;
 
 	currentDisplayRows.length = 0;
 
 	if (typeof(pattern) === 'string' && pattern.length > 0)
 		pattern = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig');
+
+	switch (document.querySelector('input[name="filter_i18n"]:checked').value) {
+	case 'all':
+		i18n_filter = /^luci-i18n-/;
+		break;
+
+	case 'lang':
+		i18n_filter = new RegExp('^luci-i18n-(base-.+|.+-(' + languages.join('|') + '))$');
+		break;
+	}
 
 	for (var name in src.pkgs) {
 		var pkg = src.pkgs[name],
@@ -129,6 +237,9 @@ function display(pattern)
 
 		if ((pattern instanceof RegExp) &&
 		    !name.match(pattern) && !desc.match(pattern))
+			continue;
+
+		if (name.indexOf('luci-i18n-') === 0 && (!(i18n_filter instanceof RegExp) || !name.match(i18n_filter)))
 			continue;
 
 		var btn, ver;
@@ -199,8 +310,8 @@ function display(pattern)
 		currentDisplayRows.push([
 			name,
 			ver,
-			pkg.size ? '%.1024mB'.format(pkg.size)
-			         : (altsize ? '~%.1024mB'.format(altsize) : '-'),
+			pkg.size ? '%1024mB'.format(pkg.size)
+			         : (altsize ? '~%1024mB'.format(altsize) : '-'),
 			desc,
 			btn
 		]);
@@ -215,44 +326,50 @@ function display(pattern)
 			return 0;
 	});
 
-	pager.parentNode.style.display = '';
-	pager.setAttribute('data-offset', 100);
-	handlePage({ target: pager.querySelector('.prev') });
+	for (var i = 0; i < pagers.length; i++) {
+		pagers[i].parentNode.style.display = '';
+		pagers[i].setAttribute('data-offset', 100);
+	}
+
+	handlePage({ target: pagers[0].querySelector('.prev') });
 }
 
 function handlePage(ev)
 {
 	var filter = document.querySelector('input[name="filter"]'),
-	    pager = ev.target.parentNode,
-	    offset = +pager.getAttribute('data-offset'),
-	    next = ev.target.classList.contains('next');
+	    offset = +ev.target.parentNode.getAttribute('data-offset'),
+	    next = ev.target.classList.contains('next'),
+	    pagers = document.querySelectorAll('.controls > .pager');
 
 	if ((next && (offset + 100) >= currentDisplayRows.length) ||
 	    (!next && (offset < 100)))
 	    return;
 
 	offset += next ? 100 : -100;
-	pager.setAttribute('data-offset', offset);
-	pager.querySelector('.text').firstChild.data = currentDisplayRows.length
-		? _('Displaying %d-%d of %d').format(1 + offset, Math.min(offset + 100, currentDisplayRows.length), currentDisplayRows.length)
-		: _('No packages');
 
-	if (offset < 100)
-		pager.querySelector('.prev').setAttribute('disabled', 'disabled');
-	else
-		pager.querySelector('.prev').removeAttribute('disabled');
+	for (var i = 0; i < pagers.length; i++) {
+		pagers[i].setAttribute('data-offset', offset);
+		pagers[i].querySelector('.text').firstChild.data = currentDisplayRows.length
+			? _('Displaying %d-%d of %d').format(1 + offset, Math.min(offset + 100, currentDisplayRows.length), currentDisplayRows.length)
+			: _('No packages');
 
-	if ((offset + 100) >= currentDisplayRows.length)
-		pager.querySelector('.next').setAttribute('disabled', 'disabled');
-	else
-		pager.querySelector('.next').removeAttribute('disabled');
+		if (offset < 100)
+			pagers[i].querySelector('.prev').setAttribute('disabled', 'disabled');
+		else
+			pagers[i].querySelector('.prev').removeAttribute('disabled');
+
+		if ((offset + 100) >= currentDisplayRows.length)
+			pagers[i].querySelector('.next').setAttribute('disabled', 'disabled');
+		else
+			pagers[i].querySelector('.next').removeAttribute('disabled');
+	}
 
 	var placeholder = _('No information available');
 
 	if (filter.value)
 		placeholder = [
 			E('span', {}, _('No packages matching "<strong>%h</strong>".').format(filter.value)), ' (',
-			E('a', { href: '#', onclick: 'handleReset(event)' }, _('Reset')), ')'
+			E('a', { href: '#', click: handleReset }, _('Reset')), ')'
 		];
 
 	cbi_update_table('#packages', currentDisplayRows.slice(offset, offset + 100),
@@ -279,6 +396,11 @@ function handleMode(ev)
 
 	ev.target.blur();
 	ev.preventDefault();
+}
+
+function handleI18nFilter(ev)
+{
+	display(document.querySelector('input[name="filter"]').value);
 }
 
 function orderOf(c)
@@ -420,7 +542,7 @@ function pkgStatus(pkg, vop, ver, info)
 	}
 }
 
-function renderDependencyItem(dep, info)
+function renderDependencyItem(dep, info, flat)
 {
 	var li = E('li'),
 	    vop = dep.version ? dep.version[0] : null,
@@ -438,9 +560,9 @@ function renderDependencyItem(dep, info)
 		var text = pkg.name;
 
 		if (pkg.installsize)
-			text += ' (%.1024mB)'.format(pkg.installsize);
+			text += ' (%1024mB)'.format(pkg.installsize);
 		else if (pkg.size)
-			text += ' (~%.1024mB)'.format(pkg.size);
+			text += ' (~%1024mB)'.format(pkg.size);
 
 		li.appendChild(E('span', { 'data-tooltip': pkg.description },
 			[ text, ' ', pkgStatus(pkg, vop, ver, info) ]));
@@ -456,14 +578,16 @@ function renderDependencyItem(dep, info)
 			[ dep.name, ' ',
 			  pkgStatus({ name: dep.name, missing: true }, vop, ver, info) ]));
 
-	var subdeps = renderDependencies(depends, info);
-	if (subdeps)
-		li.appendChild(subdeps);
+	if (!flat) {
+		var subdeps = renderDependencies(depends, info);
+		if (subdeps)
+			li.appendChild(subdeps);
+	}
 
 	return li;
 }
 
-function renderDependencies(depends, info)
+function renderDependencies(depends, info, flat)
 {
 	var deps = depends || [],
 	    items = [];
@@ -471,10 +595,12 @@ function renderDependencies(depends, info)
 	info.seen = info.seen || [];
 
 	for (var i = 0; i < deps.length; i++) {
+		var dep, vop, ver;
+
 		if (deps[i] === 'libc')
 			continue;
 
-		if (deps[i].match(/^(.+)\s+\((<=|<|>|>=|=|<<|>>)(.+)\)$/)) {
+		if (deps[i].match(/^(.+?)\s+\((<=|>=|<<|>>|<|>|=)(.+?)\)/)) {
 			dep = RegExp.$1.trim();
 			vop = RegExp.$2.trim();
 			ver = RegExp.$3.trim();
@@ -503,7 +629,7 @@ function renderDependencies(depends, info)
 			version: [vop, ver]
 		};
 
-		items.push(renderDependencyItem(info.seen[dep], info));
+		items.push(renderDependencyItem(info.seen[dep], info, flat));
 	}
 
 	if (items.length)
@@ -539,9 +665,9 @@ function handleInstall(ev)
 	    size;
 
 	if (pkg.installsize)
-		size = _('~%.1024mB installed').format(pkg.installsize);
+		size = _('~%1024mB installed').format(pkg.installsize);
 	else if (pkg.size)
-		size = _('~%.1024mB compressed').format(pkg.size);
+		size = _('~%1024mB compressed').format(pkg.size);
 	else
 		size = _('unknown');
 
@@ -556,7 +682,8 @@ function handleInstall(ev)
 	}
 
 	var totalsize = pkg.installsize || pkg.size || 0,
-	    totalpkgs = 1;
+	    totalpkgs = 1,
+	    suggestsize = 0;
 
 	if (depcache.install && depcache.install.length)
 		depcache.install.forEach(function(ipkg) {
@@ -564,9 +691,53 @@ function handleInstall(ev)
 			totalpkgs++;
 		});
 
-	inst = E('p', {},
-		_('Require approx. %.1024mB size for %d package(s) to install.')
-			.format(totalsize, totalpkgs));
+	var luci_basename = pkg.name.match(/^luci-([^-]+)-(.+)$/),
+	    i18n_packages = [],
+	    i18n_tree;
+
+	if (luci_basename && (luci_basename[1] != 'i18n' || luci_basename[2].indexOf('base-') === 0)) {
+		var i18n_filter;
+
+		if (luci_basename[1] == 'i18n') {
+			var basenames = [];
+
+			for (var pkgname in packages.installed.pkgs) {
+				var m = pkgname.match(/^luci-([^-]+)-(.+)$/);
+
+				if (m && m[1] != 'i18n')
+					basenames.push(m[2]);
+			}
+
+			if (basenames.length)
+				i18n_filter = new RegExp('^luci-i18n-(' + basenames.join('|') + ')-' + pkg.name.replace(/^luci-i18n-base-/, '') + '$');
+		}
+		else {
+			i18n_filter = new RegExp('^luci-i18n-' + luci_basename[2] + '-(' + languages.join('|') + ')$');
+		}
+
+		if (i18n_filter) {
+			for (var pkgname in packages.available.pkgs)
+				if (pkgname != pkg.name && pkgname.match(i18n_filter))
+					i18n_packages.push(pkgname);
+
+			var i18ncache = {};
+
+			i18n_tree = renderDependencies(i18n_packages, i18ncache, true);
+
+			if (i18ncache.install && i18ncache.install.length) {
+				i18ncache.install.forEach(function(ipkg) {
+					suggestsize += ipkg.installsize || ipkg.size || 0;
+				});
+			}
+		}
+	}
+
+	inst = E('p', [
+		_('Require approx. %1024mB size for %d package(s) to install.')
+			.format(totalsize, totalpkgs),
+		' ',
+		suggestsize ? _('Suggested translations require approx. %1024mB additional space.').format(suggestsize) : ''
+	]);
 
 	if (deps) {
 		tree = E('li', '<strong>%s:</strong>'.format(_('Dependencies')));
@@ -580,29 +751,59 @@ function handleInstall(ev)
 		]);
 	}
 
-	L.showModal(_('Details for package <em>%h</em>').format(pkg.name), [
+	ui.showModal(_('Details for package <em>%h</em>').format(pkg.name), [
 		E('ul', {}, [
 			E('li', '<strong>%s:</strong> %h'.format(_('Version'), pkg.version)),
 			E('li', '<strong>%s:</strong> %h'.format(_('Size'), size)),
 			tree || '',
+			i18n_packages.length ? E('li', [
+				E('strong', [_('Suggested translations'), ':']),
+				i18n_tree
+			]) : ''
 		]),
 		desc || '',
 		errs || inst || '',
+		E('div', [
+			E('hr'),
+			i18n_packages.length ? E('p', [
+				E('label', { 'class': 'cbi-checkbox' }, [
+					E('input', {
+						'id': 'i18ninstall-cb',
+						'type': 'checkbox',
+						'name': 'i18ninstall',
+						'data-packages': i18n_packages.join(' '),
+						'disabled': isReadonlyView,
+						'checked': true
+					}), ' ',
+					E('label', { 'for': 'i18ninstall-cb' }), ' ',
+					_('Install suggested translation packages as well')
+				])
+			]) : '',
+			E('p', [
+				E('label', { 'class': 'cbi-checkbox' }, [
+					E('input', {
+						'id': 'overwrite-cb',
+						'type': 'checkbox',
+						'name': 'overwrite',
+						'disabled': isReadonlyView
+					}), ' ',
+					E('label', { 'for': 'overwrite-cb' }), ' ',
+					_('Allow overwriting conflicting package files')
+				])
+			])
+		]),
 		E('div', { 'class': 'right' }, [
-			E('label', { 'class': 'cbi-checkbox', 'style': 'float:left; padding-top:.5em' }, [
-				E('input', { 'type': 'checkbox', 'name': 'overwrite' }), ' ',
-				_('Overwrite files from other package(s)')
-			]),
 			E('div', {
 				'class': 'btn',
-				'click': L.hideModal
+				'click': ui.hideModal
 			}, _('Cancel')),
 			' ',
 			E('div', {
 				'data-command': 'install',
 				'data-package': name,
 				'class': 'btn cbi-button-action',
-				'click': handleOpkg
+				'click': handleOpkg,
+				'disabled': isReadonlyView
 			}, _('Install'))
 		])
 	]);
@@ -635,11 +836,11 @@ function handleManualInstall(ev)
 		warning = E('p', {}, _('Really attempt to install <em>%h</em>?').format(name_or_url));
 	}
 
-	L.showModal(_('Manually install package'), [
+	ui.showModal(_('Manually install package'), [
 		warning,
 		E('div', { 'class': 'right' }, [
 			E('div', {
-				'click': L.hideModal,
+				'click': ui.hideModal,
 				'class': 'btn cbi-button-neutral'
 			}, _('Cancel')),
 			' ', install
@@ -649,11 +850,29 @@ function handleManualInstall(ev)
 
 function handleConfig(ev)
 {
-	L.showModal(_('OPKG Configuration'), [
+	var conf = {};
+
+	ui.showModal(_('OPKG Configuration'), [
 		E('p', { 'class': 'spinning' }, _('Loading configuration data…'))
 	]);
 
-	L.get('admin/system/opkg/config', null, function(xhr, conf) {
+	fs.list('/etc/opkg').then(function(partials) {
+		var files = [ '/etc/opkg.conf' ];
+
+		for (var i = 0; i < partials.length; i++)
+			if (partials[i].type == 'file' && partials[i].name.match(/\.conf$/))
+				files.push('/etc/opkg/' + partials[i].name);
+
+		return Promise.all(files.map(function(file) {
+			return fs.read(file)
+				.then(L.bind(function(conf, file, res) { conf[file] = res }, this, conf, file))
+				.catch(function(err) {
+					ui.addNotification(null, E('p', {}, [ _('Unable to read %s: %s').format(file, err) ]));
+					ui.hideModal();
+					throw err;
+				});
+		}));
+	}).then(function() {
 		var body = [
 			E('p', {}, _('Below is a listing of the various configuration files used by <em>opkg</em>. Use <em>opkg.conf</em> for global settings and <em>customfeeds.conf</em> for custom repository entries. The configuration in the other files may be changed but is usually not preserved by <em>sysupgrade</em>.'))
 		];
@@ -669,7 +888,7 @@ function handleConfig(ev)
 		body.push(E('div', { 'class': 'right' }, [
 			E('div', {
 				'class': 'btn cbi-button-neutral',
-				'click': L.hideModal
+				'click': ui.hideModal
 			}, _('Cancel')),
 			' ',
 			E('div', {
@@ -681,16 +900,21 @@ function handleConfig(ev)
 							data[textarea.getAttribute('name')] = textarea.value
 						});
 
-					L.showModal(_('OPKG Configuration'), [
+					ui.showModal(_('OPKG Configuration'), [
 						E('p', { 'class': 'spinning' }, _('Saving configuration data…'))
 					]);
 
-					L.post('admin/system/opkg/config', { data: JSON.stringify(data) }, L.hideModal);
-				}
+					Promise.all(Object.keys(data).map(function(file) {
+						return fs.write(file, data[file]).catch(function(err) {
+							ui.addNotification(null, E('p', {}, [ _('Unable to save %s: %s').format(file, err) ]));
+						});
+					})).then(ui.hideModal);
+				},
+				'disabled': isReadonlyView
 			}, _('Save')),
 		]));
 
-		L.showModal(_('OPKG Configuration'), body);
+		ui.showModal(_('OPKG Configuration'), body);
 	});
 }
 
@@ -702,9 +926,9 @@ function handleRemove(ev)
 	    size, desc;
 
 	if (avail.installsize)
-		size = _('~%.1024mB installed').format(avail.installsize);
+		size = _('~%1024mB installed').format(avail.installsize);
 	else if (avail.size)
-		size = _('~%.1024mB compressed').format(avail.size);
+		size = _('~%1024mB compressed').format(avail.size);
 	else
 		size = _('unknown');
 
@@ -715,28 +939,30 @@ function handleRemove(ev)
 		]);
 	}
 
-	L.showModal(_('Remove package <em>%h</em>').format(pkg.name), [
+	ui.showModal(_('Remove package <em>%h</em>').format(pkg.name), [
 		E('ul', {}, [
 			E('li', '<strong>%s:</strong> %h'.format(_('Version'), pkg.version)),
 			E('li', '<strong>%s:</strong> %h'.format(_('Size'), size))
 		]),
 		desc || '',
 		E('div', { 'style': 'display:flex; justify-content:space-between; flex-wrap:wrap' }, [
-			E('label', {}, [
-				E('input', { type: 'checkbox', checked: 'checked', name: 'autoremove' }),
+			E('label', { 'class': 'cbi-checkbox', 'style': 'float:left' }, [
+				E('input', { 'id': 'autoremove-cb', 'type': 'checkbox', 'checked': 'checked', 'name': 'autoremove', 'disabled': isReadonlyView }), ' ',
+				E('label', { 'for': 'autoremove-cb' }), ' ',
 				_('Automatically remove unused dependencies')
 			]),
 			E('div', { 'style': 'flex-grow:1', 'class': 'right' }, [
 				E('div', {
 					'class': 'btn',
-					'click': L.hideModal
+					'click': ui.hideModal
 				}, _('Cancel')),
 				' ',
 				E('div', {
 					'data-command': 'remove',
 					'data-package': name,
 					'class': 'btn cbi-button-negative',
-					'click': handleOpkg
+					'click': handleOpkg,
+					'disabled': isReadonlyView
 				}, _('Remove'))
 			])
 		])
@@ -750,14 +976,28 @@ function handleOpkg(ev)
 		    pkg = ev.target.getAttribute('data-package'),
 		    rem = document.querySelector('input[name="autoremove"]'),
 		    owr = document.querySelector('input[name="overwrite"]'),
-		    url = 'admin/system/opkg/exec/' + encodeURIComponent(cmd);
+		    i18n = document.querySelector('input[name="i18ninstall"]');
 
-		var dlg = L.showModal(_('Executing package manager'), [
+		var dlg = ui.showModal(_('Executing package manager'), [
 			E('p', { 'class': 'spinning' },
 				_('Waiting for the <em>opkg %h</em> command to complete…').format(cmd))
 		]);
 
-		L.post(url, { package: pkg, autoremove: rem ? rem.checked : false, overwrite: owr ? owr.checked : false }, function(xhr, res) {
+		var argv = [ cmd, '--force-removal-of-dependent-packages' ];
+
+		if (rem && rem.checked)
+			argv.push('--autoremove');
+
+		if (owr && owr.checked)
+			argv.push('--force-overwrite');
+
+		if (i18n && i18n.checked)
+			argv.push.apply(argv, i18n.getAttribute('data-packages').split(' '));
+
+		if (pkg != null)
+			argv.push(pkg);
+
+		fs.exec_direct('/usr/libexec/opkg-call', argv, 'json').then(function(res) {
 			dlg.removeChild(dlg.lastChild);
 
 			if (res.stdout)
@@ -775,10 +1015,10 @@ function handleOpkg(ev)
 				E('div', {
 					'class': 'btn',
 					'click': L.bind(function(res) {
-						if (L.ui.menu && L.ui.menu.flushCache)
-							L.ui.menu.flushCache();
+						if (ui.menu && ui.menu.flushCache)
+							ui.menu.flushCache();
 
-						L.hideModal();
+						ui.hideModal();
 						updateLists();
 
 						if (res.code !== 0)
@@ -787,6 +1027,9 @@ function handleOpkg(ev)
 							resolveFn(res);
 					}, this, res)
 				}, _('Dismiss'))));
+		}).catch(function(err) {
+			ui.addNotification(null, E('p', _('Unable to execute <em>opkg %s</em> command: %s').format(cmd, err)));
+			ui.hideModal();
 		});
 	});
 }
@@ -794,8 +1037,8 @@ function handleOpkg(ev)
 function handleUpload(ev)
 {
 	var path = '/tmp/upload.ipk';
-	return L.ui.uploadFile(path).then(L.bind(function(btn, res) {
-		L.showModal(_('Manually install package'), [
+	return ui.uploadFile(path).then(L.bind(function(btn, res) {
+		ui.showModal(_('Manually install package'), [
 			E('p', {}, _('Installing packages from untrusted sources is a potential security risk! Really attempt to install <em>%h</em>?').format(res.name)),
 			E('ul', {}, [
 				res.size ? E('li', {}, '%s: %1024.2mB'.format(_('Size'), res.size)) : '',
@@ -805,8 +1048,8 @@ function handleUpload(ev)
 			E('div', { 'class': 'right' }, [
 				E('div', {
 					'click': function(ev) {
-						L.hideModal();
-						L.fs.remove(path);
+						ui.hideModal();
+						fs.remove(path);
 					},
 					'class': 'btn cbi-button-neutral'
 				}, _('Cancel')), ' ',
@@ -816,7 +1059,7 @@ function handleUpload(ev)
 					'data-package': path,
 					'click': function(ev) {
 						handleOpkg(ev).finally(function() {
-							L.fs.remove(path)
+							fs.remove(path)
 						});
 					}
 				}, _('Install'))
@@ -825,7 +1068,16 @@ function handleUpload(ev)
 	}, this, ev.target));
 }
 
-function updateLists()
+function downloadLists()
+{
+	return Promise.all([
+		callMountPoints(),
+		fs.exec_direct('/usr/libexec/opkg-call', [ 'list-available' ]),
+		fs.exec_direct('/usr/libexec/opkg-call', [ 'list-installed' ])
+	]);
+}
+
+function updateLists(data)
 {
 	cbi_update_table('#packages', [],
 		E('div', { 'class': 'spinning' }, _('Loading package information…')));
@@ -833,42 +1085,167 @@ function updateLists()
 	packages.available = { providers: {}, pkgs: {} };
 	packages.installed = { providers: {}, pkgs: {} };
 
-	L.get('admin/system/opkg/statvfs', null, function(xhr, stat) {
+	return (data ? Promise.resolve(data) : downloadLists()).then(function(data) {
 		var pg = document.querySelector('.cbi-progressbar'),
-		    total = stat.blocks || 0,
-		    free = stat.bfree || 0;
+			mount = L.toArray(data[0].filter(function(m) { return m.mount == '/' || m.mount == '/overlay' }))
+				.sort(function(a, b) { return a.mount > b.mount })[0] || { size: 0, free: 0 };
 
-		pg.firstElementChild.style.width = Math.floor(total ? ((100 / total) * free) : 100) + '%';
-		pg.setAttribute('title', '%s (%.1024mB)'.format(pg.firstElementChild.style.width, free * (stat.frsize || 0)));
+		pg.firstElementChild.style.width = Math.floor(mount.size ? (100 / mount.size) * (mount.size - mount.free) : 100) + '%';
+		pg.setAttribute('title', _('%s used (%1024mB used of %1024mB, %1024mB free)').format(pg.firstElementChild.style.width, mount.size - mount.free, mount.size, mount.free));
 
-		L.get('admin/system/opkg/list/available', null, function(xhr) {
-			parseList(xhr.responseText, packages.available);
-			L.get('admin/system/opkg/list/installed', null, function(xhr) {
-				parseList(xhr.responseText, packages.installed);
-				display(document.querySelector('input[name="filter"]').value);
-			});
-		});
+		parseList(data[1], packages.available);
+		parseList(data[2], packages.installed);
+
+		for (var pkgname in packages.installed.pkgs)
+			if (pkgname.indexOf('luci-i18n-base-') === 0)
+				languages.push(pkgname.substring(15));
+
+		display(document.querySelector('input[name="filter"]').value);
 	});
 }
 
-window.requestAnimationFrame(function() {
-	var filter = document.querySelector('input[name="filter"]'),
-	    keyTimeout = null;
+var inputTimeout = null;
 
-	filter.value = filter.getAttribute('value');
-	filter.addEventListener('keyup',
-		function(ev) {
-			if (keyTimeout !== null)
-				window.clearTimeout(keyTimeout);
+function handleInput(ev) {
+	if (inputTimeout !== null)
+		window.clearTimeout(inputTimeout);
 
-			keyTimeout = window.setTimeout(function() {
-				display(ev.target.value);
-			}, 250);
+	inputTimeout = window.setTimeout(function() {
+		display(ev.target.value);
+	}, 250);
+}
+
+return view.extend({
+	load: function() {
+		return downloadLists();
+	},
+
+	render: function(listData) {
+		var query = decodeURIComponent(L.toArray(location.search.match(/\bquery=([^=]+)\b/))[1] || '');
+
+		var view = E([], [
+			E('style', { 'type': 'text/css' }, [ css ]),
+
+			E('h2', {}, _('Software')),
+
+			E('div', { 'class': 'controls' }, [
+				E('div', {}, [
+					E('label', {}, _('Disk space') + ':'),
+					E('div', { 'class': 'cbi-progressbar', 'title': _('unknown') }, E('div', {}, [ '\u00a0' ]))
+				]),
+
+				E('div', {}, [
+					E('label', {}, _('Filter') + ':'),
+					E('span', { 'class': 'control-group' }, [
+						E('input', { 'type': 'text', 'name': 'filter', 'placeholder': _('Type to filter…'), 'value': query, 'input': handleInput }),
+						E('button', { 'class': 'btn cbi-button', 'click': handleReset }, [ _('Clear') ])
+					])
+				]),
+
+				E('div', {}, [
+					E('label', {}, _('Download and install package') + ':'),
+					E('span', { 'class': 'control-group' }, [
+						E('input', { 'type': 'text', 'name': 'install', 'placeholder': _('Package name or URL…'), 'keydown': function(ev) { if (ev.keyCode === 13) handleManualInstall(ev) }, 'disabled': isReadonlyView }),
+						E('button', { 'class': 'btn cbi-button cbi-button-action', 'click': handleManualInstall, 'disabled': isReadonlyView }, [ _('OK') ])
+					])
+				]),
+
+				E('div', {}, [
+					E('label', {}, _('Actions') + ':'), ' ',
+					E('span', { 'class': 'control-group' }, [
+						E('button', { 'class': 'btn cbi-button-positive', 'data-command': 'update', 'click': handleOpkg, 'disabled': isReadonlyView }, [ _('Update lists…') ]), ' ',
+						E('button', { 'class': 'btn cbi-button-action', 'click': handleUpload, 'disabled': isReadonlyView }, [ _('Upload Package…') ]), ' ',
+						E('button', { 'class': 'btn cbi-button-neutral', 'click': handleConfig }, [ _('Configure opkg…') ])
+					])
+				]),
+
+				E('div', {}, [
+					E('label', {}, _('Display LuCI translation packages') + ':'), ' ',
+					E('div', [
+						E('label', {
+							'data-tooltip': _('Display base translation packages and translation packages for already installed languages only')
+						}, [
+							E('input', {
+								'type': 'radio',
+								'name': 'filter_i18n',
+								'value': 'lang',
+								'change': handleI18nFilter,
+								'checked': true
+							}),
+							' ',
+							_('filtered', 'Display translation packages')
+						]),
+						' \u00a0 ',
+						E('label', {
+							'data-tooltip': _('Display all available translation packages')
+						}, [
+							E('input', {
+								'type': 'radio',
+								'name': 'filter_i18n',
+								'value': 'all',
+								'change': handleI18nFilter
+							}),
+							' ',
+							_('all', 'Display translation packages')
+						]),
+						' \u00a0 ',
+						E('label', {
+							'data-tooltip': _('Hide all translation packages')
+						}, [
+							E('input', {
+								'type': 'radio',
+								'name': 'filter_i18n',
+								'value': 'none',
+								'change': handleI18nFilter
+							}),
+							' ',
+							_('none', 'Display translation packages')
+						])
+					])
+				])
+			]),
+
+			E('ul', { 'class': 'cbi-tabmenu mode' }, [
+				E('li', { 'data-mode': 'available', 'class': 'available cbi-tab', 'click': handleMode }, E('a', { 'href': '#' }, [ _('Available') ])),
+				E('li', { 'data-mode': 'installed', 'class': 'installed cbi-tab-disabled', 'click': handleMode }, E('a', { 'href': '#' }, [ _('Installed') ])),
+				E('li', { 'data-mode': 'updates', 'class': 'installed cbi-tab-disabled', 'click': handleMode }, E('a', { 'href': '#' }, [ _('Updates') ]))
+			]),
+
+			E('div', { 'class': 'controls', 'style': 'display:none' }, [
+				E('div', { 'class': 'pager center' }, [
+					E('button', { 'class': 'btn cbi-button-neutral prev', 'aria-label': _('Previous page'), 'click': handlePage }, [ '«' ]),
+					E('div', { 'class': 'text' }, [ 'dummy' ]),
+					E('button', { 'class': 'btn cbi-button-neutral next', 'aria-label': _('Next page'), 'click': handlePage }, [ '»' ])
+				])
+			]),
+
+			E('table', { 'id': 'packages', 'class': 'table' }, [
+				E('tr', { 'class': 'tr cbi-section-table-titles' }, [
+					E('th', { 'class': 'th col-2 left' }, [ _('Package name') ]),
+					E('th', { 'class': 'th col-2 left version' }, [ _('Version') ]),
+					E('th', { 'class': 'th col-1 center size'}, [ _('Size (.ipk)') ]),
+					E('th', { 'class': 'th col-10 left' }, [ _('Description') ]),
+					E('th', { 'class': 'th right cbi-section-actions' }, [ '\u00a0' ])
+				])
+			]),
+
+			E('div', { 'class': 'controls', 'style': 'display:none' }, [
+				E('div', { 'class': 'pager center' }, [
+					E('button', { 'class': 'btn cbi-button-neutral prev', 'aria-label': _('Previous page'), 'click': handlePage }, [ '«' ]),
+					E('div', { 'class': 'text' }, [ 'dummy' ]),
+					E('button', { 'class': 'btn cbi-button-neutral next', 'aria-label': _('Next page'), 'click': handlePage }, [ '»' ])
+				])
+			])
+		]);
+
+		requestAnimationFrame(function() {
+			updateLists(listData)
 		});
 
-	document.querySelector('#pager > .prev').addEventListener('click', handlePage);
-	document.querySelector('#pager > .next').addEventListener('click', handlePage);
-	document.querySelector('.cbi-tabmenu.mode').addEventListener('click', handleMode);
+		return view;
+	},
 
-	updateLists();
+	handleSave: null,
+	handleSaveApply: null,
+	handleReset: null
 });

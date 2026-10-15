@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-01-15 12:32+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2024-01-05 04:02+0000\n"
+"Last-Translator: Yuan Law <traverslombard@outlook.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationsdcwapd/zh_Hant/>\n"
 "Language: zh_Hant\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.4-dev\n"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:72
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:121
@@ -46,7 +46,7 @@ msgstr "目的通訊埠"
 msgid "Dual Channel Wi-Fi AP Daemon"
 msgstr "雙頻 Wi-Fi AP 守護行程"
 
-#: applications/luci-app-dcwapd/luasrc/controller/dcwapd.lua:11
+#: applications/luci-app-dcwapd/root/usr/share/luci/menu.d/luci-app-dcwapd.json:3
 msgid "Dual Channel WiFi"
 msgstr "雙頻 Wi-Fi"
 
@@ -71,6 +71,10 @@ msgstr "一般"
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:27
 msgid "General Settings"
 msgstr "一般設定"
+
+#: applications/luci-app-dcwapd/root/usr/share/rpcd/acl.d/luci-app-dcwapd.json:3
+msgid "Grant UCI access for luci-app-dcwapd"
+msgstr "授予 luci-app-dcwapd 擁有 UCI 存取的權限"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:138
 msgid "Interfaces"

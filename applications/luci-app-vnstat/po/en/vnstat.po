@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"PO-Revision-Date: 2021-01-07 17:03+0000\n"
-"Last-Translator: Liao junchao <liaojunchao@outlook.com>\n"
+"PO-Revision-Date: 2023-11-30 14:34+0000\n"
+"Last-Translator: rygle <pittos@post.com>\n"
 "Language-Team: English <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsvnstat/en/>\n"
 "Language: en\n"
@@ -10,10 +10,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.4.1-dev\n"
+"X-Generator: Weblate 5.3-dev\n"
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:6
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:10
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:23
 msgid "Configuration"
 msgstr "Configuration"
 
@@ -21,8 +20,11 @@ msgstr "Configuration"
 msgid "Daily traffic"
 msgstr ""
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:5
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:9
+#: applications/luci-app-vnstat/root/usr/share/rpcd/acl.d/luci-app-vnstat.json:3
+msgid "Grant UCI access for luci-app-vnstat"
+msgstr ""
+
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:14
 msgid "Graphs"
 msgstr ""
 
@@ -68,8 +70,7 @@ msgstr ""
 msgid "VnStat Graphs"
 msgstr ""
 
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:4
-#: applications/luci-app-vnstat/luasrc/controller/vnstat.lua:8
+#: applications/luci-app-vnstat/root/usr/share/luci/menu.d/luci-app-vnstat.json:3
 msgid "VnStat Traffic Monitor"
 msgstr ""
 

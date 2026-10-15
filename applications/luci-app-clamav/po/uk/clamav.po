@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-11-04 17:37+0000\n"
-"Last-Translator: Paul Dee <itsascambutmailmeanyway+weblate@gmail.com>\n"
+"PO-Revision-Date: 2022-12-18 15:49+0000\n"
+"Last-Translator: Dan <denqwerta@gmail.com>\n"
 "Language-Team: Ukrainian <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsclamav/uk/>\n"
 "Language: uk\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.9-dev\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 4.15.1-dev\n"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:143
 msgid "10"
@@ -60,8 +60,8 @@ msgstr "600"
 msgid "Block encrypted archives"
 msgstr "Блокувати зашифровані архіви"
 
-#: applications/luci-app-clamav/luasrc/controller/clamav.lua:21
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:22
+#: applications/luci-app-clamav/root/usr/share/luci/menu.d/luci-app-clamav.json:3
 msgid "ClamAV"
 msgstr "Антивірус ClamAV"
 
@@ -75,7 +75,7 @@ msgstr "Виявлення пошкоджених виконувальних ф�
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:73
 msgid "Detect possibly unwanted apps"
-msgstr "Виявлення можливих небажаних додатків"
+msgstr "Виявлення можливих небажаних застосунків"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:45
 msgid "Enable verbose logging"
@@ -88,6 +88,10 @@ msgstr "Слідувати за символічними посиланнями 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:68
 msgid "Follow file symlinks"
 msgstr "Слідувати за символічними посиланнями на файл"
+
+#: applications/luci-app-clamav/root/usr/share/rpcd/acl.d/luci-app-clamav.json:3
+msgid "Grant UCI access for luci-app-clamav"
+msgstr "Надати доступ UCI до luci-app-clamav"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:30
 msgid "Log"
@@ -178,7 +182,7 @@ msgstr "Сканувати файли swf"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:29
 msgid "Settings"
-msgstr "Параметри"
+msgstr "Налаштування"
 
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:42
 #: applications/luci-app-clamav/luasrc/model/cbi/clamav.lua:47

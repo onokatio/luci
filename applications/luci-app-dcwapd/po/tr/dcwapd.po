@@ -50,7 +50,7 @@ msgstr "Hedef port"
 msgid "Dual Channel Wi-Fi AP Daemon"
 msgstr "Çift Kanallı Wi-Fi AP Daemon"
 
-#: applications/luci-app-dcwapd/luasrc/controller/dcwapd.lua:11
+#: applications/luci-app-dcwapd/root/usr/share/luci/menu.d/luci-app-dcwapd.json:3
 msgid "Dual Channel WiFi"
 msgstr "Çift Kanallı WiFi"
 
@@ -75,6 +75,10 @@ msgstr "Genel"
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:27
 msgid "General Settings"
 msgstr "Genel Ayarlar"
+
+#: applications/luci-app-dcwapd/root/usr/share/rpcd/acl.d/luci-app-dcwapd.json:3
+msgid "Grant UCI access for luci-app-dcwapd"
+msgstr "luci-app-dcwapd için UCI erişimi verin"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:138
 msgid "Interfaces"

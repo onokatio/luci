@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-02-07 07:33+0000\n"
-"Last-Translator: Satoru Yoshida <ramat@ram.ne.jp>\n"
+"PO-Revision-Date: 2024-03-28 23:40+0000\n"
+"Last-Translator: Ioroi Kouhei <kouhei@ioroi.org>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsocserv/ja/>\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:124
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:80
@@ -16,10 +16,12 @@ msgid ""
 "<abbr title=\"Classless Inter-Domain Routing\">CIDR</abbr>-Notation: address/"
 "prefix"
 msgstr ""
+"<abbr title=\"Classless Inter-Domain Routing\">CIDR</abbr>例:アドレス/プレ"
+"フィックス"
 
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:48
 msgid "Active OpenConnect Users"
-msgstr ""
+msgstr "アクティブな OpenConnect ユーザー"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:61
 msgid "Active users"
@@ -113,6 +115,10 @@ msgstr ""
 msgid "General Settings"
 msgstr "一般設定"
 
+#: applications/luci-app-ocserv/root/usr/share/rpcd/acl.d/luci-app-ocserv.json:3
+msgid "Grant UCI access for luci-app-ocserv"
+msgstr "luci-app-ocservにUCIアクセスを許可"
+
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:23
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:67
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:52
@@ -189,7 +195,7 @@ msgstr ""
 msgid "Routing table"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:19
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:20
 msgid "Server Settings"
 msgstr "サーバー設定"
 
@@ -283,7 +289,7 @@ msgstr "ユーザー"
 msgid "User Authentication"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:24
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:25
 msgid "User Settings"
 msgstr "ユーザー設定"
 

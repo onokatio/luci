@@ -33,7 +33,7 @@ msgstr ""
 "Se acceptă autentificarea HTTP de bază. Furnizați numele de utilizator și "
 "parola în format nume de utilizator:parolă."
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:13
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:24
 msgid "Configuration"
 msgstr "Configurație"
 
@@ -70,6 +70,10 @@ msgstr "Dimensiunea primului segment PMM (în octeți)"
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:120
 msgid "General Settings"
 msgstr "Setări generale"
+
+#: applications/luci-app-polipo/root/usr/share/rpcd/acl.d/luci-app-polipo.json:3
+msgid "Grant UCI access for luci-app-polipo"
+msgstr "Acordă acces la UCI pentru luci-app-polipo"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:113
 msgid "How much RAM should Polipo use for its cache."
@@ -142,8 +146,8 @@ msgstr ""
 msgid "Parent proxy authentication"
 msgstr "Autentificare proxy părinte"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:11
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:4
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:3
 msgid "Polipo"
 msgstr "Polipo"
 
@@ -233,7 +237,7 @@ msgstr ""
 msgid "Size to which cached files should be truncated"
 msgstr "Dimensiunea la care trebuie trunchiate fișierele din memoria cache"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:12
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:15
 msgid "Status"
 msgstr "Stare"
 

@@ -1,14 +1,15 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2020-05-03 18:57+0000\n"
-"Last-Translator: ssantos <ssantos@web.de>\n"
+"PO-Revision-Date: 2023-08-29 17:33+0000\n"
+"Last-Translator: Version8504 "
+"<mc_4991_safeweb_589n98+hostedweblateorg@outlook.com>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsshairplay/pt/>\n"
 "Language: pt\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.1-dev\n"
+"X-Generator: Weblate 5.0.1-dev\n"
 
 #: applications/luci-app-shairplay/luasrc/model/cbi/shairplay.lua:47
 msgid "AO Device ID"
@@ -29,11 +30,15 @@ msgstr "Nome do Airport"
 #: applications/luci-app-shairplay/luasrc/model/cbi/shairplay.lua:34
 #: applications/luci-app-shairplay/luasrc/model/cbi/shairplay.lua:49
 msgid "Default"
-msgstr "Padrão"
+msgstr "Predefinição"
 
 #: applications/luci-app-shairplay/luasrc/model/cbi/shairplay.lua:10
 msgid "Enabled"
 msgstr "Ativado"
+
+#: applications/luci-app-shairplay/root/usr/share/rpcd/acl.d/luci-app-shairplay.json:3
+msgid "Grant UCI access for luci-app-shairplay"
+msgstr "Conceder acesso UCI ao luci-app-shairplay"
 
 #: applications/luci-app-shairplay/luasrc/model/cbi/shairplay.lua:29
 msgid "HW Address"
@@ -51,7 +56,7 @@ msgstr "Porta"
 msgid "Respawn"
 msgstr "Redisparar"
 
-#: applications/luci-app-shairplay/luasrc/controller/shairplay.lua:11
+#: applications/luci-app-shairplay/root/usr/share/luci/menu.d/luci-app-shairplay.json:3
 msgid "Shairplay"
 msgstr "Shairplay"
 

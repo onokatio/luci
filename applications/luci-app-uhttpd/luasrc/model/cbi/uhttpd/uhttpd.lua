@@ -91,9 +91,9 @@ o = ucs:taboption("general", Flag, "rfc1918_filter", translate("Ignore private I
 o.default = o.enabled
 o.rmempty = false
 
-cert_file = ucs:taboption("general", FileUpload, "cert", translate("HTTPS Certificate (DER Encoded)"))
+cert_file = ucs:taboption("general", FileUpload, "cert", translate("HTTPS Certificate (DER or PEM format)"))
 
-key_file = ucs:taboption("general", FileUpload, "key", translate("HTTPS Private Key (DER Encoded)"))
+key_file = ucs:taboption("general", FileUpload, "key", translate("HTTPS Private Key (DER or PEM format)"))
 
 o = ucs:taboption("general", Button, "remove_old", translate("Remove old certificate and key"),
 		  translate("uHTTPd will generate a new self-signed certificate using the configuration shown below."))
@@ -218,13 +218,15 @@ o.datatype = "min(1024)"
 o = s:option(Value, "commonname", translate("Server Hostname"), translate("a.k.a CommonName"))
 o.default = luci.sys.hostname()
 
-o = s:option(Value, "country", translate("Country"))
-o.default = "ZZ"
+o = s:option(Value, "organization", translate("Organization"), translate("If empty, a random/unique value is used in cert generation"))
+
+o = s:option(Value, "location", translate("Location"))
+o.default = "Unknown"
 
 o = s:option(Value, "state", translate("State"))
 o.default = "Unknown"
 
-o = s:option(Value, "location", translate("Location"))
-o.default = "Unknown"
+o = s:option(Value, "country", translate("Country"))
+o.default = "ZZ"
 
 return m

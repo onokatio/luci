@@ -2,13 +2,34 @@
   "luci-qsdk-acceleration": {
     "description": "Manage the native QSDK connection accelerator",
     "read": {
-      "uci": ["ecm", "sqm"],
-      "ubus": {"luci-rpc": ["getAccelerationStatus"]}
+      "ubus": {
+        "luci-rpc": [
+          "getAccelerationStatus"
+        ]
+      },
+      "uci": [
+        "ecm",
+        "sqm"
+      ]
     },
     "write": {
-      "uci": ["ecm"],
-      "ubus": {"uci": ["set", "commit"], "file": ["exec"]},
-      "file": {"/etc/init.d/qca-nss-ecm restart": ["exec"]}
+      "file": {
+        "/etc/init.d/qca-nss-ecm restart": [
+          "exec"
+        ]
+      },
+      "ubus": {
+        "file": [
+          "exec"
+        ],
+        "uci": [
+          "set",
+          "commit"
+        ]
+      },
+      "uci": [
+        "ecm"
+      ]
     }
   }
 }

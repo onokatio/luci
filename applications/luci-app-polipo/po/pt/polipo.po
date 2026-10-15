@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-05-26 19:03+0200\n"
-"PO-Revision-Date: 2021-03-06 14:44+0000\n"
+"PO-Revision-Date: 2024-07-09 23:09+0000\n"
 "Last-Translator: ssantos <ssantos@web.de>\n"
 "Language-Team: Portuguese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationspolipo/pt/>\n"
@@ -12,11 +12,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.5.1\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:121
 msgid "Advanced Settings"
-msgstr "Definições Avançadas"
+msgstr "Configurações avançadas"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:35
 msgid "Allowed clients"
@@ -34,7 +34,7 @@ msgstr ""
 "É suportada a autenticação basica HTTP. Indique username e password no "
 "formato username:password."
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:13
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:24
 msgid "Configuration"
 msgstr "Configuração"
 
@@ -71,6 +71,10 @@ msgstr "Tamanho do primeiro segmento PMM (em bytes)"
 msgid "General Settings"
 msgstr "Configurações gerais"
 
+#: applications/luci-app-polipo/root/usr/share/rpcd/acl.d/luci-app-polipo.json:3
+msgid "Grant UCI access for luci-app-polipo"
+msgstr "Conceder acesso UCI ao luci-app-polipo"
+
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:113
 msgid "How much RAM should Polipo use for its cache."
 msgstr "Quanta memória RAM deverá ser usada pelo polipo para cache."
@@ -85,7 +89,7 @@ msgstr "Endereço de escuta"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:26
 msgid "Listen port"
-msgstr "Porta de escuta"
+msgstr "Porto de escuta"
 
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:126
 msgid ""
@@ -141,8 +145,8 @@ msgstr ""
 msgid "Parent proxy authentication"
 msgstr "Autenticação em cache de hierarquia superior"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:11
 #: applications/luci-app-polipo/luasrc/model/cbi/polipo.lua:4
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:3
 msgid "Polipo"
 msgstr "Polipo"
 
@@ -232,7 +236,7 @@ msgstr ""
 msgid "Size to which cached files should be truncated"
 msgstr "Tamanho a partir do qual os ficheiro em cache devem ser truncados"
 
-#: applications/luci-app-polipo/luasrc/controller/polipo.lua:12
+#: applications/luci-app-polipo/root/usr/share/luci/menu.d/luci-app-polipo.json:15
 msgid "Status"
 msgstr "Estado"
 

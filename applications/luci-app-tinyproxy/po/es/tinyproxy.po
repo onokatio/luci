@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-06-10 03:41+0200\n"
-"PO-Revision-Date: 2020-05-02 10:21+0000\n"
-"Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
+"PO-Revision-Date: 2024-07-15 18:06+0000\n"
+"Last-Translator: brodrigueznu <brodrigueznu@hotmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationstinyproxy/es/>\n"
 "Language: es\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.1-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:219
 msgid ""
@@ -42,7 +42,7 @@ msgstr "Puertos permitidos"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:47
 msgid "Bind address"
-msgstr "Dirección de enlace"
+msgstr "Dirección de unión"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:149
 msgid ""
@@ -80,7 +80,7 @@ msgstr ""
 "Puede ser un rango de IPs, un nombre de dominio o \".\" para cualquier host "
 "sin dominio"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:14
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:23
 msgid "Configuration"
 msgstr "Configuración"
 
@@ -94,7 +94,7 @@ msgstr "Denegar por defecto"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:17
 msgid "Enable Tinyproxy server"
-msgstr "Activar"
+msgstr "Habilitar servidor Tinyproxy"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:55
 msgid "Error page"
@@ -128,6 +128,10 @@ msgstr "Filtrado y ACLs"
 msgid "General settings"
 msgstr "Configuración general"
 
+#: applications/luci-app-tinyproxy/root/usr/share/rpcd/acl.d/luci-app-tinyproxy.json:3
+msgid "Grant UCI access for luci-app-tinyproxy"
+msgstr "Conceder acceso UCI para luci-app-tinyproxy"
+
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:97
 msgid "Group"
 msgstr "Grupo"
@@ -153,18 +157,19 @@ msgstr "Direcciones IP o rangos a los que se permite usar el servidor proxy"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:134
 msgid ""
-"List of allowed ports for the CONNECT method. A single value \"0\" allows "
-"all ports"
+"List of allowed ports for the CONNECT method. A single value \"0\" disables "
+"CONNECT completely, an empty list allows all ports"
 msgstr ""
-"Lista de puertos permitidos al método CONNECT. Use 0 para todos los puertos"
+"Lista de puertos permitidos para el método CONNECT. Un solo valor \"0\" "
+"desactiva CONNECT por completo, una lista vacía permite todos los puertos"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:39
 msgid "Listen address"
-msgstr "Escuchar dirección"
+msgstr "Escuchar la dirección"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:31
 msgid "Listen port"
-msgstr "Puerto"
+msgstr "Puerto de escucha"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:73
 msgid "Log file"
@@ -284,10 +289,11 @@ msgstr "Nombre de grupo en el que se ejecuta el proceso Tinyproxy"
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:234
 msgid ""
 "Specifies the upstream proxy to use for accessing the target host. Format is "
-"<code>address:port</code>"
+"<code>address:port</code> or <code>socks5 address:port</code>"
 msgstr ""
-"Proxy superior a usar para llegar al host destino. El formato es "
-"<code>dirección:puerto</code>"
+"Especifica el proxy ascendente que se utilizará para acceder al host de "
+"destino. El formato es <code>dirección:puerto</code> o <code>socks5 "
+"dirección:puerto</code>"
 
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:92
 msgid "Specifies the user name the Tinyproxy process is running as"
@@ -301,7 +307,7 @@ msgstr "Arrancar servidores libres"
 msgid "Statistics page"
 msgstr "Estadísticas"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:13
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:14
 msgid "Status"
 msgstr "Estado"
 
@@ -309,8 +315,8 @@ msgstr "Estado"
 msgid "Target host"
 msgstr "Host destino"
 
-#: applications/luci-app-tinyproxy/luasrc/controller/tinyproxy.lua:12
 #: applications/luci-app-tinyproxy/luasrc/model/cbi/tinyproxy.lua:5
+#: applications/luci-app-tinyproxy/root/usr/share/luci/menu.d/luci-app-tinyproxy.json:3
 msgid "Tinyproxy"
 msgstr "Tinyproxy"
 

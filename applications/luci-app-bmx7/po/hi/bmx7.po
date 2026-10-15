@@ -1,8 +1,14 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2024-07-06 11:32+0000\n"
+"Last-Translator: Sathvic <sathvic.p@gmail.com>\n"
+"Language-Team: Hindi <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsbmx7/hi/>\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:33
 msgid "Announcements"
@@ -13,7 +19,7 @@ msgid "BMX7 revision"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:41
-msgid "Bandwith"
+msgid "Bandwidth"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/admin_status/index/bmx7_nodes.htm:3
@@ -47,7 +53,7 @@ msgid "Link key"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:61
-msgid "LinkLocal Ipv6"
+msgid "Link-local IPv6"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:71
@@ -144,7 +150,7 @@ msgid "Rating"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:78
-msgid "Remote linklocal IPv6"
+msgid "Remote link-local IPv6"
 msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:82
@@ -173,7 +179,7 @@ msgstr ""
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:37
 msgid "Status"
-msgstr ""
+msgstr "स्थिति"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:63
 msgid "TX BpP"

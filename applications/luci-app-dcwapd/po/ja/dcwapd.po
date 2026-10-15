@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-02-07 07:33+0000\n"
-"Last-Translator: Satoru Yoshida <ramat@ram.ne.jp>\n"
+"PO-Revision-Date: 2024-07-15 18:06+0000\n"
+"Last-Translator: INAGAKI Hiroshi <musashino.open@gmail.com>\n"
 "Language-Team: Japanese <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdcwapd/ja/>\n"
 "Language: ja\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:72
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:121
@@ -17,7 +17,7 @@ msgstr "ブリッジ"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:45
 msgid "Channel Sets"
-msgstr ""
+msgstr "チャンネルセット"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:89
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:102
@@ -46,7 +46,7 @@ msgstr "宛先ポート"
 msgid "Dual Channel Wi-Fi AP Daemon"
 msgstr ""
 
-#: applications/luci-app-dcwapd/luasrc/controller/dcwapd.lua:11
+#: applications/luci-app-dcwapd/root/usr/share/luci/menu.d/luci-app-dcwapd.json:3
 msgid "Dual Channel WiFi"
 msgstr "デュアル チャンネル WiFi"
 
@@ -66,11 +66,15 @@ msgstr "フィルター"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:27
 msgid "General"
-msgstr "一般設定"
+msgstr "全般"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:27
 msgid "General Settings"
 msgstr "一般設定"
+
+#: applications/luci-app-dcwapd/root/usr/share/rpcd/acl.d/luci-app-dcwapd.json:3
+msgid "Grant UCI access for luci-app-dcwapd"
+msgstr "luci-app-dcwapdにUCIアクセスを許可"
 
 #: applications/luci-app-dcwapd/luasrc/model/cbi/dcwapd/dcwapd.lua:138
 msgid "Interfaces"

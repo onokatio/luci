@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-02-08 04:46+0000\n"
-"Last-Translator: Zocker1012 <julian.schoemer.1997@gmail.com>\n"
+"PO-Revision-Date: 2024-05-08 06:32+0000\n"
+"Last-Translator: David <dawin@users.noreply.hosted.weblate.org>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsmjpg-streamer/de/>\n"
 "Language: de\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.5.4-rc\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Allow ringbuffer to exceed limit by this amount"
@@ -51,8 +51,8 @@ msgid "Don't initialize dynctrls"
 msgstr "Dynctrls nicht initialisieren"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
-msgstr ""
+msgid "Drop frames smaller than this limit"
+msgstr "Verwerfe Bilder, die kleiner als dieses Limit sind"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enable MJPG-streamer"
@@ -72,9 +72,11 @@ msgstr "Überschreiten"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr ""
+"Führe Kommando nach dem Speichern des Bilds aus. Mjpg-Streamer gibt den "
+"Dateinamen als ersten Parameter ans Skript weiter."
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:34
 msgid "File output"
@@ -95,6 +97,10 @@ msgstr "Bildrate"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "Allgemein"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "UCI-Zugriff für luci-app-mjpg-streamer erlauben"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -124,7 +130,7 @@ msgstr "Verlinke das neueste Bild auf einen festen Pfad"
 msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr "Verlinke das letzte Bild im Ringpuffer auf einen festgelegten Pfad."
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-Streamer"
 
@@ -146,7 +152,7 @@ msgstr "Ausgabe-Plugin"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:102
 msgid "Password"
-msgstr "Passwort"
+msgstr "Kennwort"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:29
 msgid "Plugin settings"

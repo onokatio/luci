@@ -1,7 +1,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: luci-app-radicale 2\n"
-"PO-Revision-Date: 2022-03-06 15:27+0000\n"
+"PO-Revision-Date: 2024-03-06 09:48+0000\n"
 "Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
 "Language-Team: Spanish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsradicale2/es/>\n"
@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.12-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:8
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:4
@@ -21,7 +21,7 @@ msgstr "Un servidor ligero CalDAV/CardDAV"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:30
 msgid "Advanced Settings"
-msgstr "Configuración avanzada"
+msgstr "Ajustes avanzados"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:74
 msgid "Allowed Ciphers"
@@ -31,7 +31,7 @@ msgstr "Cifrados permitidos"
 msgid "Authentication"
 msgstr "Autenticación"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:20
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:21
 msgid "Authentication / Users"
 msgstr "Autenticación / Usuarios"
 
@@ -142,11 +142,11 @@ msgstr "Para verificar los certificados del cliente"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:29
 msgid "General Settings"
-msgstr "Configuración general"
+msgstr "Ajustes generales"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/auth.lua:155
 msgid ""
-"Generate this field using an generator for Apache htpasswd-style "
+"Generate this field using a generator for Apache htpasswd-style "
 "authentication files (for the hash format you have chosen above), or install "
 "python3-passlib to enable the ability to create the hash by entering the "
 "plaintext in a field that will appear on this page if python3-passlib is "
@@ -165,6 +165,10 @@ msgstr "Ir a Web UI Radicale 2.x"
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:14
 msgid "Go to Radicale v2 Web UI"
 msgstr "Ir a Web UI Radicale v2"
+
+#: applications/luci-app-radicale2/root/usr/share/rpcd/acl.d/luci-app-radicale2.json:3
+msgid "Grant UCI access for luci-app-radicale2"
+msgstr "Conceder acceso UCI para luci-app-radicale2"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:109
 msgid "HTTP(S) Basic Authentication Realm"
@@ -227,10 +231,10 @@ msgstr ""
 "Archivo de configuración de registro (sin archivo significa procd "
 "predeterminado que termina en syslog)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:28
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:29
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:6
 msgid "Logging"
-msgstr "Inicio de sesión"
+msgstr "Inicio sesión"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/logging.lua:12
 msgid "Logging File"
@@ -414,7 +418,7 @@ msgstr "Seleccione bcrypt arriba para activar un hash seguro"
 msgid "Send debug information to logs"
 msgstr "Enviar información de depuración a los registros"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:16
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:17
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:18
 msgid "Server Settings"
 msgstr "Configuración del servidor"
@@ -423,7 +427,7 @@ msgstr "Configuración del servidor"
 msgid "Socket timeout (seconds)"
 msgstr "Tiempo de espera de socket (segundos)"
 
-#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:24
+#: applications/luci-app-radicale2/luasrc/controller/radicale2.lua:25
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:140
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:9
 msgid "Storage"
@@ -451,7 +455,7 @@ msgstr ""
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/server.lua:47
 msgid "Timeout"
-msgstr "Tiempo de espera"
+msgstr "Se acabó el tiempo"
 
 #: applications/luci-app-radicale2/luasrc/model/cbi/radicale2/storage.lua:25
 msgid "Use File Locks"

@@ -371,6 +371,7 @@ function init(cursor)
 					b.ifnames[1].bridge = b
 				end
 				_bridge[r[1]] = b
+				_interfaces[r[1]].bridge = b
 			elseif b then
 				b.ifnames[#b.ifnames+1] = _interfaces[r[2]]
 				b.ifnames[#b.ifnames].bridge = b
@@ -1255,8 +1256,8 @@ function protocol.get_interface(self)
 	end
 end
 
-function protocol.get_interfaces(self, ignore_bridge_state)
-	if ignore_bridge_state or self:is_bridge() or (self:is_virtual() and not self:is_floating()) then
+function protocol.get_interfaces(self)
+	if self:is_bridge() or (self:is_virtual() and not self:is_floating()) then
 		local ifaces = { }
 
 		local ifn
@@ -1447,20 +1448,21 @@ function interface.ports(self)
 		for _, iface in ipairs(members) do
 			ifaces[#ifaces+1] = interface(iface)
 		end
+		return ifaces
 	end
 end
 
 function interface.bridge_id(self)
-	if self.br then
-		return self.br.id
+	if self.dev and self.dev.bridge then
+		return self.dev.bridge.id
 	else
 		return nil
 	end
 end
 
 function interface.bridge_stp(self)
-	if self.br then
-		return self.br.stp
+	if self.dev and self.dev.bridge then
+		return self.dev.bridge.stp
 	else
 		return false
 	end
@@ -1479,7 +1481,8 @@ function interface.is_bridge(self)
 end
 
 function interface.is_bridgeport(self)
-	return self.dev and self.dev.bridge and true or false
+	return self.dev and self.dev.bridge and
+	       (self.dev.bridge.name ~= self:name()) and true or false
 end
 
 function interface.tx_bytes(self)

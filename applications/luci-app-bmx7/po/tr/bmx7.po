@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-05-15 14:32+0000\n"
-"Last-Translator: semih <semiht@gmail.com>\n"
+"PO-Revision-Date: 2024-03-31 19:53+0000\n"
+"Last-Translator: Oğuz Han <h4n.3545@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsbmx7/tr/>\n"
 "Language: tr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.7-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:33
 msgid "Announcements"
@@ -19,8 +19,8 @@ msgid "BMX7 revision"
 msgstr "BMX7 revizyonu"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:41
-msgid "Bandwith"
-msgstr ""
+msgid "Bandwidth"
+msgstr "Bant genişliği"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/admin_status/index/bmx7_nodes.htm:3
 msgid "Bmx7 mesh nodes"
@@ -53,8 +53,8 @@ msgid "Link key"
 msgstr "Bağlantı anahtarı"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:61
-msgid "LinkLocal Ipv6"
-msgstr ""
+msgid "Link-local IPv6"
+msgstr "Yerel bağlantı IPv6"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:71
 msgid "Links"
@@ -82,7 +82,7 @@ msgstr "Metrik"
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:76
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/tunnels_j.htm:38
 msgid "Name"
-msgstr "Ad"
+msgstr "İsim"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:40
 msgid "Neighbours"
@@ -150,8 +150,8 @@ msgid "Rating"
 msgstr "Derece"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:78
-msgid "Remote linklocal IPv6"
-msgstr ""
+msgid "Remote link-local IPv6"
+msgstr "Uzak bağlantı yerel IPv6"
 
 #: applications/luci-app-bmx7/root/usr/lib/lua/luci/view/bmx7/status_j.htm:82
 msgid "Routes"

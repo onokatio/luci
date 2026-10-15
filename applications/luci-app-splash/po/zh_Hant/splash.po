@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-28 08:58+0200\n"
-"PO-Revision-Date: 2021-01-17 06:58+0000\n"
-"Last-Translator: akibou <jinwenxin1997@icloud.com>\n"
+"PO-Revision-Date: 2023-12-20 10:09+0000\n"
+"Last-Translator: Yuan Law <traverslombard@outlook.com>\n"
 "Language-Team: Chinese (Traditional) <https://hosted.weblate.org/projects/"
 "openwrt/luciapplicationssplash/zh_Hant/>\n"
 "Language: zh_Hant\n"
@@ -15,7 +15,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5-dev\n"
+"X-Generator: Weblate 5.3\n"
+
+#: applications/luci-app-splash/luasrc/view/splash/splash.htm:53
+msgid "%s with the operator of this access point."
+msgstr "該存取點的運營商：%s。"
 
 #: applications/luci-app-splash/luasrc/view/splash/splash.htm:65
 #: applications/luci-app-splash/luasrc/view/splash_splash/splash.htm:13
@@ -127,9 +131,8 @@ msgid "Clients upload speed is limited to this value (kbyte/s)"
 msgstr "客戶端上傳限速 (kB/s)"
 
 #: applications/luci-app-splash/luasrc/view/splash/blocked.htm:15
-#: applications/luci-app-splash/luasrc/view/splash/splash.htm:54
-msgid "Contact"
-msgstr "聯絡方式"
+msgid "Contact the owner"
+msgstr "聯繫持有者"
 
 #: applications/luci-app-splash/luasrc/view/splash_splash/splash.htm:12
 msgid "Decline"
@@ -165,9 +168,13 @@ msgstr "防火牆區域"
 msgid "General"
 msgstr "一般"
 
-#: applications/luci-app-splash/luasrc/view/splash/splash.htm:53
-msgid "Get in %s with the operator of this access point."
-msgstr "在 %s 與此訪問點的操作者取得聯絡。"
+#: applications/luci-app-splash/luasrc/view/splash/splash.htm:54
+msgid "Get in contact"
+msgstr "取得聯繫"
+
+#: applications/luci-app-splash/root/usr/share/rpcd/acl.d/luci-app-splash.json:3
+msgid "Grant UCI access for luci-app-splash"
+msgstr "授予 luci-app-splash 擁有 UCI 存取的權限"
 
 #: applications/luci-app-splash/luasrc/view/admin_status/splash.htm:205
 msgid "Hostname"
@@ -235,7 +242,7 @@ msgstr "白名單中的 MAC 地址，可不用接受 splash，同時沒有頻寬
 
 #: applications/luci-app-splash/luasrc/model/cbi/splash/splash.lua:77
 msgid "Netmask"
-msgstr "子網路遮罩"
+msgstr "網路遮罩"
 
 #: applications/luci-app-splash/luasrc/model/cbi/splash/splash.lua:37
 msgid "Network"

@@ -1,8 +1,14 @@
 msgid ""
 msgstr ""
+"PO-Revision-Date: 2024-07-06 11:32+0000\n"
+"Last-Translator: Sathvic <sathvic.p@gmail.com>\n"
+"Language-Team: Hindi <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsocserv/hi/>\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/main.lua:124
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:80
@@ -107,6 +113,10 @@ msgstr ""
 msgid "General Settings"
 msgstr ""
 
+#: applications/luci-app-ocserv/root/usr/share/rpcd/acl.d/luci-app-ocserv.json:3
+msgid "Grant UCI access for luci-app-ocserv"
+msgstr ""
+
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:23
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:67
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:52
@@ -183,7 +193,7 @@ msgstr ""
 msgid "Routing table"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:19
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:20
 msgid "Server Settings"
 msgstr ""
 
@@ -194,7 +204,7 @@ msgstr ""
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/users.lua:73
 #: applications/luci-app-ocserv/luasrc/view/ocserv_status.htm:58
 msgid "Status"
-msgstr ""
+msgstr "स्थिति"
 
 #: applications/luci-app-ocserv/luasrc/model/cbi/ocserv/user-config.lua:112
 msgid "The DNS servers to be provided to clients; can be either IPv6 or IPv4"
@@ -277,7 +287,7 @@ msgstr ""
 msgid "User Authentication"
 msgstr ""
 
-#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:24
+#: applications/luci-app-ocserv/luasrc/controller/ocserv.lua:25
 msgid "User Settings"
 msgstr ""
 

@@ -18,12 +18,16 @@ var callFileList = rpc.declare({
 });
 
 network.registerPatternVirtual(/^ncm-.+$/);
-network.registerErrorCode('CONFIGURE_FAILED',  _('Configuration failed'));
-network.registerErrorCode('DISCONNECT_FAILED', _('Disconnection attempt failed'));
-network.registerErrorCode('FINALIZE_FAILED',   _('Finalizing failed'));
-network.registerErrorCode('GETINFO_FAILED',    _('Modem information query failed'));
-network.registerErrorCode('INITIALIZE_FAILED', _('Initialization failure'));
-network.registerErrorCode('SETMODE_FAILED',    _('Setting operation mode failed'));
+network.registerErrorCode('CONFIGURE_FAILED', _('Failed to configure modem'));
+network.registerErrorCode('CONNECT_FAILED',  _('Failed to connect'));
+network.registerErrorCode('DISCONNECT_FAILED', _('Failed to disconnect'));
+network.registerErrorCode('FINALIZE_FAILED',  _('Finalizing failed'));
+network.registerErrorCode('GETINFO_FAILED',  _('Failed to get modem information'));
+network.registerErrorCode('INITIALIZE_FAILED', _('Failed to initialize modem'));
+network.registerErrorCode('NO_DEVICE',     _('No control device specified'));
+network.registerErrorCode('NO_IFACE',     _('The interface could not be found'));
+network.registerErrorCode('PIN_FAILED',    _('Unable to verify PIN'));
+network.registerErrorCode('SETMODE_FAILED',  _('Failed to set operating mode'));
 network.registerErrorCode('UNSUPPORTED_MODEM', _('Unsupported modem'));
 
 return network.registerProtocol('ncm', {
@@ -58,7 +62,8 @@ return network.registerProtocol('ncm', {
 	renderFormOptions: function(s) {
 		var o;
 
-		o = s.taboption('general', form.Value, 'device', _('Modem device'));
+		o = s.taboption('general', form.Value, '_modem_device', _('Modem device'));
+		o.ucioption = 'device';
 		o.rmempty = false;
 		o.load = function(section_id) {
 			return callFileList('/dev/').then(L.bind(function(devices) {
@@ -68,7 +73,7 @@ return network.registerProtocol('ncm', {
 			}, this));
 		};
 
-		o = s.taboption('general', form.Value, 'service', _('Service Type'));
+		o = s.taboption('general', form.Value, 'mode', _('Network Mode'));
 		o.value('', _('Modem default'));
 		o.value('preferlte', _('Prefer LTE'));
 		o.value('preferumts', _('Prefer UMTS'));
@@ -83,41 +88,36 @@ return network.registerProtocol('ncm', {
 		o.value('IPV4V6', _('IPv4+IPv6'));
 		o.value('IPV6', _('IPv6'));
 
-		s.taboption('general', form.Value, 'apn', _('APN'));
-		s.taboption('general', form.Value, 'pincode', _('PIN'));
+		o = s.taboption('general', form.Value, 'apn', _('APN'));
+		o.validate = function(section_id, value) {
+			if (value == null || value == '')
+				return true;
+
+			if (!/^[a-zA-Z0-9\-.]*[a-zA-Z0-9]$/.test(value))
+					return _('Invalid APN provided');
+
+			return true;
+		};
+
+		o = s.taboption('general', form.Value, 'pincode', _('PIN'));
+		o.datatype = 'and(uinteger,minlength(4),maxlength(8))';
+
 		s.taboption('general', form.Value, 'username', _('PAP/CHAP username'));
 
 		o = s.taboption('general', form.Value, 'password', _('PAP/CHAP password'));
 		o.password = true;
 
-		o = s.taboption('general', form.Value, 'dialnumber', _('Dial number'));
-		o.placeholder = '*99***1#';
-
 		if (L.hasSystemFeature('ipv6')) {
-			o = s.taboption('advanced', form.ListValue, 'ipv6', _('Obtain IPv6-Address'));
+			o = s.taboption('advanced', form.ListValue, 'ppp_ipv6', _('Obtain IPv6 address'));
+			o.ucioption = 'ipv6';
 			o.value('auto', _('Automatic'));
 			o.value('0', _('Disabled'));
 			o.value('1', _('Manual'));
 			o.default = 'auto';
 		}
 
-		o = s.taboption('advanced', form.Value, 'delay', _('Modem init timeout'), _('Maximum amount of seconds to wait for the modem to become ready'));
-		o.placeholder = '10';
-		o.datatype    = 'min(1)';
-
-		o = s.taboption('advanced', form.Flag, 'defaultroute', _('Default gateway'), _('If unchecked, no default route is configured'));
-		o.default = o.enabled;
-
-		o = s.taboption('advanced', form.Value, 'metric', _('Use gateway metric'));
+		o = s.taboption('advanced', form.Value, 'delay', _('Modem init timeout'), _('Amount of seconds to wait for the modem to become ready'));
 		o.placeholder = '0';
-		o.datatype    = 'uinteger';
-		o.depends('defaultroute', '1');
-
-		o = s.taboption('advanced', form.Flag, 'peerdns', _('Use DNS servers advertised by peer'), _('If unchecked, the advertised DNS server addresses are ignored'));
-		o.default = o.enabled;
-
-		o = s.taboption('advanced', form.DynamicList, 'dns', _('Use custom DNS servers'));
-		o.depends('peerdns', '0');
-		o.datatype = 'ipaddr';
+		o.datatype  = 'min(0)';
 	}
 });

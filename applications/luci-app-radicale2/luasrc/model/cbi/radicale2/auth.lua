@@ -1,6 +1,6 @@
 -- Licensed to the public under the Apache License 2.0.
 
-local rad2 = luci.controller.radicale2
+local rad2 = require "luci.controller.radicale2"
 local fs = require("nixio.fs")
 local util = require("luci.util")
 
@@ -152,7 +152,7 @@ pass.formvalue = function(self, section)
 end
 
 else
-local pass = s:option(Value, "password", translate("Encrypted Password"), translate("Generate this field using an generator for Apache htpasswd-style authentication files (for the hash format you have chosen above), or install python3-passlib to enable the ability to create the hash by entering the plaintext in a field that will appear on this page if python3-passlib is installed."))
+local pass = s:option(Value, "password", translate("Encrypted Password"), translate("Generate this field using a generator for Apache htpasswd-style authentication files (for the hash format you have chosen above), or install python3-passlib to enable the ability to create the hash by entering the plaintext in a field that will appear on this page if python3-passlib is installed."))
 pass.password = true
 pass.rmempty = false
 

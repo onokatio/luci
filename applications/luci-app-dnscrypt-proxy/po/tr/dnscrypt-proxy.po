@@ -1,21 +1,21 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-12-15 17:33+0000\n"
-"Last-Translator: Erdinc <erdincbeldek@gmail.com>\n"
+"PO-Revision-Date: 2024-03-31 19:53+0000\n"
+"Last-Translator: Oğuz Han <h4n.3545@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsdnscrypt-proxy/tr/>\n"
 "Language: tr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:139
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:161
 msgid "-------"
 msgstr "-------"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:17
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:21
 msgid "Advanced"
 msgstr "Gelişmiş"
 
@@ -70,16 +70,16 @@ msgstr "Özel Yapılandırma Dosyası Oluşturun"
 msgid "DNS Query Logfile"
 msgstr "DNS Sorgusu Günlük Dosyası"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:14
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:15
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:58
 msgid "DNSCrypt-Proxy"
 msgstr "DNSCrypt-Proxy"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:35
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:39
 msgid "DNSCrypt-Proxy Logfile"
 msgstr "DNSCrypt-Proxy Günlük Dosyası"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:26
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:30
 msgid "DNSCrypt-Proxy Resolver List"
 msgstr "DNSCrypt-Proxy Çözümleyici Listesi"
 
@@ -101,15 +101,15 @@ msgid ""
 msgstr ""
 "Mevcut çözümleyici listesini 'github.com/dyne/dnscrypt-proxy'den indirin."
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:18
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:22
 msgid "Edit DNSCrypt-Proxy Configuration"
 msgstr "DNSCrypt-Proxy Yapılandırmasını Düzenle"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:19
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:23
 msgid "Edit Dnsmasq Configuration"
 msgstr "Dnsmasq Yapılandırmasını Düzenle"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:20
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:24
 msgid "Edit Resolvcrypt Configuration"
 msgstr "Resolvcrypt Yapılandırmasını Düzenle"
 
@@ -141,6 +141,10 @@ msgstr ""
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:97
 msgid "General Options"
 msgstr "Genel seçenekler"
+
+#: applications/luci-app-dnscrypt-proxy/root/usr/share/rpcd/acl.d/luci-app-dnscrypt-proxy.json:3
+msgid "Grant UCI access for luci-app-dnscrypt-proxy"
+msgstr "luci-app-dnscrypt-proxy için UCI erişimi verin"
 
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:189
 msgid "IP Address"
@@ -195,7 +199,7 @@ msgstr "Kullanılabilir SSL desteği yok. <br />"
 msgid "No default resolver list and no SSL support available.<br />"
 msgstr "Varsayılan çözümleyici listesi ve SSL desteği yok. <br />"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:15
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:19
 msgid "Overview"
 msgstr "Genel bakış"
 
@@ -229,7 +233,7 @@ msgstr ""
 
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:194
 msgid "Port"
-msgstr "Port"
+msgstr "Bağlantı Noktası"
 
 #: applications/luci-app-dnscrypt-proxy/luasrc/model/cbi/dnscrypt-proxy/overview_tab.lua:125
 msgid "Refresh List"
@@ -338,10 +342,10 @@ msgstr ""
 msgid "Transfer Options To Dnsmasq"
 msgstr "Seçenekleri Dnsmasq'a Transfer et"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:16
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:20
 msgid "View Logfile"
 msgstr "Günlük Dosyasını Görüntüle"
 
-#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:21
+#: applications/luci-app-dnscrypt-proxy/luasrc/controller/dnscrypt-proxy.lua:25
 msgid "View Resolver List"
 msgstr "Çözümleyici Listesini Görüntüle"

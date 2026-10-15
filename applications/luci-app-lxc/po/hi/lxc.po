@@ -1,24 +1,29 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2019-11-19 16:05+0000\n"
-"Last-Translator: Avinash H. Duduskar <strykar@hotmail.com>\n"
+"PO-Revision-Date: 2024-07-06 11:32+0000\n"
+"Last-Translator: Sathvic <sathvic.p@gmail.com>\n"
 "Language-Team: Hindi <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationslxc/hi/>\n"
 "Language: hi\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 3.10-dev\n"
+"X-Generator: Weblate 5.7-dev\n"
 
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:18
 msgid ""
-"<b>Please note:</b> For LXC Containers you need a custom OpenWrt image.<br />"
+"<b>Please note:</b> LXC Containers require features not available on OpenWrt "
+"images for devices with small flash.<br />"
 msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:29
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:47
 msgid "Actions"
 msgstr "चाल-चलन"
+
+#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
+msgid "Also you may want to install 'kmod-veth' for optional network support."
+msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:23
 msgid "Available Containers"
@@ -62,6 +67,10 @@ msgstr ""
 msgid "Free Temp Threshold"
 msgstr ""
 
+#: applications/luci-app-lxc/root/usr/share/rpcd/acl.d/luci-app-lxc.json:3
+msgid "Grant UCI access for luci-app-lxc"
+msgstr ""
+
 #: applications/luci-app-lxc/luasrc/controller/lxc.lua:31
 #: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:17
 msgid "LXC Containers"
@@ -94,7 +103,7 @@ msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:28
 msgid "Status"
-msgstr ""
+msgstr "स्थिति"
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:132
 msgid "Stop"
@@ -102,11 +111,4 @@ msgstr ""
 
 #: applications/luci-app-lxc/luasrc/view/lxc.htm:46
 msgid "Template"
-msgstr ""
-
-#: applications/luci-app-lxc/luasrc/model/cbi/lxc.lua:19
-msgid ""
-"The image should include at least support for 'kernel cgroups', 'kernel "
-"namespaces' and 'miscellaneous LXC related options' plus 'kmod-veth' for "
-"optional network support."
 msgstr ""

@@ -1,14 +1,14 @@
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2021-12-15 17:33+0000\n"
-"Last-Translator: Erdinc <erdincbeldek@gmail.com>\n"
+"PO-Revision-Date: 2024-04-01 08:36+0000\n"
+"Last-Translator: Oğuz Han <h4n.3545@gmail.com>\n"
 "Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
 "luciapplicationsmjpg-streamer/tr/>\n"
 "Language: tr\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.10-dev\n"
+"X-Generator: Weblate 5.5-dev\n"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:217
 msgid "Allow ringbuffer to exceed limit by this amount"
@@ -51,8 +51,8 @@ msgid "Don't initialize dynctrls"
 msgstr "Dynctrls'i başlatmayın"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:74
-msgid "Drop frames smaller then this limit"
-msgstr ""
+msgid "Drop frames smaller than this limit"
+msgstr "Bu sınırdan daha küçük kareleri düşür"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:12
 msgid "Enable MJPG-streamer"
@@ -72,9 +72,11 @@ msgstr "Aşan"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:220
 msgid ""
-"Execute command after saving picture. Mjpg-streamer parse the filename as "
+"Execute command after saving picture. Mjpg-streamer parses the filename as "
 "first parameter to your script."
 msgstr ""
+"Resmi kaydettikten sonra komutu yürütün. Mjpg-streamer, dosya adını "
+"betiğinizin ilk parametresi olarak ayrıştırır."
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:34
 msgid "File output"
@@ -95,6 +97,10 @@ msgstr "Saniyedeki kare sayısı"
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:8
 msgid "General"
 msgstr "Genel"
+
+#: applications/luci-app-mjpg-streamer/root/usr/share/rpcd/acl.d/luci-app-mjpg-streamer.json:3
+msgid "Grant UCI access for luci-app-mjpg-streamer"
+msgstr "luci-app-mjpg-streamer için UCI erişimi verin"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:33
 msgid "HTTP output"
@@ -124,7 +130,7 @@ msgstr "En yeni resmi sabit dosya adına bağlayın"
 msgid "Link the last picture in ringbuffer to fixed named file provided."
 msgstr "Ringbuffer'daki son resmi sağlanan sabit isimli dosyaya bağlayın."
 
-#: applications/luci-app-mjpg-streamer/luasrc/controller/mjpg-streamer.lua:12
+#: applications/luci-app-mjpg-streamer/root/usr/share/luci/menu.d/luci-app-mjpg-streamer.json:3
 msgid "MJPG-streamer"
 msgstr "MJPG-yayıncısı"
 
@@ -154,7 +160,7 @@ msgstr "Eklenti ayarları"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:91
 msgid "Port"
-msgstr "Port"
+msgstr "Bağlantı Noktası"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:51
 msgid "Resolution"
@@ -198,7 +204,7 @@ msgstr "UVC girişi"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:98
 msgid "Username"
-msgstr "Kullanıcı adı"
+msgstr "Kullanıcı Adı"
 
 #: applications/luci-app-mjpg-streamer/luasrc/model/cbi/mjpg-streamer.lua:108
 msgid "WWW folder"

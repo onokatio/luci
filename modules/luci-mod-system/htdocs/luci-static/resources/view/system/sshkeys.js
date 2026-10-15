@@ -1,9 +1,12 @@
 'use strict';
+'require baseclass';
 'require view';
 'require fs';
 'require ui';
 
-var SSHPubkeyDecoder = L.Class.singleton({
+var isReadonlyView = !L.hasViewPermission() || null;
+
+var SSHPubkeyDecoder = baseclass.singleton({
 	lengthDecode: function(s, off)
 	{
 		var l = (s.charCodeAt(off++) << 24) |
@@ -92,7 +95,7 @@ var SSHPubkeyDecoder = L.Class.singleton({
 			return { type: 'DSA', bits: len1 * 8, comment: comment, options: options, fprint: fprint, src: s };
 
 		case 'ssh-ed25519':
-			return { type: 'ECDH', curve: 'Curve25519', comment: comment, options: options, fprint: fprint, src: s };
+			return { type: 'EdDSA', curve: 'Curve25519', comment: comment, options: options, fprint: fprint, src: s };
 
 		case 'ecdsa-sha2':
 			return { type: 'ECDSA', curve: curve, comment: comment, options: options, fprint: fprint, src: s };
@@ -106,7 +109,7 @@ var SSHPubkeyDecoder = L.Class.singleton({
 function renderKeyItem(pubkey) {
 	return E('div', {
 		class: 'item',
-		click: removeKey,
+		click: isReadonlyView ? null : removeKey,
 		'data-key': pubkey.src
 	}, [
 		E('strong', pubkey.comment || _('Unnamed key')), E('br'),
@@ -166,7 +169,7 @@ function addKey(ev) {
 	}
 	else if (!pubkey) {
 		ui.showModal(_('Add key'), [
-			E('div', { class: 'alert-message warning' }, _('The given SSH public key is invalid. Please supply proper public RSA or ECDSA keys.')),
+			E('div', { class: 'alert-message warning' }, _('The given SSH public key is invalid. Please supply proper public RSA, ED25519 or ECDSA keys.')),
 			E('div', { class: 'right' }, E('div', { class: 'btn', click: L.hideModal }, _('Close')))
 		]);
 	}
@@ -195,7 +198,7 @@ function removeKey(ev) {
 
 	L.showModal(_('Delete key'), [
 		E('div', _('Do you really want to delete the following SSH key?')),
-		E('pre', delkey),
+		E('pre', [ delkey ]),
 		E('div', { class: 'right' }, [
 			E('div', { class: 'btn', click: L.hideModal }, _('Cancel')),
 			' ',
@@ -245,17 +248,23 @@ return view.extend({
 	},
 
 	render: function(keys) {
-		var list = E('div', { 'class': 'cbi-dynlist', 'dragover': dragKey, 'drop': dropKey }, [
+		var list = E('div', {
+			'class': 'cbi-dynlist',
+			'dragover': isReadonlyView ? null : dragKey,
+			'drop': isReadonlyView ? null : dropKey
+		}, [
 			E('div', { 'class': 'add-item' }, [
 				E('input', {
 					'class': 'cbi-input-text',
 					'type': 'text',
 					'placeholder': _('Paste or drag SSH key file…') ,
-					'keydown': function(ev) { if (ev.keyCode === 13) addKey(ev) }
+					'keydown': function(ev) { if (ev.keyCode === 13) addKey(ev) },
+					'disabled': isReadonlyView
 				}),
 				E('button', {
 					'class': 'cbi-button',
-					'click': ui.createHandlerFn(this, addKey)
+					'click': ui.createHandlerFn(this, addKey),
+					'disabled': isReadonlyView
 				}, _('Add key'))
 			])
 		]);
