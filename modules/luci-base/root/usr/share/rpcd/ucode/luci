@@ -262,18 +262,19 @@ const methods = {
 				'wps',
 			];
 
-			if (access('/usr/sbin/hostapd')) {
-				result.hostapd = { cli: access('/usr/sbin/hostapd_cli') == true };
-
+			// The supported QSDK binaries do not implement OpenWrt's -v<feature> probes.
+			const qsdk_hashes = { hostapd: '2a74b813f4a393bfe1316c45445370bf8326db71fcbd3fca271a70298fd2d855',
+				wpa_supplicant: '8b3c112b50bc6408d8ed5cd7e8c8d7817cc8c57035d976d88ccc6829b5181805' };
+			const qsdk_features = [ '11ac', '11ax', '11be', '11r', 'acs', 'eap', 'owe', 'sae', 'suiteb192', 'wps' ];
+			for (let binary in [ 'hostapd', 'wpa_supplicant' ]) {
+				let path = `/usr/sbin/${binary}`;
+				if (!access(path)) continue;
+				let name = binary == 'hostapd' ? 'hostapd' : 'wpasupplicant';
+				let cli = binary == 'hostapd' ? 'hostapd_cli' : 'wpa_cli';
+				let qsdk = result.netifd_legacy && system(`echo '${qsdk_hashes[binary]}  ${path}' | sha256sum -c - >/dev/null 2>/dev/null`) == 0;
+				result[name] = { cli: access(`/usr/sbin/${cli}`) == true };
 				for (let feature in wifi_features)
-					result.hostapd[feature] = system(`/usr/sbin/hostapd -v${feature} >/dev/null 2>/dev/null`) == 0;
-			}
-
-			if (access('/usr/sbin/wpa_supplicant')) {
-				result.wpasupplicant = { cli: access('/usr/sbin/wpa_cli') == true };
-
-				for (let feature in wifi_features)
-					result.wpasupplicant[feature] = system(`/usr/sbin/wpa_supplicant -v${feature} >/dev/null 2>/dev/null`) == 0;
+					result[name][feature] = qsdk ? index(qsdk_features, feature) >= 0 : system(`${path} -v${feature} >/dev/null 2>/dev/null`) == 0;
 			}
 
 			let fd = popen('dnsmasq --version 2>/dev/null');

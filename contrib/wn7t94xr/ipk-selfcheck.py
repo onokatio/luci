@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
 OUT, CACHE = map(pathlib.Path, sys.argv[1:])
-custom_names = {'libiwinfo20181126', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
+custom_names = {'libiwinfo20230701', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
                 'liblucihttp0', 'liblucihttp-ucode', 'rpcd-mod-ucode', 'luci-base', 'luci-mod-network',
                 'luci-theme-bootstrap', 'luci-lib-uqr', 'luci-app-package-manager', 'luci-app-sqm',
                 'luci-qsdk-wn7t94xr-runtime', 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
@@ -81,7 +81,7 @@ for fields, _, _ in records.values():
         if fields['Package'] in persistent:
             assert match[1] in LOCK['rom_packages'] or match[1] in persistent | {'libc', 'opkg', 'netifd', 'ubus', 'jshn'}
 
-for name, archived in [('libiwinfo20181126', '2019-10-16-07315b6f-1'), ('rpcd-mod-iwinfo', '2020-05-26-67c8a3fd-1')]:
+for name, archived in [('libiwinfo20230701', '2026-05-26-66bdd1a0-1'), ('rpcd-mod-iwinfo', '2026-10-04-d99f703e-1')]:
     version = records[name][0]['Version']
     assert version.startswith(archived + '+qsdk'), name
     if sys.platform.startswith('linux'):
@@ -100,7 +100,7 @@ main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/ucitrack',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages',
                         'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
-                        'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
+                        'usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
 assert payload['usr/bin/ucode'] == '/tmp/luci-ram/usr/bin/ucode'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
@@ -122,7 +122,7 @@ for line in manifest.splitlines():
 assert ram_names == set(records) - persistent and len(ram_names) == len(records) - len(persistent)
 libraries = {file: data for name in ram_names for file, data in records[name][1].items()
              if file.startswith('usr/lib/') and '/' not in file.removeprefix('usr/lib/')}
-exposed = set(payload) | {'usr/lib/libiwinfo.so', 'usr/lib/libucode.so.20230711'}
+exposed = set(payload) | {'usr/lib/libucode.so.20230711'}
 for file, data in libraries.items():
     if file in exposed and isinstance(data, str):
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
@@ -169,11 +169,43 @@ with tempfile.TemporaryDirectory() as directory:
     request_script = root / 'curl.py'
     request_script.write_text('import json,shutil,sys\nm=json.loads(' + repr(json.dumps(fixtures)) + ')\nshutil.copyfile(m[sys.argv[1]],sys.argv[2])\n')
     targets = root / 'root'
-    for d in ('usr/lib/lua', 'usr/lib/ucode', 'usr/lib/rpcd', 'usr/libexec', 'usr/lib/opkg', 'usr/lib/sqm', 'etc/sqm', 'usr/share', 'www', 'lib/netifd/wireless', 'etc/init.d', 'sbin'):
+    for d in ('usr/lib/lua', 'usr/lib/ucode', 'usr/lib/rpcd', 'usr/libexec', 'usr/lib/opkg', 'usr/lib/sqm', 'etc/sqm', 'usr/share', 'www', 'lib/netifd/wireless', 'etc/init.d', 'sbin', 'usr/bin'):
         (targets / d).mkdir(parents=True, exist_ok=True)
-    for f in ('etc/init.d/network', 'sbin/wifi', 'usr/lib/libiwinfo.so'):
+    for f in ('etc/init.d/network', 'sbin/wifi', 'etc/board.json'):
         (targets / f).write_text('vendor')
+    device = root / 'device'
+    props = {'compatible': b'qcom,ipq5332-ap-mi01.6\0qcom,ipq5332\0', 'aliases/ethernet1': b'/soc/dp2\0',
+             'soc/ess-instance/ess-switch1@1/compatible': b'qcom,ess-switch-qca8386\0'}
+    for key, value in {'device_id': 1, 'switch_cpu_bmp': 1, 'switch_lan_bmp': 14, 'switch_wan_bmp': 0}.items():
+        props['soc/ess-instance/ess-switch1@1/' + key] = value.to_bytes(4, 'big')
+    for key in ['qcom,id', 'qcom,is_switch_connected', 'qcom,mht-dev']:
+        props['soc/dp2/' + key] = (1).to_bytes(4, 'big')
+    for key, data in props.items():
+        f = device / key; f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(data)
+    board = targets / 'etc/board.json'
+    board.write_text('{"network":{"keep":true},"switch":{"switch1":{"enable":false}}}')
+    jshn = HERE.parents[2] / 'sdk/staging_dir/host'
     script = init[init.index('fetch()'):].replace('/proc/mounts', str(mounts))
+    script = script.replace('/sys/firmware/devicetree/base', str(device)).replace('/sys/class/net/eth1/type', str(device / 'type'))
+    (device / 'type').write_text('1\n')
+    script = script.replace('/usr/share/libubox/jshn.sh', str(jshn / 'share/libubox/jshn.sh')).replace('json_load_file /etc/board.json', 'json_load_file "' + str(board) + '"')
+
+    board_code = script[script.index('\t# Supply board metadata'):script.index("\tprintf '%s\\n' ")]
+    wanted_ports = [{'num': 0, 'device': 'eth1', 'need_tag': False}] + [{'num': n, 'role': 'lan', 'index': n} for n in range(1, 4)]
+    for data in [{'network': {'keep': True}}, {'switch': {'switch1': {'ports': []}}},
+                 {'switch': {'switch1': {'ports': [{'num': 9}]}}}, {'switch': False}, {'switch': {'switch1': False}},
+                 {'switch': {'switch1': {'ports': False}}}]:
+        board.write_text(json.dumps(data))
+        probe = root / 'board-probe'; (probe / 'etc').mkdir(parents=True, exist_ok=True)
+        subprocess.run(['bash', '-c', f'export PATH="{jshn}/bin:$PATH"; unpack="{probe}"; download="{root}/unused"; check() {{\n' + board_code + '\n}; check'], check=True)
+        actual = json.loads((probe / 'etc/board.json').read_text())
+        expected = json.loads(json.dumps(data))
+        switch = expected.setdefault('switch', {})
+        if isinstance(switch, dict):
+            switch1 = switch.setdefault('switch1', {})
+            if isinstance(switch1, dict) and ('ports' not in switch1 or switch1['ports'] == []): switch1['ports'] = wanted_ports
+        assert actual == expected, (actual, expected)
+    board.write_text('{"network":{"keep":true},"switch":{"switch1":{"enable":false}}}')
     script = script.replace('/usr/lib/opkg/status', str(status), 1)
     script = script.replace('\t\t/usr/lib/opkg/status >>', '\t\t' + str(status) + ' >>')
     script = script.replace('> /usr/lib/opkg/status', '> ' + str(status))
@@ -192,7 +224,8 @@ with tempfile.TemporaryDirectory() as directory:
     for action in ('start', 'stop'):
         script = script.replace('"$ram/etc/init.d/ucitrack" ' + action, 'service ucitrack ' + action)
     stub = f'''
-ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
+export PATH='{jshn}/bin':$PATH
+ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi etc/board.json'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
 logger() {{ :; }}
 stat() {{ if [ "$2" = %u:%a ]; then echo 0:755; else echo 0; fi; }}
@@ -240,8 +273,8 @@ if start; then exit 12; fi
 [ ! -e "$ram" ] && [ ! -e "$state" ]
 bad_sha=0; fetch
 [ -f "$ram/etc/sqm/sqm.conf" ]
-[ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq {len(ram_names) + 1} ]
-! grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
+[ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq {len(ram_names) + 2} ]
+grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
 grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
 [ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq {len(ram_names)} ]
 ! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"

@@ -26,7 +26,7 @@ int main(void)
 	assert(!station.flags && !station.has_rx_bytes && !station.has_tx_bytes);
 	rpc_iwinfo_qsdk_station("ath1;id", "00:11:22:33:44:55", &station);
 	assert(!station.flags);
-	struct iwinfo_rate_entry rate = { .rate = 5764800, .mcs = -1, .is_eht = 1, .is_320mhz = 1, .nss = 2 };
+	struct iwinfo_rate_entry rate = { .rate = 5764800, .mcs = -1, .is_eht = 1, .mhz_hi = 1, .mhz = 64, .eht_gi = UINT8_MAX, .nss = 2 };
 	struct blob_attr *tb[4];
 	const struct blobmsg_policy policy[] = {
 		{ .name = "mhz", .type = BLOBMSG_TYPE_INT32 },

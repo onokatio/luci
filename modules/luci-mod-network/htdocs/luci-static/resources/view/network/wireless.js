@@ -637,9 +637,9 @@ var CBIWifiFrequencyValue = form.Value.extend({
 		]).then(L.bind(function(data) {
 			this.qca = data[0] && data[0].get('type') == 'qcawificfg80211';
 			this.channels = {
-				'2g': (this.qca || L.hasSystemFeature('hostapd', 'acs')) ? [ 'auto', 'auto', { available: true } ] : [],
-				'5g': (this.qca || L.hasSystemFeature('hostapd', 'acs')) ? [ 'auto', 'auto', { available: true } ] : [],
-				'6g': (this.qca || L.hasSystemFeature('hostapd', 'acs')) ? [ 'auto', 'auto', { available: true } ] : [],
+				'2g': L.hasSystemFeature('hostapd', 'acs') ? [ 'auto', 'auto', { available: true } ] : [],
+				'5g': L.hasSystemFeature('hostapd', 'acs') ? [ 'auto', 'auto', { available: true } ] : [],
+				'6g': L.hasSystemFeature('hostapd', 'acs') ? [ 'auto', 'auto', { available: true } ] : [],
 				'60g': []
 			};
 			const wifidevs = data[0];
@@ -674,9 +674,9 @@ var CBIWifiFrequencyValue = form.Value.extend({
 			this.modes = [
 				'', 'Legacy', { available: hwmodelist.a || hwmodelist.b || hwmodelist.g },
 				'n', 'N', { available: hwmodelist.n },
-				'ac', 'AC', { available: (this.qca || L.hasSystemFeature('hostapd', '11ac')) && hwmodelist.ac },
-				'ax', 'AX', { available: (this.qca || L.hasSystemFeature('hostapd', '11ax')) && hwmodelist.ax },
-				'be', 'BE', { available: (this.qca || L.hasSystemFeature('hostapd', '11be')) && hwmodelist.be }
+				'ac', 'AC', { available: L.hasSystemFeature('hostapd', '11ac') && hwmodelist.ac },
+				'ax', 'AX', { available: L.hasSystemFeature('hostapd', '11ax') && hwmodelist.ax },
+				'be', 'BE', { available: L.hasSystemFeature('hostapd', '11be') && hwmodelist.be }
 			];
 
 			// Create a list of HT modes based on device capabilities
@@ -1934,9 +1934,9 @@ return view.extend({
 
 
 				const crypto_modes = [];
-				const is_6ghz = uci.get('wireless', radioNet.getWifiDeviceName(), 'band') == '6g';
+				const is_6ghz = qca_secure_band(radioNet.getName()) || uci.get('wireless', radioNet.getWifiDeviceName(), 'band') == '6g';
 
-				if (hwtype == 'mac80211') {
+				if (hwtype == 'mac80211' || hwtype == 'qcawificfg80211') {
 					const has_supplicant = L.hasSystemFeature('wpasupplicant');
 					const has_hostapd = L.hasSystemFeature('hostapd');
 
@@ -2083,19 +2083,16 @@ return view.extend({
 				}
 
 				if (hwtype == 'qcawificfg80211') {
-					crypto_modes.push(['sae', 'WPA3-SAE', 35]);
-					crypto_modes.push(['owe', 'OWE', 31], ['wpa3', 'WPA3-EAP', 35], ['wpa3-192', 'WPA3-EAP (192-bit)', 36]);
+					if (!is_6ghz) crypto_modes.push(['none', _('No Encryption'), 0]);
+					const allowed = [ 'none', 'psk2', 'sae', 'sae-mixed', 'owe', 'wpa2', 'wpa3', 'wpa3-192', 'wpa3-mixed' ];
+					for (let i = crypto_modes.length - 1; i >= 0; i--)
+						if (!allowed.includes(crypto_modes[i][0])) crypto_modes.splice(i, 1);
 					encr.validate = function(id, value) {
-						var mld = this.map.lookupOption('mld', id)[0];
-						return (!(mld.isActive(id) && mld.formvalue(id)) && !qca_secure_band(id)) || [ 'sae', 'owe', 'wpa3', 'wpa3-192' ].indexOf(value) >= 0 || _('MLO and 6 GHz require WPA3-SAE, OWE or WPA3-EAP.');
-						};
-					if (!qca_secure_band(radioNet.getName())) {
-							crypto_modes.push(['wpa2', 'WPA2-EAP', 34], ['wpa3-mixed', 'WPA2-EAP/WPA3-EAP Mixed Mode', 33], ['psk2', 'WPA2-PSK', 34], ['sae-mixed', 'WPA2-PSK/WPA3-SAE Mixed Mode', 33], ['none', _('No Encryption'), 0]);
-					}
+						const mld = this.map.lookupOption('mld', id)[0];
+						return (!(mld.isActive(id) && mld.formvalue(id)) && !qca_secure_band(id)) || [ 'sae', 'owe', 'wpa3', 'wpa3-192' ].includes(value) || _('MLO and 6 GHz require WPA3-SAE, OWE or WPA3-EAP.');
+					};
 				}
-				else {
-					crypto_modes.push(['wep-open', _('WEP Open System'), 11], ['wep-shared', _('WEP Shared Key'), 10], ['none', _('No Encryption'), 0]);
-				}
+				else crypto_modes.push(['wep-open', _('WEP Open System'), 11], ['wep-shared', _('WEP Shared Key'), 10], ['none', _('No Encryption'), 0]);
 
 				crypto_modes.sort(function(a, b) { return b[2] - a[2]; });
 
@@ -2828,7 +2825,7 @@ return view.extend({
 
 						}
 
-						if (hwtype == 'qcawificfg80211' || (L.hasSystemFeature('hostapd', 'cli') && L.hasSystemFeature('wpasupplicant'))) {
+						if (L.hasSystemFeature('hostapd', 'cli') && L.hasSystemFeature('wpasupplicant')) {
 							o = ss.taboption('encryption', form.Flag, 'wps_pushbutton', _('Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE'))
 							o.enabled = '1';
 							o.disabled = '0';
@@ -2854,6 +2851,7 @@ return view.extend({
 						(o.deps || []).filter(function(d) { return d.encryption == 'wpa3'; }).forEach(function(d) { o.depends(Object.assign({}, d, { encryption: 'wpa3-192' })); });
 						var key = ({ wps_pushbutton: 'wps_pbc', private_key: 'priv_key', private_key_passwd: 'priv_key_pwd', private_key2: 'priv_key2', private_key2_passwd: 'priv_key2_pwd' })[o.option] || o.option;
 						if (qca_shared.indexOf(key == 'wps_pbc' ? 'wps_pushbutton' : key) < 0) return;
+						o.ucioption = key;
 						o.write = function(id, value) {
 							if (/[\r\n\0]/.test(value)) throw new Error(_('Line breaks are not allowed.'));
 							if (key == 'r0kh' || key == 'r1kh') value = L.toArray(value).map(function(v) { return v.replace(/,/g, ' '); });
@@ -2862,7 +2860,7 @@ return view.extend({
 							if (key == 'wps_pbc') qca_set_shared(id, 'wps', value);
 						};
 						o.remove = function(id) { qca_set_shared(id, key, null); if (key == 'wps_pbc') qca_set_shared(id, 'wps', '0'); };
-						if (key != o.option || key == 'r0kh' || key == 'r1kh' || key == 'eap_type')
+						if (key == 'r0kh' || key == 'r1kh' || key == 'eap_type')
 							o.cfgvalue = function(id) { var v = uci.get('wireless', id, key); return key == 'eap_type' ? (v || '').toLowerCase() : key == 'r0kh' || key == 'r1kh' ? L.toArray(v).map(function(s) { return s.trim().replace(/\s+/g, ','); }) : v; };
 					});
 				}

@@ -26,7 +26,7 @@ jobs:
       - name: Prepare pinned SDK
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y python2 build-essential gawk gettext libncurses5-dev unzip curl rsync libssl-dev cmake pkg-config
+          sudo apt-get install -y python2 build-essential gawk gettext libncurses5-dev unzip curl rsync libssl-dev cmake pkg-config bsdextrautils
           sudo ln -sf /usr/bin/python2 /usr/local/bin/python
           curl -fL https://archive.openwrt.org/releases/19.07.10/targets/ipq40xx/generic/openwrt-sdk-19.07.10-ipq40xx-generic_gcc-7.5.0_musl_eabi.Linux-x86_64.tar.xz -o sdk.tar.xz
           echo 'b7c5e68c3d327a91dc5761f2d56c20a41e6846f36727f2c675810466d83b7306  sdk.tar.xz' | sha256sum -c -

@@ -9,7 +9,7 @@ ram=/tmp/luci-ram
 state=/overlay/luci-ram
 manifest=/etc/luci-qsdk/ram-packages
 dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'
-bindings='etc/init.d/network sbin/wifi usr/lib/libiwinfo.so'
+bindings='etc/init.d/network sbin/wifi etc/board.json'
 
 fetch() {
 	local digest download unpack name version sha url database
@@ -47,7 +47,7 @@ fetch() {
 		   ! tar -tzf "$download/data.tar.gz" > "$download/filelist" ||
 		   ! sed -e '/\/$/d' -e 's,^\./,,' -e '/^etc\//d' -e '/^sbin\/luci-reload$/d' -e '/^sbin\/wifi$/d' \
 		     -e '/^usr\/bin\/ucode$/d' -e '/^usr\/sbin\/uhttpd$/d' -e '/^usr\/libexec\/cgi-io$/d' \
-		     -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
+		     -e '/^usr\/lib\/libiwinfo.so.20230701$/d' -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
 		     -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \
 		     "$download/filelist" > "$unpack/usr/lib/opkg/info/$name.list"; then
 			rm -rf "$unpack" "$download"
@@ -58,6 +58,38 @@ fetch() {
 	[ -x "$unpack/usr/sbin/uhttpd" ] && [ -x "$unpack/usr/bin/ucode" ] && [ -f "$unpack/usr/share/ucode/luci/dispatcher.uc" ] &&
 	   [ -f "$unpack/lib/netifd/wireless/qcawificfg80211.sh" ] &&
 	   [ -f "$unpack/etc/init.d/network" ] && [ -f "$unpack/sbin/wifi" ] || { rm -rf "$unpack" "$download"; return 1; }
+	# Supply board metadata in RAM; the vendor file is restored when LuCI stops.
+	if ! (
+		[ "$(tr '\000' '\n' </sys/firmware/devicetree/base/compatible | head -n 1)" = qcom,ipq5332-ap-mi01.6 ] || exit 1
+		[ "$(tr -d '\000' </sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/compatible)" = qcom,ess-switch-qca8386 ] &&
+		[ "$(tr -d '\000' </sys/firmware/devicetree/base/aliases/ethernet1)" = /soc/dp2 ] &&
+		[ "$(cat /sys/class/net/eth1/type)" = 1 ] || exit 1
+		for property in device_id:00000001 switch_cpu_bmp:00000001 switch_lan_bmp:0000000e switch_wan_bmp:00000000; do
+			[ "$(hexdump -v -e '1/1 "%02x"' /sys/firmware/devicetree/base/soc/ess-instance/ess-switch1@1/${property%:*})" = "${property#*:}" ] || exit 1
+		done
+		for property in qcom,id qcom,is_switch_connected qcom,mht-dev; do
+			[ "$(hexdump -v -e '1/1 "%02x"' /sys/firmware/devicetree/base/soc/dp2/$property)" = 00000001 ] || exit 1
+		done
+		. /usr/share/libubox/jshn.sh
+		json_load_file /etc/board.json || exit 1
+		for object in switch switch1; do
+			json_get_type type "$object"
+			case "$type" in '') json_add_object "$object";; object) json_select "$object";; *) json_dump; exit 0;; esac
+		done
+		json_get_type type ports
+		[ -z "$type" ] || [ "$type" = array ] || { json_dump; exit 0; }
+		if [ "$type" = array ]; then json_select ports; else json_add_array ports; fi
+		json_get_keys keys
+		if [ -z "$keys" ]; then
+			for port in 0 1 2 3; do
+				json_add_object; json_add_int num "$port"
+				if [ "$port" = 0 ]; then json_add_string device eth1; json_add_boolean need_tag 0
+				else json_add_string role lan; json_add_int index "$port"; fi
+				json_close_object
+			done
+		fi
+		json_dump
+	) > "$unpack/etc/board.json"; then rm -rf "$unpack" "$download"; return 1; fi
 	printf '%s\n' "$digest" > "$unpack/.manifest-sha256"
 	chmod 755 "$unpack"
 	mv "$unpack" "$ram" || { rm -rf "$unpack" "$download"; return 1; }
@@ -133,7 +165,7 @@ stop() {
 	[ ! -x "$ram/etc/init.d/ucitrack" ] || "$ram/etc/init.d/ucitrack" stop
 	/etc/init.d/rpcd stop
 	# Keep routing active if a busy mount prevents restoring the vendor view.
-	for file in usr/lib/libiwinfo.so sbin/wifi etc/init.d/network; do
+	for file in etc/board.json sbin/wifi etc/init.d/network; do
 		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || result=1
 	done
 	for dir in lib/netifd/wireless www usr/share etc/sqm usr/lib/sqm usr/lib/opkg usr/libexec usr/lib/rpcd usr/lib/ucode usr/lib/lua; do

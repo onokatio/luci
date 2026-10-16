@@ -12,9 +12,9 @@ cc="$toolchain/bin/arm-openwrt-linux-muslgnueabi-gcc"
 strip="$toolchain/bin/arm-openwrt-linux-muslgnueabi-strip"
 includes="-I$iwinfo/include -I$stage/usr/include -I$stage/usr/include/libnl-tiny"
 mkdir -p "$output/usr/lib/lua" "$output/usr/lib/rpcd" "$output/usr/bin"
-make -C "$iwinfo" CC="$cc" BACKENDS='nl80211 qcawificfg80211' FPIC=-fPIC \
-	CFLAGS="-Os -Wall -D_GNU_SOURCE -mfloat-abi=hard $includes" LDFLAGS="-L$stage/usr/lib -Wl,-z,relro,-z,now" compile
-cp "$iwinfo/libiwinfo.so" "$output/usr/lib/"
+make -C "$iwinfo" CC="$cc" BACKENDS='nl80211 qcawificfg80211' SOVERSION=20230701 FPIC=-fPIC \
+	CFLAGS="-Os -Wall -D_GNU_SOURCE -mfloat-abi=hard $includes" LDFLAGS="-L$iwinfo -L$stage/usr/lib -Wl,-rpath,/tmp/luci-ram/usr/lib -Wl,-z,relro,-z,now" compile
+cp "$iwinfo/libiwinfo.so.20230701" "$output/usr/lib/"
 cp "$iwinfo/iwinfo.so" "$output/usr/lib/lua/"
 cp "$iwinfo/iwinfo" "$output/usr/bin/"
 rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)"
@@ -25,8 +25,8 @@ rpcd_source="$(find "$sdk/build_dir" -path '*/rpcd-*/iwinfo.c' -print | head -1)
 	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/luci.so"
 "$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
 	-I"$iwinfo/include" -I"$(dirname "$rpcd_source")/include" "$luci/libs/rpcd-mod-iwinfo/src/iwinfo.c" \
-	-L"$stage/usr/lib" -L"$iwinfo" -liwinfo -lubox -lubus -luci -o "$output/usr/lib/rpcd/iwinfo.so"
-"$strip" "$output/usr/lib/libiwinfo.so" "$output/usr/lib/lua/iwinfo.so" \
+	-L"$iwinfo" -L"$stage/usr/lib" -liwinfo -lubox -lubus -luci -Wl,-rpath,/tmp/luci-ram/usr/lib -o "$output/usr/lib/rpcd/iwinfo.so"
+"$strip" "$output/usr/lib/libiwinfo.so.20230701" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
 python3 - "$iwinfo" "$output" <<'RATE'
 import pathlib, sys

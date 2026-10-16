@@ -978,7 +978,7 @@ static bool rpc_luci_get_iwinfo(struct blob_buf *buf, const char *devname,
 
 	if (!iw_backend || !iw_close || !iw_format_hwmodes || !iw_modenames || !iw_80211names ||
 	    !iw_htmodenames || !iw_authnames || !iw_kmgmtnames || !iw_ciphernames) {
-		if (glob("/usr/lib/libiwinfo.so*", 0, NULL, &paths) != 0)
+		if (glob("/tmp/luci-ram/usr/lib/libiwinfo.so.20230701", 0, NULL, &paths) != 0)
 			return false;
 
 		for (i = 0; i < paths.gl_pathc && !iwlib; i++)
@@ -1968,72 +1968,6 @@ rpc_luci_qsdk_switch_supported(void)
 	    !rpc_luci_dt_u32("/sys/firmware/devicetree/base/soc/dp2/qcom,mht-dev", 1));
 }
 
-static void
-rpc_luci_qsdk_switch(struct blob_buf *buf)
-{
-	static const struct blobmsg_policy switch_policy = { "switch", BLOBMSG_TYPE_UNSPEC };
-	static const struct blobmsg_policy device_policy = { "switch1", BLOBMSG_TYPE_UNSPEC };
-	static const struct blobmsg_policy ports_policy = { "ports", BLOBMSG_TYPE_UNSPEC };
-	struct blob_attr *switches = NULL, *device = NULL, *ports = NULL, *cur;
-	struct blob_buf original;
-	void *s, *d, *a, *p;
-	int rem, i;
-
-	/* The vendor board generator skips port metadata when network UCI already exists. */
-	if (!rpc_luci_qsdk_switch_supported()) return;
-
-	blobmsg_parse(&switch_policy, 1, &switches, blob_data(buf->head), blob_len(buf->head));
-	if (switches) {
-		if (blobmsg_type(switches) != BLOBMSG_TYPE_TABLE)
-			return;
-		blobmsg_parse(&device_policy, 1, &device, blobmsg_data(switches), blobmsg_data_len(switches));
-		if (device) {
-			if (blobmsg_type(device) != BLOBMSG_TYPE_TABLE)
-				return;
-			blobmsg_parse(&ports_policy, 1, &ports, blobmsg_data(device), blobmsg_data_len(device));
-			if (ports && (blobmsg_type(ports) != BLOBMSG_TYPE_ARRAY || blobmsg_data_len(ports)))
-				return;
-		}
-	}
-
-	original = *buf;
-	memset(buf, 0, sizeof(*buf));
-	blob_buf_init(buf, 0);
-	blob_for_each_attr(cur, original.head, rem)
-		if (strcmp(blobmsg_name(cur), "switch"))
-			blobmsg_add_blob(buf, cur);
-
-	s = blobmsg_open_table(buf, "switch");
-	if (switches)
-		blobmsg_for_each_attr(cur, switches, rem)
-			if (strcmp(blobmsg_name(cur), "switch1"))
-				blobmsg_add_blob(buf, cur);
-
-	d = blobmsg_open_table(buf, "switch1");
-	if (device)
-		blobmsg_for_each_attr(cur, device, rem)
-			if (strcmp(blobmsg_name(cur), "ports"))
-				blobmsg_add_blob(buf, cur);
-
-	a = blobmsg_open_array(buf, "ports");
-	for (i = 0; i <= 3; i++) {
-		p = blobmsg_open_table(buf, NULL);
-		blobmsg_add_u32(buf, "num", i);
-		if (i == 0) {
-			blobmsg_add_string(buf, "device", "eth1");
-			blobmsg_add_u8(buf, "need_tag", false);
-		}
-		else {
-			blobmsg_add_string(buf, "role", "lan");
-			blobmsg_add_u32(buf, "index", i);
-		}
-		blobmsg_close_table(buf, p);
-	}
-	blobmsg_close_array(buf, a);
-	blobmsg_close_table(buf, d);
-	blobmsg_close_table(buf, s);
-	blob_buf_free(&original);
-}
 /* End QSDK switch topology */
 #include "qsdk-switch-controls.h"
 
@@ -2047,7 +1981,6 @@ rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
 	if (!blobmsg_add_json_from_file(&blob, "/etc/board.json"))
 		return UBUS_STATUS_UNKNOWN_ERROR;
 
-	rpc_luci_qsdk_switch(&blob);
 
 	ubus_send_reply(ctx, req, blob.head);
 	return UBUS_STATUS_OK;
