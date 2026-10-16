@@ -297,10 +297,19 @@ const nativeOptions = new Function('ss', wireless.slice(optionsStart, optionsEnd
 assert.deepEqual(nativeOptions.map(o => o.option), ['_wpa_key', 'auth_server']);
 assert.deepEqual(nativeOptions[0].deps, [{encryption: 'psk2'}]);
 assert.deepEqual(nativeOptions[1].deps, [{encryption: 'wpa2'}]);
+const nativeSetup = wireless.slice(optionsStart, wireless.indexOf('\n\t\t\t\t\t});', optionsEnd) + '\n\t\t\t\t\t});'.length);
+const alias = { option: 'private_key', depends() {} };
+new Function('ss', 'uci', 'qca_shared', 'qca_set_shared', 'L', '_', nativeSetup)({ children: [alias] }, uci, ['priv_key'], qca.setShared, {toArray: v => v}, v => v);
+assert.equal(alias.ucioption, 'priv_key');
+assert.equal(alias.cfgvalue, undefined);
+alias.write('ath1', '/etc/client.key');
+assert.equal(data.ath1.priv_key, '/etc/client.key');
+alias.remove('ath1');
+assert.equal(data.ath1.priv_key, null);
 const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_hwmode', frequencyCode + '\nreturn CBIWifiFrequencyValue;')(
 	{ Value: { extend: v => v } }, { declare: () => () => Promise.resolve([]) },
 	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['HT20', 'HT40', 'HE20', 'HE40', 'EHT20', 'EHT40'], getHWModes: () => ['n', 'ax', 'be'] }) },
-	uci, { bind: (fn, ctx) => fn.bind(ctx), hasSystemFeature: () => false, toArray: v => v || [] }, v => v, qca.hwmode);
+	uci, { bind: (fn, ctx) => fn.bind(ctx), hasSystemFeature: () => true, toArray: v => v || [] }, v => v, qca.hwmode);
 (async () => {
 	let notifications = 0, saves = 0;
 	const toggleCode = wireless.slice(wireless.indexOf('function network_updown'), wireless.indexOf('function next_free_sid'));

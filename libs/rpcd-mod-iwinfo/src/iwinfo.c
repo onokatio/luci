@@ -1,4 +1,4 @@
-/* Upstream: openwrt/rpcd commit 67c8a3fd, with QSDK radio and rate metadata. */
+/* Upstream: openwrt/rpcd commit d99f703e, with QSDK radio and rate metadata. */
 /*
  * rpcd - UBUS RPC server
  *
@@ -18,6 +18,7 @@
  */
 
 #include <sys/types.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <libubus.h>
 #include <iwinfo.h>
@@ -102,7 +103,7 @@ rpc_iwinfo_close(void)
 
 static void
 rpc_iwinfo_call_int(const char *name, int (*func)(const char *, int *),
-                    const char **map)
+                    const char * const *map)
 {
 	int rv;
 
@@ -135,9 +136,52 @@ rpc_iwinfo_call_hardware_id(const char *name)
 }
 
 static void
+rpc_iwinfo_lower(const char *src, char *dst, size_t len)
+{
+	size_t i;
+
+	for (i = 0; *src && i < len; i++)
+		*dst++ = tolower((unsigned char)*src++);
+
+	*dst = 0;
+}
+
+static void
+rpc_iwinfo_add_bit_array(const char *name, uint32_t bits,
+                         const char * const values[], size_t len,
+                         bool lower, uint32_t zero)
+{
+	void *c;
+	size_t i;
+	char l[128];
+	const char *v;
+
+	if (!bits)
+		bits = zero;
+
+	c = blobmsg_open_array(&buf, name);
+
+	for (i = 0; i < len; i++)
+		if (bits & 1 << i)
+		{
+			v = values[i];
+
+			if (lower)
+			{
+				rpc_iwinfo_lower(v, l, strlen(values[i]));
+				v = l;
+			}
+
+			blobmsg_add_string(&buf, NULL, v);
+		}
+
+	blobmsg_close_array(&buf, c);
+}
+
+static void
 rpc_iwinfo_add_encryption(const char *name, struct iwinfo_crypto_entry *e)
 {
-	int ciph, wpa_version;
+	int wpa_version;
 	void *c, *d;
 
 	c = blobmsg_open_table(&buf, name);
@@ -148,15 +192,10 @@ rpc_iwinfo_add_encryption(const char *name, struct iwinfo_crypto_entry *e)
 	{
 		if (!e->wpa_version)
 		{
-			d = blobmsg_open_array(&buf, "wep");
-
-			if (e->auth_algs & IWINFO_AUTH_OPEN)
-				blobmsg_add_string(&buf, NULL, "open");
-
-			if (e->auth_algs & IWINFO_AUTH_SHARED)
-				blobmsg_add_string(&buf, NULL, "shared");
-
-			blobmsg_close_array(&buf, d);
+			rpc_iwinfo_add_bit_array("wep", e->auth_algs,
+						IWINFO_AUTH_NAMES,
+						IWINFO_AUTH_COUNT,
+						true, 0);
 		}
 		else
 		{
@@ -168,56 +207,19 @@ rpc_iwinfo_add_encryption(const char *name, struct iwinfo_crypto_entry *e)
 
 			blobmsg_close_array(&buf, d);
 
-
-			d = blobmsg_open_array(&buf, "authentication");
-
-			if (e->auth_suites & IWINFO_KMGMT_PSK)
-				blobmsg_add_string(&buf, NULL, "psk");
-
-			if (e->auth_suites & IWINFO_KMGMT_8021x)
-				blobmsg_add_string(&buf, NULL, "802.1x");
-
-			if (e->auth_suites & IWINFO_KMGMT_SAE)
-				blobmsg_add_string(&buf, NULL, "sae");
-
-			if (e->auth_suites & IWINFO_KMGMT_OWE)
-				blobmsg_add_string(&buf, NULL, "owe");
-
-			if (!e->auth_suites ||
-				(e->auth_suites & IWINFO_KMGMT_NONE))
-				blobmsg_add_string(&buf, NULL, "none");
-
-			blobmsg_close_array(&buf, d);
+			rpc_iwinfo_add_bit_array("authentication",
+						e->auth_suites,
+						IWINFO_KMGMT_NAMES,
+						IWINFO_KMGMT_COUNT,
+						true, IWINFO_KMGMT_NONE);
 		}
 
-		d = blobmsg_open_array(&buf, "ciphers");
-		ciph = e->pair_ciphers | e->group_ciphers;
 
-		if (ciph & IWINFO_CIPHER_WEP40)
-			blobmsg_add_string(&buf, NULL, "wep-40");
-
-		if (ciph & IWINFO_CIPHER_WEP104)
-			blobmsg_add_string(&buf, NULL, "wep-104");
-
-		if (ciph & IWINFO_CIPHER_TKIP)
-			blobmsg_add_string(&buf, NULL, "tkip");
-
-		if (ciph & IWINFO_CIPHER_CCMP)
-			blobmsg_add_string(&buf, NULL, "ccmp");
-
-		if (ciph & IWINFO_CIPHER_WRAP)
-			blobmsg_add_string(&buf, NULL, "wrap");
-
-		if (ciph & IWINFO_CIPHER_AESOCB)
-			blobmsg_add_string(&buf, NULL, "aes-ocb");
-
-		if (ciph & IWINFO_CIPHER_CKIP)
-			blobmsg_add_string(&buf, NULL, "ckip");
-
-		if (!ciph || (ciph & IWINFO_CIPHER_NONE))
-			blobmsg_add_string(&buf, NULL, "none");
-
-		blobmsg_close_array(&buf, d);
+		rpc_iwinfo_add_bit_array("ciphers",
+					e->pair_ciphers | e->group_ciphers,
+					IWINFO_CIPHER_NAMES,
+					IWINFO_CIPHER_COUNT,
+					true, IWINFO_CIPHER_NONE);
 	}
 
 	blobmsg_close_table(&buf, c);
@@ -235,45 +237,78 @@ rpc_iwinfo_call_encryption(const char *name)
 static void
 rpc_iwinfo_call_htmodes(const char *name)
 {
-	int modes, i;
-	void *c;
-	if (!iw->htmodelist(ifname, &modes)) {
-		c = blobmsg_open_array(&buf, name);
-		for (i = 0; i < IWINFO_HTMODE_COUNT; i++)
-			if (modes & (1U << i)) blobmsg_add_string(&buf, NULL, IWINFO_HTMODE_NAMES[i]);
-		blobmsg_close_array(&buf, c);
-	}
+	int modes;
+
+	if (iw->htmodelist(ifname, &modes))
+		return;
+
+	rpc_iwinfo_add_bit_array(name, modes & ~IWINFO_HTMODE_NOHT,
+				IWINFO_HTMODE_NAMES, IWINFO_HTMODE_COUNT,
+				false, 0);
 }
 
-static void
+static int
 rpc_iwinfo_call_hwmodes(const char *name)
 {
 	int modes;
-	void *c;
 
-	if (!iw->hwmodelist(ifname, &modes))
+	if (iw->hwmodelist(ifname, &modes))
+		return -1;
+
+	rpc_iwinfo_add_bit_array(name, modes,
+				IWINFO_80211_NAMES, IWINFO_80211_COUNT,
+				false, 0);
+
+	return modes;
+}
+
+static void rpc_iwinfo_call_hw_ht_mode(int hwmodelist)
+{
+	char text[32];
+	const char *hwmode_str;
+	const char *htmode_str;
+	int htmode;
+
+	if (iwinfo_format_hwmodes(hwmodelist, text, sizeof(text)) > 0)
+		blobmsg_add_string(&buf, "hwmodes_text", text);
+
+	if (hwmodelist == IWINFO_80211_AD)
 	{
-		c = blobmsg_open_array(&buf, name);
-
-		if (modes & IWINFO_80211_AC)
-			blobmsg_add_string(&buf, NULL, "ac");
-
-		if (modes & IWINFO_80211_A)
-			blobmsg_add_string(&buf, NULL, "a");
-
-		if (modes & IWINFO_80211_B)
-			blobmsg_add_string(&buf, NULL, "b");
-
-		if (modes & IWINFO_80211_G)
-			blobmsg_add_string(&buf, NULL, "g");
-
-		if (modes & IWINFO_80211_N)
-			blobmsg_add_string(&buf, NULL, "n");
-		if (modes & IWINFO_80211_AX) blobmsg_add_string(&buf, NULL, "ax");
-		if (modes & IWINFO_80211_BE) blobmsg_add_string(&buf, NULL, "be");
-
-		blobmsg_close_array(&buf, c);
+		blobmsg_add_string(&buf, "hwmode", "ad");
+		return;
 	}
+
+	if (iw->htmode(ifname, &htmode))
+		return;
+
+	htmode_str = iwinfo_htmode_name(htmode);
+	if (htmode_str)
+	{
+		if (iwinfo_htmode_is_ht(htmode))
+			hwmode_str = "n";
+		else if (iwinfo_htmode_is_vht(htmode))
+			hwmode_str = "ac";
+		else if (iwinfo_htmode_is_he(htmode))
+			hwmode_str = "ax";
+		else if (iwinfo_htmode_is_eht(htmode))
+			hwmode_str = "be";
+		else {
+			if (hwmodelist & IWINFO_80211_N)
+				hwmode_str = "n";
+			else if (hwmodelist & IWINFO_80211_G)
+				hwmode_str = "g";
+			else if (hwmodelist & IWINFO_80211_B)
+				hwmode_str = "b";
+			else if (hwmodelist & IWINFO_80211_A)
+				hwmode_str = "a";
+			else
+				hwmode_str = "unknown";
+		}
+	} else
+		htmode_str = hwmode_str = "unknown";
+
+	blobmsg_add_string(&buf, "hwmode", hwmode_str);
+	blobmsg_add_string(&buf, "htmode", htmode_str);
 }
 
 static void
@@ -290,7 +325,7 @@ rpc_iwinfo_info(struct ubus_context *ctx, struct ubus_object *obj,
                 struct ubus_request_data *req, const char *method,
                 struct blob_attr *msg)
 {
-	int rv;
+	int rv, hwmodes;
 	void *c;
 
 	rv = rpc_iwinfo_open(msg);
@@ -308,6 +343,8 @@ rpc_iwinfo_info(struct ubus_context *ctx, struct ubus_object *obj,
 
 	rpc_iwinfo_call_int("mode", iw->mode, IWINFO_OPMODE_NAMES);
 	rpc_iwinfo_call_int("channel", iw->channel, NULL);
+	rpc_iwinfo_call_int("center_chan1", iw->center_chan1, NULL);
+	rpc_iwinfo_call_int("center_chan2", iw->center_chan2, NULL);
 
 	rpc_iwinfo_call_int("frequency", iw->frequency, NULL);
 	rpc_iwinfo_call_int("frequency_offset", iw->frequency_offset, NULL);
@@ -325,7 +362,10 @@ rpc_iwinfo_info(struct ubus_context *ctx, struct ubus_object *obj,
 
 	rpc_iwinfo_call_encryption("encryption");
 	rpc_iwinfo_call_htmodes("htmodes");
-	rpc_iwinfo_call_hwmodes("hwmodes");
+	hwmodes = rpc_iwinfo_call_hwmodes("hwmodes");
+
+	if (hwmodes > 0)
+		rpc_iwinfo_call_hw_ht_mode(hwmodes);
 
 	c = blobmsg_open_table(&buf, "hardware");
 	rpc_iwinfo_call_hardware_id("id");
@@ -344,8 +384,8 @@ rpc_iwinfo_scan(struct ubus_context *ctx, struct ubus_object *obj,
                 struct ubus_request_data *req, const char *method,
                 struct blob_attr *msg)
 {
-	int i, rv, len;
-	void *c, *d;
+	int i, rv, len, band;
+	void *c, *d, *t;
 	char mac[18];
 	char res[IWINFO_BUFSIZE];
 	struct iwinfo_scanlist_entry *e;
@@ -377,11 +417,47 @@ rpc_iwinfo_scan(struct ubus_context *ctx, struct ubus_object *obj,
 
 			blobmsg_add_string(&buf, "mode", IWINFO_OPMODE_NAMES[e->mode]);
 
+			band = iwinfo_band2ghz(e->band);
+			if (band > 0)
+				blobmsg_add_u32(&buf, "band", band);
 			blobmsg_add_u32(&buf, "channel", e->channel);
+			blobmsg_add_u32(&buf, "mhz", e->mhz);
 			blobmsg_add_u32(&buf, "signal", (uint32_t)(e->signal - 0x100));
 
 			blobmsg_add_u32(&buf, "quality", e->quality);
 			blobmsg_add_u32(&buf, "quality_max", e->quality_max);
+
+			if (e->ht_chan_info.primary_chan) {
+				t = blobmsg_open_table(&buf, "ht_operation");
+				blobmsg_add_u32(&buf, "primary_channel", e->ht_chan_info.primary_chan);
+				blobmsg_add_string(&buf, "secondary_channel_offset", ht_secondary_offset[e->ht_chan_info.secondary_chan_off]);
+				blobmsg_add_u32(&buf, "channel_width", ht_chan_width[e->ht_chan_info.chan_width]);
+				blobmsg_close_table(&buf, t);
+			}
+
+			if (e->vht_chan_info.center_chan_1) {
+				t = blobmsg_open_table(&buf, "vht_operation");
+				blobmsg_add_u32(&buf, "channel_width", vht_chan_width[e->vht_chan_info.chan_width]);
+				blobmsg_add_u32(&buf, "center_freq_1", e->vht_chan_info.center_chan_1);
+				blobmsg_add_u32(&buf, "center_freq_2", e->vht_chan_info.center_chan_2);
+				blobmsg_close_table(&buf, t);
+			}
+
+			if (e->he_chan_info.center_chan_1) {
+				t = blobmsg_open_table(&buf, "he_operation");
+				blobmsg_add_u32(&buf, "channel_width", eht_chan_width[e->he_chan_info.chan_width]);
+				blobmsg_add_u32(&buf, "center_freq_1", e->he_chan_info.center_chan_1);
+				blobmsg_add_u32(&buf, "center_freq_2", e->he_chan_info.center_chan_2);
+				blobmsg_close_table(&buf, t);
+			}
+
+			if (e->eht_chan_info.center_chan_1) {
+				t = blobmsg_open_table(&buf, "eht_operation");
+				blobmsg_add_u32(&buf, "channel_width", eht_chan_width[e->eht_chan_info.chan_width]);
+				blobmsg_add_u32(&buf, "center_freq_1", e->eht_chan_info.center_chan_1);
+				blobmsg_add_u32(&buf, "center_freq_2", e->eht_chan_info.center_chan_2);
+				blobmsg_close_table(&buf, t);
+			}
 
 			rpc_iwinfo_add_encryption("encryption", &e->crypto);
 
@@ -405,7 +481,7 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_rate_entry *r)
 	blobmsg_add_u8(&buf, "vht", r->is_vht);
 	blobmsg_add_u8(&buf, "he", r->is_he);
 	blobmsg_add_u8(&buf, "eht", r->is_eht);
-	blobmsg_add_u32(&buf, "mhz", r->is_320mhz ? 320 : r->mhz);
+	blobmsg_add_u32(&buf, "mhz", r->mhz_hi * 256 + r->mhz);
 	blobmsg_add_u32(&buf, "rate", r->rate);
 
 	if (r->is_ht) {
@@ -418,9 +494,16 @@ rpc_iwinfo_add_rateinfo(struct iwinfo_rate_entry *r)
 		blobmsg_add_u32(&buf, "nss", r->nss);
 		blobmsg_add_u8(&buf, "short_gi", r->is_short_gi);
 	}
-	else if (r->is_he || r->is_eht) {
+	else if (r->is_he) {
 		if (r->mcs >= 0) blobmsg_add_u32(&buf, "mcs", r->mcs);
-		if (r->nss) blobmsg_add_u32(&buf, "nss", r->nss);
+		blobmsg_add_u32(&buf, "nss", r->nss);
+		if (r->he_gi <= 2) blobmsg_add_u32(&buf, "he_gi", r->he_gi);
+		blobmsg_add_u32(&buf, "he_dcm", r->he_dcm);
+	}
+	else if (r->is_eht) {
+		if (r->mcs >= 0) blobmsg_add_u32(&buf, "mcs", r->mcs);
+		blobmsg_add_u32(&buf, "nss", r->nss);
+		if (r->eht_gi <= 2) blobmsg_add_u32(&buf, "eht_gi", r->eht_gi);
 	}
 }
 
@@ -515,7 +598,7 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 	uint16_t stats;
 	uint8_t flags;
 	struct ether_addr *macaddr = NULL;
-	void *c, *d, *e;
+	void *c = NULL, *d, *e;
 	struct blob_attr *tb[__RPC_A_MAX];
 	bool found = false;
 
@@ -633,32 +716,37 @@ rpc_iwinfo_survey(struct ubus_context *ctx, struct ubus_object *obj,
 	void *c, *d;
 	int i, rv, len;
 
-	blob_buf_init(&buf, 0);
-
 	rv = rpc_iwinfo_open(msg);
+
+	if (rv)
+		return rv;
+
+	blob_buf_init(&buf, 0);
 
 	c = blobmsg_open_array(&buf, "results");
 
-	if (rv || iw->survey(ifname, res, &len) || len < 0)
-		return UBUS_STATUS_OK;
+	if (!iw->survey(ifname, res, &len) && (len > 0))
+	{
+		for (i = 0; i < len; i += sizeof(struct iwinfo_survey_entry)) {
+			e = (struct iwinfo_survey_entry *)&res[i];
 
-	for (i = 0; i < len; i += sizeof(struct iwinfo_survey_entry)) {
-		e = (struct iwinfo_survey_entry *)&res[i];
-
-		d = blobmsg_open_table(&buf, NULL);
-		blobmsg_add_u32(&buf, "mhz", e->mhz);
-		blobmsg_add_u32(&buf, "noise", e->noise);
-		blobmsg_add_u64(&buf, "active_time", e->active_time);
-		blobmsg_add_u64(&buf, "busy_time", e->busy_time);
-		blobmsg_add_u64(&buf, "busy_time_ext", e->busy_time_ext);
-		blobmsg_add_u64(&buf, "rx_time", e->rxtime);
-		blobmsg_add_u64(&buf, "tx_time", e->txtime);
-		blobmsg_close_table(&buf, d);
+			d = blobmsg_open_table(&buf, NULL);
+			blobmsg_add_u32(&buf, "mhz", e->mhz);
+			blobmsg_add_u32(&buf, "noise", e->noise);
+			blobmsg_add_u64(&buf, "active_time", e->active_time);
+			blobmsg_add_u64(&buf, "busy_time", e->busy_time);
+			blobmsg_add_u64(&buf, "busy_time_ext", e->busy_time_ext);
+			blobmsg_add_u64(&buf, "rx_time", e->rxtime);
+			blobmsg_add_u64(&buf, "tx_time", e->txtime);
+			blobmsg_close_table(&buf, d);
+		}
 	}
 
 	blobmsg_close_array(&buf, c);
 	ubus_send_reply(ctx, req, buf.head);
+
 	rpc_iwinfo_close();
+
 	return UBUS_STATUS_OK;
 }
 
@@ -667,7 +755,7 @@ rpc_iwinfo_freqlist(struct ubus_context *ctx, struct ubus_object *obj,
                     struct ubus_request_data *req, const char *method,
                     struct blob_attr *msg)
 {
-	int i, rv, len, ch;
+	int i, rv, len, ch, band;
 	char res[IWINFO_BUFSIZE];
 	struct iwinfo_freqlist_entry *f;
 	void *c, *d;
@@ -691,11 +779,19 @@ rpc_iwinfo_freqlist(struct ubus_context *ctx, struct ubus_object *obj,
 			f = (struct iwinfo_freqlist_entry *)&res[i];
 			d = blobmsg_open_table(&buf, NULL);
 
+			band = iwinfo_band2ghz(f->band);
+			if (band > 0)
+				blobmsg_add_u32(&buf, "band", band);
 			blobmsg_add_u32(&buf, "channel", f->channel);
 			blobmsg_add_u32(&buf, "mhz", f->mhz);
 			blobmsg_add_u32(&buf, "band", f->mhz >= 57000 ? 60 : f->mhz >= 5925 ? 6 : f->mhz >= 4900 ? 5 : 2);
 			blobmsg_add_u8(&buf, "no_ir", f->restricted);
 			blobmsg_add_u8(&buf, "restricted", f->restricted);
+
+			rpc_iwinfo_add_bit_array("flags", f->flags,
+						IWINFO_FREQ_FLAG_NAMES,
+						IWINFO_FREQ_FLAG_COUNT,
+						true, 0);
 
 			if (ch > -1)
 				blobmsg_add_u8(&buf, "active", f->channel == ch);
@@ -949,7 +1045,7 @@ rpc_iwinfo_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 	};
 
 	static struct ubus_object_type iwinfo_type =
-		UBUS_OBJECT_TYPE("luci-rpc-iwinfo", iwinfo_methods);
+		UBUS_OBJECT_TYPE("rpcd-plugin-iwinfo", iwinfo_methods);
 
 	static struct ubus_object obj = {
 		.name = "iwinfo",

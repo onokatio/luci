@@ -127,9 +127,11 @@ for package in LOCK['base_packages']:
     record(original, read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])['control'][0].decode())
 
 native = {
-    'libiwinfo20181126': (['usr/lib/libiwinfo.so'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
-    'rpcd-mod-iwinfo': (['usr/lib/rpcd/iwinfo.so'], 'libc, rpcd, libiwinfo20181126, libubox20191228, libubus20210603, libuci20130104'),
-    'rpcd-mod-luci': (['usr/lib/rpcd/luci.so'], 'libc, rpcd, libiwinfo20181126, libubox20191228, libubus20210603, libuci20130104, libnl-tiny'),
+    'libiwinfo20230701': (['usr/lib/libiwinfo.so.20230701'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
+    'iwinfo': (['usr/bin/iwinfo'], 'libc, libiwinfo20230701'),
+    'libiwinfo-lua': (['usr/lib/lua/iwinfo.so'], 'libc, liblua5.1.5, libiwinfo20230701'),
+    'rpcd-mod-iwinfo': (['usr/lib/rpcd/iwinfo.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104'),
+    'rpcd-mod-luci': (['usr/lib/rpcd/luci.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104, libnl-tiny'),
     'libucode20230711': (['usr/lib/libucode.so.20230711'], 'libc, libgcc'),
     'ucode': (['usr/bin/ucode'], 'libc, libucode20230711'),
     'liblucihttp0': (['usr/lib/liblucihttp.so.0', 'usr/lib/liblucihttp.so.0.1'], 'libc'),
@@ -141,8 +143,8 @@ for module in ['fs', 'log', 'uci', 'ubus', 'math', 'html']:
         (', libuci20130104' if module == 'uci' else ', libubus20210603, libubox20191228' if module == 'ubus' else ''))
 # Keep compatibility fixes newer than the archived packages on the active feeds.
 component_versions = {
-    'libiwinfo20181126': '2019-10-16-07315b6f-1',
-    'rpcd-mod-iwinfo': '2020-05-26-67c8a3fd-1',
+    'libiwinfo20230701': '2026-05-26-66bdd1a0-1',
+    'rpcd-mod-iwinfo': '2026-10-04-d99f703e-1',
     'rpcd-mod-luci': '20210614-1',
     'liblucihttp0': '2023.03.15-9b5b683f-1',
     'liblucihttp-ucode': '2023.03.15-9b5b683f-1',
@@ -159,9 +161,9 @@ for name, (filenames, depends) in native.items():
     if name == 'libucode20230711':
         payload.update(tree(NATIVE / 'usr/share/licenses/libucode20230711', 'usr/share/licenses/libucode20230711'))
         assert len(payload) == 4
-    if name in ('rpcd-mod-iwinfo', 'rpcd-mod-luci'):
-        depends = depends.replace('libiwinfo20181126', 'libiwinfo20181126 (= ' + component_versions['libiwinfo20181126'] + ')')
-    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20181126' else 'libucode' if name == 'libucode20230711' else '', version=component_versions.get(name, VERSION))
+    if name in ('iwinfo', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci'):
+        depends = depends.replace('libiwinfo20230701', 'libiwinfo20230701 (= ' + component_versions['libiwinfo20230701'] + ')')
+    emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20230701' else 'libucode' if name == 'libucode20230711' else '', version=component_versions.get(name, VERSION))
 
 luci_packages = {
     'luci-base': ('modules/luci-base', 'libc, rpcd, rpcd-mod-file, rpcd-mod-luci, rpcd-mod-ucode, cgi-io, ucode, ucode-mod-fs, ucode-mod-log, ucode-mod-uci, ucode-mod-ubus, ucode-mod-math, ucode-mod-html, liblucihttp-ucode'),
@@ -216,7 +218,7 @@ payload['etc/init.d/ucitrack'] = ('/tmp/luci-ram/etc/init.d/ucitrack', 0o755)
 payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
 payload['etc/hotplug.d/iface/11-sqm'] = ('/tmp/luci-ram/etc/hotplug.d/iface/11-sqm', 0o755)
 payload['etc/config/sqm'] = (b"config queue 'uplink'\n\toption enabled '0'\n\toption interface 'eth0'\n\toption download '85000'\n\toption upload '10000'\n\toption qdisc 'cake'\n\toption script 'piece_of_cake.qos'\n\toption linklayer 'none'\n", 0o644)
-for name in ('usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
+for name in ('usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
     payload[name] = ('/tmp/luci-ram/' + name, 0o755)
 
 md5 = lambda data: hashlib.md5(data).hexdigest()
