@@ -128,8 +128,6 @@ for package in LOCK['base_packages']:
 
 native = {
     'libiwinfo20230701': (['usr/lib/libiwinfo.so.20230701'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
-    'iwinfo': (['usr/bin/iwinfo'], 'libc, libiwinfo20230701'),
-    'libiwinfo-lua': (['usr/lib/lua/iwinfo.so'], 'libc, liblua5.1.5, libiwinfo20230701'),
     'rpcd-mod-iwinfo': (['usr/lib/rpcd/iwinfo.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104'),
     'rpcd-mod-luci': (['usr/lib/rpcd/luci.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104, libnl-tiny'),
     'libucode20230711': (['usr/lib/libucode.so.20230711'], 'libc, libgcc'),
@@ -161,7 +159,7 @@ for name, (filenames, depends) in native.items():
     if name == 'libucode20230711':
         payload.update(tree(NATIVE / 'usr/share/licenses/libucode20230711', 'usr/share/licenses/libucode20230711'))
         assert len(payload) == 4
-    if name in ('iwinfo', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci'):
+    if name in ('rpcd-mod-iwinfo', 'rpcd-mod-luci'):
         depends = depends.replace('libiwinfo20230701', 'libiwinfo20230701 (= ' + component_versions['libiwinfo20230701'] + ')')
     emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20230701' else 'libucode' if name == 'libucode20230711' else '', version=component_versions.get(name, VERSION))
 

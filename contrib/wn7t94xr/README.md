@@ -24,7 +24,7 @@ LuCI本体は公式の `openwrt-25.12` ブランチを使います。周波数�
 
 ### 公式実装への置き換え
 
-v5.1.0-1では、iwinfoを公式の `66bdd1a0`、rpcd-mod-iwinfoを公式の `d99f703e` を基に更新しました。rpcd本体は純正のままです。新しいiwinfoには別のSONAME（`libiwinfo.so.20230701`）を付け、純正プログラムが使う旧ライブラリを維持します。LuCI用のiwinfoコマンドとLuaモジュールは、新しいライブラリと組み合わせてRAMに置きます。
+v5.1.0-1では、iwinfoを公式の `66bdd1a0`、rpcd-mod-iwinfoを公式の `d99f703e` を基に更新しました。rpcd本体は純正のままです。新しいiwinfoには別のSONAME（`libiwinfo.so.20230701`）を付け、純正プログラムが使う旧ライブラリを維持します。LuCIのRPC拡張だけが新しいライブラリを使います。
 
 純正hostapd・wpa_supplicantの既知のバイナリに限り、OpenWrt形式の機能情報を返します。Wireless画面のACS・11ac/ax/be・暗号化方式・WPSは、この情報を使う公式の選択処理へ統一しました。未知のバイナリでは、公式の機能検査へ戻ります。EAPの鍵とWPSの設定名には標準フォームの `ucioption` を使い、MLOで共有する値の書き込み処理は維持しています。
 
@@ -149,13 +149,13 @@ python3 contrib/wn7t94xr/build-ipk.py /tmp/wn7-native ../netifd /tmp/wn7-base-ca
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 ```
 
-準備・起動用の2個と、RAM用の23個の、計25個のIPKを生成します。互換性のある4個のIPK（cgi-io、uhttpd、uhttpd-mod-ubus、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
+準備・起動用の2個と、RAM用の21個の、計23個のIPKを生成します。互換性のある4個のIPK（cgi-io、uhttpd、uhttpd-mod-ubus、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
 
 機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
 
 ## RAMとoverlayの配置
 
-`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の27個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
 
 | 内容 | 保存先 |
 | --- | --- |
@@ -170,9 +170,9 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 
 停止時はマウントを解除してからネットワーク管理サービスを再起動します。netifdが無線ドライバーのディレクトリを開いたまま保持するため、その所有マウントに限り通常の解除に失敗した場合はlazy unmountを使います。参照はその後のnetifd再起動で閉じます。他のマウントの解除に失敗した場合は、ネットワークとRAMを保持して再試行できる状態を残します。
 
-取得成功後はOverlayFSでucode、RPC、実行補助スクリプト、opkg管理情報、共有データ、Webファイル、netifdプラグインのディレクトリにRAM上のファイルを重ねます。ネットワーク起動処理、`/sbin/wifi`、`board.json`、iwinfoコマンドはbind mountし、新規の実行ファイルとライブラリにはRAMを参照するシンボリックリンクを使います。純正領域のドライバー、ファームウェア、校正データは維持します。netifdはプロセス起動時にドライバープラグインを検出するため、RAMへの展開後にネットワーク管理サービスを一度再起動します。この際、通信が一時的に切れます。
+取得成功後はOverlayFSでucode、RPC、実行補助スクリプト、opkg管理情報、共有データ、Webファイル、netifdプラグインのディレクトリにRAM上のファイルを重ねます。ネットワーク起動処理、`/sbin/wifi`、`board.json`はbind mountし、新規の実行ファイルとライブラリにはRAMを参照するシンボリックリンクを使います。純正領域のドライバー、ファームウェア、校正データは維持します。netifdはプロセス起動時にドライバープラグインを検出するため、RAMへの展開後にネットワーク管理サービスを一度再起動します。この際、通信が一時的に切れます。
 
-27個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
+25個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
 
 ## 旧バージョンからの更新
 

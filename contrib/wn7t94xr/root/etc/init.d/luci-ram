@@ -9,7 +9,7 @@ ram=/tmp/luci-ram
 state=/overlay/luci-ram
 manifest=/etc/luci-qsdk/ram-packages
 dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'
-bindings='etc/init.d/network sbin/wifi etc/board.json usr/bin/iwinfo'
+bindings='etc/init.d/network sbin/wifi etc/board.json'
 
 fetch() {
 	local digest download unpack name version sha url database
@@ -165,7 +165,7 @@ stop() {
 	[ ! -x "$ram/etc/init.d/ucitrack" ] || "$ram/etc/init.d/ucitrack" stop
 	/etc/init.d/rpcd stop
 	# Keep routing active if a busy mount prevents restoring the vendor view.
-	for file in usr/bin/iwinfo etc/board.json sbin/wifi etc/init.d/network; do
+	for file in etc/board.json sbin/wifi etc/init.d/network; do
 		[ ! "/$file" -ef "$ram/$file" ] || umount "/$file" || result=1
 	done
 	for dir in lib/netifd/wireless www usr/share etc/sqm usr/lib/sqm usr/lib/opkg usr/libexec usr/lib/rpcd usr/lib/ucode usr/lib/lua; do

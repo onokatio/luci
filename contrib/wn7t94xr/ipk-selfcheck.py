@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
 OUT, CACHE = map(pathlib.Path, sys.argv[1:])
-custom_names = {'libiwinfo20230701', 'iwinfo', 'libiwinfo-lua', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
+custom_names = {'libiwinfo20230701', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
                 'liblucihttp0', 'liblucihttp-ucode', 'rpcd-mod-ucode', 'luci-base', 'luci-mod-network',
                 'luci-theme-bootstrap', 'luci-lib-uqr', 'luci-app-package-manager', 'luci-app-sqm',
                 'luci-qsdk-wn7t94xr-runtime', 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
@@ -171,7 +171,7 @@ with tempfile.TemporaryDirectory() as directory:
     targets = root / 'root'
     for d in ('usr/lib/lua', 'usr/lib/ucode', 'usr/lib/rpcd', 'usr/libexec', 'usr/lib/opkg', 'usr/lib/sqm', 'etc/sqm', 'usr/share', 'www', 'lib/netifd/wireless', 'etc/init.d', 'sbin', 'usr/bin'):
         (targets / d).mkdir(parents=True, exist_ok=True)
-    for f in ('etc/init.d/network', 'sbin/wifi', 'etc/board.json', 'usr/bin/iwinfo'):
+    for f in ('etc/init.d/network', 'sbin/wifi', 'etc/board.json'):
         (targets / f).write_text('vendor')
     device = root / 'device'
     props = {'compatible': b'qcom,ipq5332-ap-mi01.6\0qcom,ipq5332\0', 'aliases/ethernet1': b'/soc/dp2\0',
@@ -225,7 +225,7 @@ with tempfile.TemporaryDirectory() as directory:
         script = script.replace('"$ram/etc/init.d/ucitrack" ' + action, 'service ucitrack ' + action)
     stub = f'''
 export PATH='{jshn}/bin':$PATH
-ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi etc/board.json usr/bin/iwinfo'
+ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi etc/board.json'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
 logger() {{ :; }}
 stat() {{ if [ "$2" = %u:%a ]; then echo 0:755; else echo 0; fi; }}
@@ -282,7 +282,7 @@ requests="$(wc -l < '{requests}')"
 fetch
 [ "$(wc -l < '{requests}')" = "$requests" ]
 start; start
-[ "$(wc -l < '{mounts}' | tr -d ' ')" -eq 14 ]
+[ "$(wc -l < '{mounts}' | tr -d ' ')" -eq 13 ]
 [ "$(grep -c '^network restart$' '{root}/services')" -eq 1 ]
 echo persistent > "$state/upper/www/addon"
 fail_umount='{targets}/www'
