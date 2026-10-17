@@ -14,73 +14,9 @@
 
 const isReadonlyView = !L.hasViewPermission();
 
-var callStationStatistics = rpc.declare({
-	object: 'iwinfo', method: 'assoclist', params: [ 'device', 'mac', 'statistics' ]
-});
-
 var qca_shared = [ 'hidden', 'isolate', 'macfilter', 'maclist', 'wmm', 'shpreamble', 'dtim_period', 'bintval', 'wpa_group_rekey', 'rts', 'frag', 'skip_inactivity_poll', 'max_inactivity', 'max_listen_interval', 'disassoc_low_ack', 'ieee80211r', 'nasid', 'mobility_domain', 'reassociation_deadline', 'ft_over_ds', 'ft_psk_generate_local', 'r0_key_lifetime', 'r1_key_holder', 'pmk_r1_push', 'r0kh', 'r1kh', 'ieee80211w', 'ieee80211w_max_timeout', 'ieee80211w_retry_timeout', 'wpa_disable_eapol_key_retries', 'auth_server', 'auth_port', 'auth_secret', 'acct_server', 'acct_port', 'acct_secret', 'dae_client', 'dae_port', 'dae_secret', 'wps_pushbutton', 'eap_type', 'pac_file', 'fast_provisioning', 'ca_cert', 'client_cert', 'priv_key', 'priv_key_pwd', 'auth', 'identity', 'anonymous_identity', 'password', 'ca_cert2', 'client_cert2', 'priv_key2', 'priv_key2_pwd', 'auth2', 'altsubject_match', 'altsubject_match2', 'subject_match', 'subject_match2', 'domain_match', 'domain_match2', 'domain_suffix_match', 'domain_suffix_match2' ];
 
 qca_shared.push('maxsta', 'rrm_neighbor_report', 'rrm_beacon_report', 'bss_transition', 'rrm_neighbors');
-
-function qca_hostapd_call(ifname, method, values) {
-	var keys = Object.keys(values || {});
-	return rpc.declare({ object: 'hostapd.' + ifname, method: method, params: keys, reject: true }).apply(null,
-		keys.map(function(key) { return values[key]; }));
-}
-
-function qca_neighbor_report(value) {
-	var parts = value.trim().split(/\s+/), mac = parts[0] || '';
-	if (parts.length != 4 || !/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac) ||
-		(parseInt(mac.substr(0, 2), 16) & 1) || mac == '00:00:00:00:00:00' ||
-		parts.slice(1).some(function(v) { return !/^\d+$/.test(v); }) ||
-		+parts[1] < 1 || +parts[1] > 255 || +parts[2] < 1 || +parts[2] > 233 || +parts[3] < 1 || +parts[3] > 16) return null;
-	return mac.replace(/:/g, '') + '00000000' + parts.slice(1).map(function(v) { return (+v).toString(16).padStart(2, '0'); }).join('');
-}
-
-function qca_wireless_actions(radioNet, readonly) {
-	var ifname = radioNet.getIfname(), status = E('pre'), mac = E('input', { 'class': 'cbi-input-text', 'placeholder': _('Client MAC address') });
-	function result(value) {
-		if (value && value.pbc_status != null) status.textContent = _('WPS: %s. Last result: %s.').format(value.pbc_status, value.last_wps_result || '-');
-		else if (value && value.list != null) status.textContent = value.list.map(function(n) { return n.join(' '); }).join('\n') || _('No neighbor APs configured.');
-		else status.textContent = typeof value == 'object' ? JSON.stringify(value, null, 2) : String(value);
-	}
-	function button(label, method, values) {
-		return E('button', { 'class': 'cbi-button cbi-button-action', 'type': 'button', 'disabled': readonly,
-			'click': ui.createHandlerFn(null, function() {
-				return Promise.resolve().then(values || function() { return {}; }).then(function(args) { return qca_hostapd_call(ifname, method, args); })
-					.then(function(value) { result(value); if (method.indexOf('wps_') == 0) return qca_hostapd_call(ifname, 'wps_status', {}).then(result); })
-					.catch(function(error) { result(error.message); ui.addNotification(null, E('p', {}, error.message)); });
-			}) }, label);
-	}
-	return E('div', {}, [
-		E('button', { 'class': 'cbi-button cbi-button-action', 'type': 'button', 'click': ui.createHandlerFn(null, function() {
-			return rpc.declare({ object: 'luci-rpc', method: 'getWirelessSettings', params: ['device'], reject: true })(ifname).then(function(data) {
-				status.textContent = Object.keys(data.values || {}).map(function(key) { return key + ': ' + data.values[key]; }).join('\n') + '\n' + (data.airtime || '');
-			});
-		}) }, _('Read active settings and airtime')),
-		E('div', {}, [ button(_('WPS start'), 'wps_start'), ' ', button(_('WPS cancel'), 'wps_cancel'), ' ', button(_('WPS status'), 'wps_status') ]),
-		E('p', {}, _('WPS requires an enabled WPS-compatible network. Save and apply its settings first.')),
-		mac, ' ', button(_('Request BSS transition'), 'bss_transition_request', function() {
-			if (!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac.value)) throw new Error(_('Enter a client MAC address.'));
-			var entries = uci.get('wireless', radioNet.getName(), 'rrm_neighbors') || [];
-			entries = Array.isArray(entries) ? entries : [ entries ];
-			var neighbors = entries.map(qca_neighbor_report);
-			if (!neighbors.length || neighbors.some(function(n) { return !n; })) throw new Error(_('Configure neighbor APs and save and apply first.'));
-			return { addr: mac.value, neighbors: neighbors, disassociation_imminent: false, validity_period: 30 };
-		}),
-		E('p', {}, _('The client decides whether to move to a neighbor AP. This request does not force disconnection.')),
-		button(_('Request beacon measurement'), 'rrm_beacon_req', function() {
-			if (!/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i.test(mac.value)) throw new Error(_('Enter a client MAC address.'));
-			var entries = uci.get('wireless', radioNet.getName(), 'rrm_neighbors') || [];
-			var first = Array.isArray(entries) ? entries[0] : entries;
-			if (!first || !qca_neighbor_report(first)) throw new Error(_('Configure neighbor APs and save and apply first.'));
-			var parts = first.trim().split(/\s+/);
-			return { addr: mac.value, op_class: +parts[1], channel: +parts[2], duration: 50, mode: 0, bssid: parts[0] };
-		}),
-		E('p', {}, _('Measure the first configured neighbor AP. The client must support 802.11k beacon measurements.')),
-		button(_('Show neighbor reports'), 'rrm_nr_list'), status
-	]);
-}
 
 function qca_members(id) {
 	var mld = uci.get('wireless', id, 'mld');
@@ -437,93 +373,6 @@ function format_wifirate(rate) {
 	].filter(Boolean).join('');
 
 	return s;
-}
-
-function render_station_usage(bss) {
-	if (!bss.telemetry.available)
-		return E('p', {}, _('MCS/GI usage statistics are unavailable.'));
-	var rx = bss.rx || {}, tx = bss.tx || {}, mcsRows = [], giRows = [];
-	var row = function(name, receive, transmit) {
-		return [ name, receive == null ? '-' : String(receive), transmit == null ? '-' : String(transmit) ];
-	};
-	[ 'ht', 'vht', 'he', 'eht' ].forEach(function(mode) {
-		var receive = (rx.mcs_usage || {})[mode] || [], transmit = (tx.mcs_usage || {})[mode] || [];
-		for (var i = 0; i < 17; i++)
-			if (receive[i] > 0 || transmit[i] > 0)
-				mcsRows.push(row(mode.toUpperCase() + ' MCS ' + (i == 16 ? _('Unknown') : i), receive[i], transmit[i]));
-	});
-	[ '0.8 µs', '0.4 µs', '1.6 µs', '3.2 µs' ].forEach(function(gi, i) {
-		if ((rx.gi_usage || [])[i] > 0 || (tx.gi_usage || [])[i] > 0)
-			giRows.push(row(gi, (rx.gi_usage || [])[i], (tx.gi_usage || [])[i]));
-	});
-	var table = function(title, rows, available) {
-		return E('div', {}, [ E('h4', {}, title), rows.length ? E('div', { 'class': 'table' }, [
-			E('div', { 'class': 'tr' }, [ E('div', { 'class': 'th' }), E('div', { 'class': 'th' }, _('Receive')), E('div', { 'class': 'th' }, _('Transmit')) ])
-		].concat(rows.map(function(values) {
-			return E('div', { 'class': 'tr' }, values.map(function(value) { return E('div', { 'class': 'td' }, value); }));
-		}))) : E('p', {}, available ? _('No usage samples reported.') : _('Usage statistics are unavailable.')) ]);
-	};
-	return E('div', {}, [
-		table(_('MCS usage counters'), mcsRows, rx.mcs_usage || tx.mcs_usage),
-		table(_('Guard interval usage counters'), giRows, rx.gi_usage || tx.gi_usage),
-		E('p', {}, _('Driver usage counters do not identify the rate of the latest packet.'))
-	]);
-}
-
-function update_station_details(node, peer) {
-	if (uci.get('wireless', peer.radio.getName(), 'type') != 'qcawificfg80211') {
-		dom.content(node, render_station_details(peer));
-		return Promise.resolve();
-	}
-	return callStationStatistics(peer.network.getIfname(), peer.mac, true).catch(function() {
-		return { telemetry: { available: false } };
-	}).then(function(stats) {
-		if (node.isConnected)
-			dom.content(node, render_station_details(Object.assign({}, peer, stats)));
-	});
-}
-
-function render_station_details(bss) {
-	var rx = bss.rx || {}, tx = bss.tx || {};
-	var yesno = function(value) { return value == null ? '-' : value ? _('Yes') : _('No'); };
-	var count = function(value) { return value == null ? '-' : String(value); };
-	var bytes = function(value) { return value == null ? '-' : '%1024.2mB'.format(value); };
-	var mcs = function(rate) { return rate.mcs == null || rate.mcs < 0 ? '-' : String(rate.mcs); };
-	var connection = [
-		[_('MAC-Address'), bss.mac],
-		[_('Network'), bss.network.getShortName() + ' (' + bss.network.getIfname() + ')'],
-		[_('Connected time'), bss.connected_time == null ? '-' : '%t'.format(bss.connected_time)],
-		[_('Inactive'), bss.inactive == null ? '-' : '%.3f s'.format(bss.inactive / 1000)],
-		[_('Signal / Noise'), '%s / %s dBm'.format(count(bss.signal), bss.noise || '-')],
-		[_('Average signal'), bss.signal_avg == null ? '-' : '%d dBm'.format(bss.signal_avg)],
-		[_('Authenticated'), yesno(bss.authenticated)],
-		[_('Authorized'), yesno(bss.authorized)],
-		[_('WMM'), yesno(bss.wme)],
-		[_('Management Frame Protection'), yesno(bss.mfp)]
-	];
-	var traffic = [
-		[_('Rate'), format_wifirate(rx), format_wifirate(tx)],
-		['MCS', mcs(rx), mcs(tx)],
-		['NSS', count(rx.nss), count(tx.nss)],
-		[_('Packets'), count(rx.packets), count(tx.packets)],
-		[_('Bytes'), bytes(rx.bytes), bytes(tx.bytes)],
-		[_('Retries'), '-', count(tx.retries)],
-		[_('Failed'), '-', count(tx.failed)],
-		[_('Dropped'), count(rx.drop_misc), '-']
-	];
-	return E('div', {}, [
-		E('div', { 'class': 'table' }, connection.map(function(row) {
-			return E('div', { 'class': 'tr' }, [ E('div', { 'class': 'td' }, row[0]), E('div', { 'class': 'td' }, row[1]) ]);
-		})),
-		E('div', { 'class': 'table' }, [
-			E('div', { 'class': 'tr' }, [E('div', { 'class': 'th' }), E('div', { 'class': 'th' }, _('Receive')), E('div', { 'class': 'th' }, _('Transmit'))])
-		].concat(traffic.map(function(row) {
-			return E('div', { 'class': 'tr' }, row.map(function(value) { return E('div', { 'class': 'td' }, value); }));
-		}))),
-		E('p', {}, _('Receive is traffic from this station to the router. Counters are reported by the driver.')),
-		(rx.ht || rx.vht || rx.he || rx.eht || tx.ht || tx.vht || tx.he || tx.eht) && mcs(rx) == '-' && mcs(tx) == '-' ? E('p', {}, _('The driver did not report the MCS of the latest packet.')) : '',
-		bss.telemetry ? render_station_usage(bss) : ''
-	]);
 }
 
 function radio_restart(id, ev) {
@@ -1121,21 +970,11 @@ return view.extend({
 					}, [ desc ]), row[0].firstChild);
 			}
 
-			if (table.firstElementChild.childNodes.length < 6)
-				table.firstElementChild.appendChild(E('div', { 'class': 'th cbi-section-actions'}));
-			var actions = [ E('button', {
-				'class': 'cbi-button cbi-button-neutral',
-				'click': L.bind(function(peer) {
-					var details = E('div', { 'data-station-mac': peer.mac, 'data-station-network': peer.network.getName() }, render_station_details(peer));
-					ui.showModal(_('Station details'), [
-						details,
-						E('div', { 'class': 'right' }, E('button', { 'class': 'cbi-button', 'click': ui.hideModal }, _('Dismiss')))
-					]);
-					return update_station_details(details, peer);
-				}, this, bss)
-			}, _('Details')) ];
 			if (bss.network.isClientDisconnectSupported()) {
-				actions.push(E('button', {
+				if (table.firstElementChild.childNodes.length < 6)
+					table.firstElementChild.appendChild(E('th', { 'class': 'th cbi-section-actions'}));
+
+				row.push(E('button', {
 					'class': 'cbi-button cbi-button-remove',
 					'click': L.bind(function(net, mac, ev) {
 						dom.parent(ev.currentTarget, '.tr').style.opacity = 0.5;
@@ -1148,28 +987,21 @@ return view.extend({
 					'disabled': isReadonlyView || null
 				}, [ _('Disconnect') ]));
 			}
-			row.push(E('div', { 'class': 'nowrap' }, actions));
+			else {
+				row.push('-');
+			}
 
 			trows.push(row);
 		});
 
 		cbi_update_table(table, trows, E('em', _('No information available')));
 
-		var details = document.querySelector('[data-station-mac]'), detailsTask = Promise.resolve();
-		if (details) {
-			var peer = data[3].filter(function(station) {
-				return station.mac == details.getAttribute('data-station-mac') && station.network.getName() == details.getAttribute('data-station-network');
-			})[0];
-			if (peer) detailsTask = update_station_details(details, peer);
-			else dom.content(details, E('em', _('Station is no longer connected.')));
-		}
-
 		const status = document.querySelector('.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large');
 
 		if (status)
 			render_modal_status(status, data[2].filter(function(n) { return n.getName() == status.getAttribute('data-network'); })[0]);
 
-		return detailsTask.then(function() { return network.flushCache(); });
+		return network.flushCache();
 	},
 
 	load: function() {
@@ -1397,29 +1229,7 @@ return view.extend({
 						: _('Distance to farthest network member in meters.'));
 					o.datatype = hwtype == 'qcawificfg80211' ? 'and(uinteger,range(0,21150))' : 'or(range(0,114750),"auto")';
 					o.placeholder = hwtype == 'qcawificfg80211' ? '0' : 'auto';
-					if (hwtype == 'qcawificfg80211') {
-						o = ss.taboption('advanced', form.Flag, 'atf_enabled', _('Airtime Fairness'), _('Enabling or disabling ATF reinitializes the native wireless modules and briefly disconnects all radios.'));
-						o.rmempty = false; o.default = '0';
-						o = ss.taboption('advanced', form.Value, 'puncture_bitmap', _('EHT punctured subchannels'), _('Hexadecimal bitmap (for example 0x8). Each 1 disables a 20 MHz subchannel, starting with the lowest frequency. Requires EHT80/160/320 and a fixed primary channel; the primary cannot be punctured. Clear for native defaults, or 0 to disable. The backend validates legal patterns and verifies the applied bitmap.'));
-						o.optional=true;
-						o.cfgvalue=function(id){var v=uci.get('wireless',id,'puncture_bitmap');return v==null?'':'0x'+(+v).toString(16);};
-						o.validate=function(id,value){return !value || /^(0x[0-9a-fA-F]{1,4}|[0-9]{1,5})$/.test(value) && Number(value)<=65535 ? true : _('Enter a 16-bit hexadecimal or decimal bitmap.');};
-						o.write=function(id,value){uci.set('wireless',id,'puncture_bitmap',String(Number(value)));};
-						[['dfs_puncture_en',_('Automatic DFS puncturing')],['puncture_strict',_('Strict puncturing validation')]].forEach(function(item){o=ss.taboption('advanced',form.Flag,item[0],item[1]);o.optional=true;});
-						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Requires ATF. This firmware cannot combine strict radio scheduling with SSID groups; use each group\'s scheduling policy instead.'));
-						o.optional = true;
-						o.validate = function(id, value) {
-							var option = this.map.lookupOption('qsdk_atf_groups', id), groups = option ? option[0].formvalue(id) : [];
-							return value != '1' || !(Array.isArray(groups) ? groups.some(function(g) { return !!g; }) : groups) ? true : _('Disable strict radio scheduling before using SSID groups.');
-						};
-						o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_groups', _('ATF SSID groups'), _('One group per entry: name, percentage (1–100), policy (0: fair, 1: strict, 2: fair without borrowing). Assign APs to the group below. Group percentages must total at most 100.'));
-						o.optional = true;
-						o.validate = function(id,value) { var f=(value || '').trim().split(/\s+/);return !value || f.length==3 && /^[A-Za-z][A-Za-z0-9_-]{0,30}$/.test(f[0]) && /^\d{1,3}$/.test(f[1]) && +f[1]>=1 && +f[1]<=100 && /^[012]$/.test(f[2]) ? true : _('Enter a group name, percentage and policy 0–2.'); };
-						o = ss.taboption('advanced', form.Value, 'he_bsscolor', _('BSS Color'), _('Use 1–63 for a fixed color, 0 to disable coloring, or clear for native automatic selection. Clearing a fixed color reinitializes all radios.'));
-						o.datatype = 'and(uinteger,range(0,63))'; o.optional = true; o.placeholder = _('Automatic');
-						o.cfgvalue = function(id) { var value = uci.get('wireless', id, 'he_bsscolor'); return value ? String(value).split(' ')[0] : ''; };
-						o.write = function(id, value) { uci.set('wireless', id, 'he_bsscolor', String(+value) + ' 1'); };
-					}
+
 				}
 
 				if (hwtype == 'qcawificfg80211' && /g$/.test(uci.get('wireless', radioNet.getWifiDeviceName(), 'hwmode') || '')) {
@@ -1769,62 +1579,6 @@ return view.extend({
 
 
 				if (hwtype == 'qcawificfg80211') {
-					[ ['he_dl_ofdma', _('Downlink OFDMA')], ['he_ul_ofdma', _('Uplink OFDMA')],
-					  ['he_ul_mimo', _('Uplink MU-MIMO')], ['vhtmubfer', _('VHT MU beamforming')], ['vhtsubfer', _('VHT SU beamforming')], ['he_mubfer', _('HE MU beamforming')], ['he_subfer', _('HE SU beamforming')],
-					  ['set_eht_ulofdma', _('EHT uplink OFDMA')],
-					  ['set_eht_mu_bfmr', _('EHT MU beamforming')], ['set_eht_su_bfmr', _('EHT SU beamforming')],
-					  ['twt_responder', _('TWT responder')] ].forEach(function(item) {
-						o = ss.taboption('advanced', form.ListValue, item[0], item[1]);
-						o.value('', _('Driver default')); o.value('0', _('Disabled')); o.value('1', _('Enabled'));
-						o.optional = true; o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					});
-					o = ss.taboption('advanced', form.Value, 'set_eht_ulmumimo', _('EHT uplink MU-MIMO bitmap'), _('Native bitmap (0–7). Factory values depend on the radio bandwidth.'));
-					o.optional = true; o.datatype = 'range(0,7)'; o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					o = ss.taboption('advanced', form.ListValue, 'mcastenhance', _('Multicast enhancement mode'));
-					o.value('', _('Driver default')); o.value('0', _('Disabled'));
-					o.value('5', _('Vendor multicast management (factory mode)'));
-					o.optional = true; o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-
-					o = ss.taboption('advanced', form.ListValue, '_igmp_snooping', _('Bridge IGMP snooping'), _('Applies to the attached bridge network and all its ports.'));
-					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds'); o.optional = true;
-					o.value('', _('Bridge default')); o.value('0', _('Disabled')); o.value('1', _('Enabled'));
-					var bridgeNames = L.toArray(uci.get('wireless', radioNet.getName(), 'network')).filter(function(name) { return uci.get('network', name, 'type') == 'bridge'; });
-					o.cfgvalue = function() { return bridgeNames.length ? (uci.get('network', bridgeNames[0], 'igmp_snooping') || '') : ''; };
-					o.write = function(id, value) { L.toArray(uci.get('wireless', id, 'network')).filter(function(name) { return uci.get('network', name, 'type') == 'bridge'; }).forEach(function(name) { if (value) uci.set('network', name, 'igmp_snooping', value); else uci.unset('network', name, 'igmp_snooping'); }); };
-					o.remove = function(id) { this.write(id, ''); };
-					o.readonly = !bridgeNames.length;
-
-					o = ss.taboption('advanced', form.Value, 'maxsta', _('Maximum associated clients'));
-					o.datatype = 'and(uinteger,range(1,128))'; o.placeholder = 128; o.optional = true;
-					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					o = ss.taboption('advanced', form.DynamicList, 'qsdk_wmm', _('WMM queue parameters'), _('Format: parameter (cwmin/cwmax/aifs/txop/acm/noack), AC (BE/BK/VI/VO), scope (local/bss), value. CW values are exponents 0–15; AIFS 1–15; TXOP units are 32 µs; ACM/NoAck are 0/1. NoAck is local only. Clearing overrides reinitializes all radios.'));
-					o.optional = true;
-					o.validate = function(id,value) { var f=(value || '').trim().split(/\s+/), limits={cwmin:[0,15],cwmax:[0,15],aifs:[1,15],txop:[0,65535],acm:[0,1],noack:[0,1]},r=limits[f[0]];return !value || f.length==4 && r && /^(BE|BK|VI|VO)$/.test(f[1]) && /^(local|bss)$/.test(f[2]) && /^\d{1,5}$/.test(f[3]) && +f[3]>=r[0] && +f[3]<=r[1] && !(f[0]=='noack' && f[2]=='bss') ? true : _('Enter a valid WMM parameter, access category, scope and value.'); };
-					o = ss.taboption('advanced', form.DynamicList, 'qsdk_dscp_map', _('DSCP to TID mapping'), _('One mapping per entry: DSCP (0–63), TID (0–7). Values not listed retain native defaults. Mapping is per SSID.'));
-					o.optional = true;
-					o.validate = function(id,value) {var f=(value || '').trim().split(/\s+/);return !value || f.length==2 && /^\d{1,2}$/.test(f[0]) && +f[0]<=63 && /^[0-7]$/.test(f[1]) ? true : _('Enter a DSCP value 0–63 and TID 0–7.');};
-					o = ss.taboption('advanced', form.Value, 'qsdk_atf_group', _('ATF group membership'), _('Use a group name configured on this radio. Clear the separate SSID allocation when using a group.'));
-					o.optional = true;o.depends('mode','ap');
-					o.validate = function(id,value) {return !value || /^[A-Za-z][A-Za-z0-9_-]{0,30}$/.test(value) ? true : _('Use letters, digits, underscores and hyphens, beginning with a letter.');};
-					o = ss.taboption('advanced', form.DynamicList, 'qsdk_atf_ac', _('ATF access category allocations'), _('One AC per entry: BE/BK/VI/VO and percentage (1–100). Applies to this SSID, or its shared group. Percentages must total at most 100.'));
-					o.optional = true;o.depends('mode','ap');
-					o.validate = function(id,value) {var f=(value || '').trim().split(/\s+/);return !value || f.length==2 && /^(BE|BK|VI|VO)$/.test(f[0]) && /^\d{1,3}$/.test(f[1]) && +f[1]>=1 && +f[1]<=100 ? true : _('Enter an access category and percentage 1–100.');};
-					o = ss.taboption('advanced', form.Value, 'atf_airtime', _('SSID airtime allocation'), _('Percentage (1–100) used when ATF is enabled on this radio. Clear to leave the SSID in the unassigned pool.'));
-					o.datatype = 'and(uinteger,range(1,100))'; o.optional = true;
-					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					o = ss.taboption('advanced', form.DynamicList, 'atf_station_airtime', _('Station airtime allocations'), _('One client per entry: MAC address and percentage (1–100), separated by a space.'));
-					o.optional = true; o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					o.validate = function(id, value) {
-						var fields = (value || '').trim().split(/\s+/);
-						return !value || fields.length == 2 && qca_neighbor_report(fields[0] + ' 1 1 1') && /^\d+$/.test(fields[1]) && +fields[1] >= 1 && +fields[1] <= 100 ? true : _('Enter a unicast MAC address and an airtime percentage from 1 to 100.');
-					};
-					o = ss.taboption('advanced', form.DynamicList, 'rrm_neighbors', _('Neighbor APs'),
-						_('One AP per entry: BSSID, operating class, channel and PHY type, separated by spaces. Neighbor APs use this network’s SSID.'));
-					o.optional = true; o.depends('rrm_neighbor_report', '1');
-					o.validate = function(id, value) { return !value || qca_neighbor_report(value) ? true : _('Enter a unicast BSSID, operating class (1–255), channel (1–233) and PHY type (1–16).'); };
-					o = ss.taboption('advanced', form.DummyValue, '_qsdk_actions', _('Wireless actions'));
-					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
-					o.cfgvalue = function() { return qca_wireless_actions(radioNet, ss.map.readonly); };
 					[ ['bintval', _('Beacon Interval'), 'range(15,65535)', 100], ['rts', _('RTS/CTS Threshold'), 'or(range(0,2347),"off")', 'off'], ['frag', _('Fragmentation Threshold'), 'and(uinteger,range(256,2346))', 2346] ].forEach(function(p) {
 						o = ss.taboption('advanced', form.Value, p[0], p[1]);
 						o.datatype = p[2]; o.placeholder = p[3]; o.optional = true;

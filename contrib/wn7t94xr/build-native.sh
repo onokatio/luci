@@ -60,9 +60,9 @@ cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luc
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
 /tmp/qsdk-hostapd-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -Wno-unused-function -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" \
- "$luci/contrib/wn7t94xr/management-selfcheck.c" "$host/lib/libblobmsg_json.a" \
- "$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-management-selfcheck
-/tmp/qsdk-management-selfcheck
+ "$luci/contrib/wn7t94xr/hostapd-info-selfcheck.c" "$host/lib/libblobmsg_json.a" \
+ "$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-hostapd-info-selfcheck
+/tmp/qsdk-hostapd-info-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
@@ -71,13 +71,6 @@ cc -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" \
 	"$luci/contrib/wn7t94xr/acceleration-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-acceleration-selfcheck
 /tmp/qsdk-acceleration-selfcheck
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
-	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o /tmp/qsdk-telemetry-selfcheck
-/tmp/qsdk-telemetry-selfcheck
-"$cc" -D_GNU_SOURCE -Os -std=gnu99 -Wall -Werror -mfloat-abi=hard \
-	-I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" \
-	"$luci/contrib/wn7t94xr/telemetry-selfcheck.c" -o "$output/telemetry-selfcheck"
-
 python3 - "$luci/libs/rpcd-mod-luci/src/qsdk-switch-controls.h" "$output/qsdk-switch-controls.inc" <<'CHECK'
 import pathlib,sys
 source=pathlib.Path(sys.argv[1]).read_text()
