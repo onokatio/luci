@@ -1405,7 +1405,6 @@ return view.extend({
 						o.cfgvalue=function(id){var v=uci.get('wireless',id,'puncture_bitmap');return v==null?'':'0x'+(+v).toString(16);};
 						o.validate=function(id,value){return !value || /^(0x[0-9a-fA-F]{1,4}|[0-9]{1,5})$/.test(value) && Number(value)<=65535 ? true : _('Enter a 16-bit hexadecimal or decimal bitmap.');};
 						o.write=function(id,value){uci.set('wireless',id,'puncture_bitmap',String(Number(value)));};
-						o.remove=function(id){uci.unset('wireless',id,'puncture_bitmap');};
 						[['dfs_puncture_en',_('Automatic DFS puncturing')],['puncture_strict',_('Strict puncturing validation')]].forEach(function(item){o=ss.taboption('advanced',form.Flag,item[0],item[1]);o.optional=true;});
 						o = ss.taboption('advanced', form.Flag, 'atfstrictsched', _('Strict airtime scheduling'), _('Prevent borrowing unused airtime between allocations. Requires ATF. This firmware cannot combine strict radio scheduling with SSID groups; use each group\'s scheduling policy instead.'));
 						o.optional = true;
@@ -1420,7 +1419,6 @@ return view.extend({
 						o.datatype = 'and(uinteger,range(0,63))'; o.optional = true; o.placeholder = _('Automatic');
 						o.cfgvalue = function(id) { var value = uci.get('wireless', id, 'he_bsscolor'); return value ? String(value).split(' ')[0] : ''; };
 						o.write = function(id, value) { uci.set('wireless', id, 'he_bsscolor', String(+value) + ' 1'); };
-						o.remove = function(id) { uci.unset('wireless', id, 'he_bsscolor'); };
 					}
 				}
 
@@ -1827,7 +1825,6 @@ return view.extend({
 					o = ss.taboption('advanced', form.DummyValue, '_qsdk_actions', _('Wireless actions'));
 					o.depends('mode', 'ap'); o.depends('mode', 'ap-wds');
 					o.cfgvalue = function() { return qca_wireless_actions(radioNet, ss.map.readonly); };
-					o.write = function() {};
 					[ ['bintval', _('Beacon Interval'), 'range(15,65535)', 100], ['rts', _('RTS/CTS Threshold'), 'or(range(0,2347),"off")', 'off'], ['frag', _('Fragmentation Threshold'), 'and(uinteger,range(256,2346))', 2346] ].forEach(function(p) {
 						o = ss.taboption('advanced', form.Value, p[0], p[1]);
 						o.datatype = p[2]; o.placeholder = p[3]; o.optional = true;
@@ -1846,7 +1843,6 @@ return view.extend({
 						o = ss.taboption('general', form.DummyValue, '_mld', _('Multi-Link Operation'));
 						o.cfgvalue = function(id) { return radioNet.get('mld') + ': ' + qca_members(id).join(', '); };
 						o.description = _('Each link can be enabled or disabled separately.');
-						o.write = function() {};
 					}
 				}
 

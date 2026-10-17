@@ -52,6 +52,8 @@ for filename in published + official:
     assert ipk['debian-binary'] == b'2.0\n'
     payload, hooks = unpack(ipk['data.tar.gz']), unpack(ipk['control.tar.gz'])
     fields = dict(re.findall(r'^([A-Za-z-]+): (.*)$', hooks['control'].decode(), re.M))
+    if filename in published:
+        assert fields['Installed-Size'] == str(len(ipk['data.tar.gz']))
     name = fields['Package']
     assert name not in records
     records[name] = (fields, payload, path)

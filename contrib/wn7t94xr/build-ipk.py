@@ -4,16 +4,21 @@ import gzip
 import hashlib
 import io
 import json
+import os
 import pathlib
 import re
 import subprocess
 import sys
 import tarfile
+import tempfile
 import zlib
 
 HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
-NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
+SDK, NATIVE, NETIFD, CACHE, OUT = map(pathlib.Path, sys.argv[1:])
+os.umask(0o022)
+os.environ['SOURCE_DATE_EPOCH'] = '0'
+os.environ['PATH'] = str(SDK.resolve() / 'staging_dir/host/bin') + os.pathsep + os.environ['PATH']
 ARCH = 'arm_cortex-a7_neon-vfpv4'
 VERSION = json.loads((HERE / 'sources.json').read_text())['version']
 PREPARE = 'luci-qsdk-wn7t94xr-prepare'
@@ -26,28 +31,6 @@ OUT.mkdir(parents=True, exist_ok=True)
 assert not list(OUT.glob('*.ipk')), 'Use an output directory without old IPKs'
 jsmin = OUT / 'jsmin'
 subprocess.run(['cc', '-O2', str(LUCI / 'modules/luci-base/src/jsmin.c'), '-o', str(jsmin)], check=True)
-
-
-def archive(entries):
-    stream = io.BytesIO()
-    with tarfile.open(fileobj=stream, mode='w', format=tarfile.USTAR_FORMAT) as tar:
-        directories = {str(parent) for name in entries for parent in pathlib.PurePosixPath(name).parents if str(parent) != '.'}
-        for directory in sorted(directories):
-            item = tarfile.TarInfo(directory + '/')
-            item.type, item.mode = tarfile.DIRTYPE, 0o755
-            tar.addfile(item)
-        for name, (payload, mode) in sorted(entries.items()):
-            path = pathlib.PurePosixPath(name)
-            assert not path.is_absolute() and '..' not in path.parts
-            item = tarfile.TarInfo(name)
-            item.mode = mode
-            if isinstance(payload, str):
-                item.type, item.linkname = tarfile.SYMTYPE, payload
-                tar.addfile(item)
-            else:
-                item.size = len(payload)
-                tar.addfile(item, io.BytesIO(payload))
-    return gzip.compress(stream.getvalue(), compresslevel=9, mtime=0)
 
 
 def read_archive(data):
@@ -64,17 +47,28 @@ def read_archive(data):
     return entries
 
 
-packages, versions, sizes = {}, {}, {}
+packages, versions, sizes = set(), {}, {}
 
 
 def write_package(name, version, payload, hooks):
-    installed = sum(len(data) for data, _ in payload.values() if isinstance(data, bytes))
-    control = hooks['control'][0].decode()
-    control = re.sub(r'^Installed-Size: .*\n', '', control, flags=re.M) + f'Installed-Size: {installed}\n'
-    hooks['control'] = (control.encode(), 0o644)
     path = OUT / f'{name}_{version}_{ARCH}.ipk'
-    path.write_bytes(archive({'debian-binary': (b'2.0\n', 0o644), 'control.tar.gz': (archive(hooks), 0o644), 'data.tar.gz': (archive(payload), 0o644)}))
-    record(path, payload, control)
+    hooks['control'] = (hooks['control'][0] + b'Installed-Size: 0\n', 0o644)
+    with tempfile.TemporaryDirectory() as directory:
+        root = pathlib.Path(directory)
+        root.chmod(0o755)
+        for filename, (data, mode) in (payload | {'CONTROL/' + key: value for key, value in hooks.items()}).items():
+            relative = pathlib.PurePosixPath(filename)
+            assert not relative.is_absolute() and '..' not in relative.parts
+            target = root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if isinstance(data, str):
+                target.symlink_to(data)
+            else:
+                target.write_bytes(data)
+                target.chmod(mode)
+        subprocess.run([str(SDK.resolve() / 'scripts/ipkg-build'), '-o', '0', '-g', '0', str(root), str(OUT.resolve())],
+                       check=True)
+        record(path, payload, (root / 'CONTROL/control').read_text())
 
 
 def flash_bytes(payload):
@@ -87,7 +81,7 @@ def flash_bytes(payload):
 def record(path, payload, control):
     fields = dict(re.findall(r'^([A-Za-z-]+): (.*)$', control, re.M))
     if path.parent == OUT:
-        packages[fields['Package']] = control.rstrip() + f'\nFilename: {path.name}\nSize: {path.stat().st_size}\nSHA256sum: {hashlib.sha256(path.read_bytes()).hexdigest()}\n\n'
+        packages.add(fields['Package'])
     versions[fields['Package']] = fields['Version']
     logical = sum(len(data) for data, _ in payload.values() if isinstance(data, bytes))
     sizes[fields['Package']] = {'name': fields['Package'], 'ipk_bytes': path.stat().st_size,
@@ -337,7 +331,8 @@ hooks = {'control': (control.encode(), 0o644),
 hooks.update({name: (data.encode(), 0o755) for name, data in [
     ('preinst', preinst), ('postinst', postinst), ('prerm', prerm)]})
 write_package('luci-qsdk-wn7t94xr', VERSION, payload, hooks)
-(OUT / 'Packages').write_text(''.join(packages.values()))
+with (OUT / 'Packages').open('w') as index:
+    subprocess.run([str(SDK.resolve() / 'scripts/ipkg-make-index.sh'), '.'], cwd=OUT, stdout=index, check=True)
 (OUT / 'Packages.gz').write_bytes(gzip.compress((OUT / 'Packages').read_bytes(), mtime=0))
 (OUT / 'SHA256SUMS').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest() + '  ' + p.name + '\n' for p in sorted(OUT.glob('*.ipk'))))
 (OUT / 'sizes.json').write_text(json.dumps({'preflight_kib': required_kib,
