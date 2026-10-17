@@ -70,10 +70,8 @@ DESTDIR="$prefix" cmake --install "$build/http-build"
 mkdir -p "$out/usr/lib/ucode/luci" "$out/usr/lib/rpcd" "$out/usr/bin"
 "$cc" -Os -Wall -fPIC -shared -mfloat-abi=hard -I"$prefix/usr/include" -I"$stage/usr/include" \
  "$luci/contrib/package/ucode-mod-html/src/html.c" -o "$out/usr/lib/ucode/html.so"
-rpcd_header="$(find "$sdk/build_dir" -path '*/rpcd-*/include/rpcd/plugin.h' -print -quit)"
-[ -n "$rpcd_header" ]
 "$cc" -Os -Wall -Werror -fPIC -shared -mfloat-abi=hard -DINSTALL_PREFIX='"/usr"' -I"$prefix/usr/include" \
- -I"$stage/usr/include" -I"$(dirname "$(dirname "$rpcd_header")")" "$sources/rpcd/ucode.c" \
+ -I"$stage/usr/include" "$sources/rpcd/ucode.c" \
  -L"$prefix/usr/lib" -L"$stage/usr/lib" -Wl,-rpath,/tmp/luci-ram/usr/lib -lucode -lubus -lubox -o "$out/usr/lib/rpcd/ucode.so"
 mkdir -p "$out/usr/share/licenses/libucode20230711"
 cp "$sources/ucode/LICENSE" "$out/usr/share/licenses/libucode20230711/ucode.txt"
