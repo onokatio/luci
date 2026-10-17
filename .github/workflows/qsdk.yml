@@ -58,4 +58,3 @@ jobs:
             package/SHA256SUMS
             package/Packages*
             package/sizes.json
-            native/telemetry-selfcheck

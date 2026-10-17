@@ -82,19 +82,6 @@ const uci = {
 	sections: (config, type) => Object.entries(data).filter(([, v]) => v['.type'] == type).map(([id, v]) => ({ '.name': id, ...v }))
 };
 const helpers = wireless.slice(wireless.indexOf('var qca_shared'), wireless.indexOf('function count_changes'));
-let strictAtf, atfGroups = [];
-const strictAtfCode = wireless.match(/o = ss\.taboption\('advanced', form\.Flag, 'atfstrictsched'[\s\S]*?(?=\n\s*o = ss\.taboption)/)[0];
-new Function('ss', 'form', '_', 'var o; ' + strictAtfCode)({taboption:()=>strictAtf={map:{lookupOption:()=>[{formvalue:()=>atfGroups}]}}}, {Flag:{}}, v=>v);
-assert.equal(strictAtf.validate('wifi1','1'), true);
-atfGroups = ['primary 60 1'];
-assert.notEqual(strictAtf.validate('wifi1','1'), true);
-assert.equal(strictAtf.validate('wifi1','0'), true);
-const neighborReport = new Function('uci', helpers + '\nreturn qca_neighbor_report;')(uci);
-assert.equal(neighborReport('02:11:22:33:44:66 115 36 9'), '02112233446600000000732409');
-assert.equal(neighborReport('02:11:22:33:44:66 115 036 9'), '02112233446600000000732409');
-for (const bad of ['01:11:22:33:44:66 115 36 9', '00:00:00:00:00:00 115 36 9',
-	'02:11:22:33:44:66 256 36 9', '02:11:22:33:44:66 115 234 9',
-	'02:11:22:33:44:66 115 36 17', '02:11:22:33:44:66 115 36 9 x']) assert.equal(neighborReport(bad), null);
 const modalStatusCode = wireless.slice(wireless.indexOf('function render_modal_status'), wireless.indexOf('function format_wifirate'));
 const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_modal_status;')((tag, text) => ({ tag, text }), v => v);
 assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
@@ -177,28 +164,6 @@ fragmentMode = '11g';
 assert.equal(fragment.validate('ap', '512'), true);
 assert.notEqual(fragment.validate('ap', '513'), true);
 
-const detailCode = wireless.slice(wireless.indexOf('function render_station_usage'), wireless.indexOf('function radio_restart'));
-const detail = new Function('E', '_', 'format_wifirate', detailCode + '\nreturn render_station_details;')(
-	(tag, attrs, children) => ({ tag, attrs, children }), value => value, rate);
-const info = JSON.stringify(detail({ mac: '00:11:22:33:44:55', network: { getShortName: () => '<untrusted>', getIfname: () => 'ath1' }, rx: { he: true, packets: 0 }, tx: {}, authenticated: true }));
-assert(info.includes('The driver did not report the MCS of the latest packet.') && !info.includes('undefined'));
-assert(info.includes('Authenticated') && info.includes('Yes'));
-assert(info.includes('Authorized') && info.includes('"-"'));
-assert(info.includes('"0"') && info.includes('<untrusted>'));
-const station = { network: { getShortName: () => 'test', getIfname: () => 'ath1' }, telemetry: { available: true },
-	rx: { he: true, mcs_usage: { he: Array.from({ length: 17 }, (_, i) => i == 11 ? 42 : 0) }, gi_usage: [100, 0, 24, 0, 0] },
-	tx: { gi_usage: [200, 0, 0, 0, 0] } };
-const usage = JSON.stringify(detail(station));
-assert(usage.includes('HE MCS 11') && usage.includes('"42"') && usage.includes('"24"'));
-assert(usage.includes('0.8 µs') && usage.includes('1.6 µs') && !usage.includes('0.4 µs'));
-assert(usage.includes('latest packet') && !usage.includes('HE-MCS'));
-station.telemetry.available = false;
-assert(JSON.stringify(detail(station)).includes('usage statistics are unavailable'));
-station.telemetry.available = true;
-station.rx = { mcs_usage: {}, gi_usage: [0, 0, 0, 0, 0] }; station.tx = {};
-assert(JSON.stringify(detail(station)).includes('No usage samples reported.'));
-station.rx = {}; station.tx = {};
-assert(JSON.stringify(detail(station)).includes('Usage statistics are unavailable.'));
 const cell = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const child = { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
 const button = { blur() {}, classList: { add() {} } };
@@ -365,6 +330,8 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'])
 		new Function(fs.readFileSync(path.join(root, file), 'utf8'));
 	assert(!wireless.includes('require tools.qca'));
+	for (const removed of ['render_station_details', 'callStationStatistics', 'qca_wireless_actions', 'qca_neighbor_report', 'qsdk_dscp_map', 'atf_enabled']) assert(!wireless.includes(removed));
+	assert(wireless.includes('isClientDisconnectSupported()') && wireless.includes('disconnectClient(mac, true, 5, 60000)'));
 	const acceleration = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'), 'utf8');
 	async function checkApply(failure) {
 		const original = { enabled: '1', acceleration_engine: 'auto' }, wanted = { enabled: '1', acceleration_engine: 'sfe' };
