@@ -144,18 +144,33 @@ python3 ../netifd/contrib/qsdk/selfcheck.py
 python3 ../iwinfo/tests/channel-selfcheck.py
 sh contrib/wn7t94xr/build-native.sh /path/to/sdk ../iwinfo /tmp/wn7-native
 sh contrib/wn7t94xr/build-runtime.sh /path/to/sdk /tmp/wn7-runtime-sources /tmp/wn7-native
-python3 contrib/wn7t94xr/build-base.py /tmp/wn7-base-cache
 python3 contrib/wn7t94xr/build-ipk.py /path/to/sdk /tmp/wn7-native ../netifd /tmp/wn7-base-cache ./dist/wn7t94xr
 python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 ```
 
 `luci-base`、`luci-mod-network`、`luci-lib-uqr`、`luci-theme-bootstrap`、`luci-app-package-manager`、`luci-app-sqm` は、各パッケージの公式Makefileと `luci.mk` を変更せず、SDKのパッケージビルドで生成します。ファイルの配置、依存関係、アーキテクチャ、JavaScriptの圧縮、バージョン埋め込み、LuCI本体のコンパイルは公式の処理に任せます。生成したIPKは作り直さず、そのままフィードへ登録します。
 
+依存IPKは `build-ipk.py` からSDKの `scripts/download.pl` で取得し、SHA-256とTLS証明書を検証します。rpcdのヘッダーは、SDKが `Build/InstallDev` で配置したものを使います。SDK内部のビルドディレクトリは探索しません。
+
 QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起動用のパッケージは従来のビルド処理を使います。公式Makefileへの移行により、互換処理が増える部分は移していません。LuCIのIPKに含まれる設定ファイルもRAMへ展開し、起動時にパッケージのインストールスクリプトは実行しません。overlay上の設定とサービスの準備は、引き続き起動パッケージが担当します。
 
 準備・起動用の2個と、RAM用の21個の、計23個のIPKを生成します。互換性のある4個のIPK（cgi-io、uhttpd、uhttpd-mod-ubus、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
 
 機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
+
+### 残りのビルド処理の比較
+
+v5.2.0-1を基準に、公式方式への移行版を実際にビルドして比較しました。空行・コメントを含む行数で、呼び出し側・追加Makefile・公式ソースへのパッチも数えています。試作だけの検証コードは含めません。
+
+| 試作した変更 | 独自コードの増減 | 採否 |
+| --- | ---: | --- |
+| 準備・起動IPKを `package.mk` で生成 | +39行 | 見送り。Makefile、フック引き渡し、SDKのrootfsステージ分離が必要 |
+| ucodeをソース同梱の公式Makefileでビルド | +2行 | 見送り。純正ABIと独立したJSONライブラリの指定が残る |
+| rpcd-mod-luciを公式Makefile・CMakeでビルド | +1行 | 見送り。ヘッダー選択の指定とCMake最低バージョンのパッチが必要 |
+| 依存IPK取得をSDKへ委譲し、既存IPKビルドへ統合 | −17行 | 採用。独立した取得スクリプトとCIの呼び出しを削除 |
+| rpcdヘッダーをSDK標準の配置先から取得 | −5行 | 採用。ビルドディレクトリへの依存を削除 |
+
+採用後のビルドスクリプトは533行から512行へ減り、CIも1行減りました。既存の6個のLuCIパッケージは引き続き公式の `luci.mk` で生成します。純正ABIの維持やRAM向けのリンク設定に必要な処理は残しています。
 
 ## RAMとoverlayの配置
 
@@ -194,8 +209,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.2.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.2.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.2.1-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.2.1-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -209,7 +224,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.2.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.2.1-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

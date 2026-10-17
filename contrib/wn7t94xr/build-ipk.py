@@ -12,6 +12,7 @@ import sys
 import tarfile
 import tempfile
 import zlib
+from concurrent.futures import ThreadPoolExecutor
 
 HERE = pathlib.Path(__file__).resolve().parent
 LUCI = HERE.parents[1]
@@ -93,6 +94,25 @@ def control(name, depends, version=VERSION, provides=''):
 
 def emit(name, depends, payload, provides='', version=VERSION):
     write_package(name, version, payload, {'control': (control(name, depends, version=version, provides=provides).encode(), 0o644)})
+
+
+def download(package):
+    url = package.get('url') or ('https://archive.openwrt.org/releases/packages-19.07/'
+           + ARCH + '/' + package['feed'] + '/' + package['filename'])
+    mirror, filename = url.rsplit('/', 1)
+    subprocess.run([str(SDK.resolve() / 'scripts/download.pl'), str(CACHE.resolve()), package['filename'],
+                    package['sha256'], filename, mirror], check=True,
+                   env=os.environ | {'TOPDIR': str(SDK.resolve()), 'CURL_OPTIONS': '--no-insecure --max-time 120'})
+
+
+CACHE.mkdir(parents=True, exist_ok=True)
+available = {p['name'] for p in LOCK['base_packages']} | set(LOCK['rom_packages']) | {
+    'libc', 'libpthread', 'opkg', 'libiwinfo20181126', 'libiwinfo-lua',
+    'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'kmod-sched-cake'}
+for package in LOCK['base_packages']:
+    assert all(d.split(' ')[0] in available for d in package['depends'].split(', ') if d)
+with ThreadPoolExecutor(max_workers=4) as pool:
+    list(pool.map(download, LOCK['base_packages']))
 
 
 # Keep compatible native utilities as separate hash-pinned official 19.07 IPKs.
