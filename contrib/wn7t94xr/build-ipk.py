@@ -29,8 +29,6 @@ FEED_URL = 'https://github.com/onokatio/luci/releases/download/v' + VERSION
 LOCK = json.loads((HERE / 'sources.json').read_text())
 OUT.mkdir(parents=True, exist_ok=True)
 assert not list(OUT.glob('*.ipk')), 'Use an output directory without old IPKs'
-jsmin = OUT / 'jsmin'
-subprocess.run(['cc', '-O2', str(LUCI / 'modules/luci-base/src/jsmin.c'), '-o', str(jsmin)], check=True)
 
 
 def read_archive(data):
@@ -97,22 +95,6 @@ def emit(name, depends, payload, provides='', version=VERSION):
     write_package(name, version, payload, {'control': (control(name, depends, version=version, provides=provides).encode(), 0o644)})
 
 
-def tree(path, destination=''):
-    entries = {}
-    for file in sorted(path.rglob('*')):
-        if file.is_dir():
-            continue
-        dest = (pathlib.PurePosixPath(destination) / file.relative_to(path)).as_posix()
-        data = file.readlink().as_posix() if file.is_symlink() else file.read_bytes()
-        mode = file.stat().st_mode & 0o777
-        if dest.endswith('.ut') and isinstance(data, bytes):
-            data = data.replace(b'{# PKG_VERSION #}', ('25.12+qsdk' + VERSION).encode())
-        if dest.endswith('.js') and isinstance(data, bytes):
-            data = subprocess.check_output([str(jsmin.resolve())], input=data)
-        entries[dest] = (data, mode)
-    return entries
-
-
 # Keep compatible native utilities as separate hash-pinned official 19.07 IPKs.
 for package in LOCK['base_packages']:
     original = CACHE / package['filename']
@@ -151,36 +133,28 @@ for name, (filenames, depends) in native.items():
             assert binary[:6] == b'\x7fELF\x01\x01' and binary[18:20] == b'\x28\x00', filename
         payload[filename] = (binary, 0o755)
     if name == 'libucode20230711':
-        payload.update(tree(NATIVE / 'usr/share/licenses/libucode20230711', 'usr/share/licenses/libucode20230711'))
+        payload.update({file.relative_to(NATIVE).as_posix(): (file.read_bytes(), 0o644)
+                        for file in (NATIVE / 'usr/share/licenses/libucode20230711').iterdir()})
         assert len(payload) == 4
     if name in ('rpcd-mod-iwinfo', 'rpcd-mod-luci'):
         depends = depends.replace('libiwinfo20230701', 'libiwinfo20230701 (= ' + component_versions['libiwinfo20230701'] + ')')
     emit(name, depends, payload, 'libiwinfo' if name == 'libiwinfo20230701' else 'libucode' if name == 'libucode20230711' else '', version=component_versions.get(name, VERSION))
 
-luci_packages = {
-    'luci-base': ('modules/luci-base', 'libc, rpcd, rpcd-mod-file, rpcd-mod-luci, rpcd-mod-ucode, cgi-io, ucode, ucode-mod-fs, ucode-mod-log, ucode-mod-uci, ucode-mod-ubus, ucode-mod-math, ucode-mod-html, liblucihttp-ucode'),
-    'luci-mod-network': ('modules/luci-mod-network', 'luci-base, rpcd-mod-iwinfo, luci-lib-uqr'),
-    'luci-lib-uqr': ('libs/luci-lib-uqr', 'libc'),
-    'luci-theme-bootstrap': ('themes/luci-theme-bootstrap', 'luci-base'),
-    'luci-app-package-manager': ('applications/luci-app-package-manager', 'luci-base, opkg'),
-    'luci-app-sqm': ('applications/luci-app-sqm', 'luci-base, sqm-scripts'),
-}
-for name, (source, depends) in luci_packages.items():
-    path = LUCI / source
-    required = re.search(r'^LUCI_DEPENDS:=(.*?)(?=\n[^\t ]|\Z)', (path / 'Makefile').read_text(), re.M | re.S)
-    if required:
-        assert set(re.findall(r'\+([a-z0-9.+-]+)', required[1])) <= set(depends.split(', ')), name
-    payload = tree(path / 'root')
-    payload.update(tree(path / 'htdocs', 'www'))
-    payload.update(tree(path / 'ucode', 'usr/share/ucode/luci'))
-    if name == 'luci-base':
-        payload['etc/init.d/ucitrack'] = ((path / 'root/etc/init.d/ucitrack').read_bytes(), 0o755)
-    # Config and service setup belong to the small persistent bootstrap.
-    payload = {file: data for file, data in payload.items() if not file.startswith('etc/') or file == 'etc/init.d/ucitrack'}
-    if name == 'luci-base':
-        payload.update(tree(NATIVE / 'usr/lib/ucode/luci', 'usr/lib/ucode/luci'))
-        payload['usr/share/ucode/luci/version.uc'] = ((NATIVE / 'usr/share/ucode/luci/version.uc').read_bytes(), 0o644)
-    emit(name, depends, payload, 'luci-app-opkg' if name == 'luci-app-package-manager' else '')
+# Use the upstream recipes unchanged, including their dependency and architecture metadata.
+make = ['make', 'TOPDIR=' + str(SDK.resolve()), 'PACKAGE_DIR=' + str(OUT.resolve()),
+        'PKG_SRC_VERSION=25.12+qsdk' + VERSION, 'PKG_PO_VERSION=' + VERSION,
+        'PKG_GITBRANCH=LuCI openwrt-25.12 branch', 'CONFIG_LUCI_JSMIN=y', 'CONFIG_LUCI_CSSTIDY=']
+subprocess.run(make + ['host-compile'], cwd=LUCI / 'modules/luci-base', check=True)
+for source in ['modules/luci-base', 'modules/luci-mod-network', 'libs/luci-lib-uqr',
+               'themes/luci-theme-bootstrap', 'applications/luci-app-package-manager', 'applications/luci-app-sqm']:
+    name = pathlib.Path(source).name
+    include = str((NATIVE / 'runtime-build/root/usr/include').resolve())
+    for target in ['clean', 'compile']:
+        subprocess.run(make + ['CONFIG_PACKAGE_' + name + '=m', 'TARGET_CPPFLAGS=-I' + include,
+                               target], cwd=LUCI / source, check=True)
+    built, = OUT.glob(name + '_*.ipk')
+    ipk = read_archive(built.read_bytes())
+    record(built, read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])['control'][0].decode())
 
 network = (HERE / 'root/etc/init.d/network').read_bytes()
 wifi = (NETIFD / 'contrib/qsdk/wifi').read_bytes()

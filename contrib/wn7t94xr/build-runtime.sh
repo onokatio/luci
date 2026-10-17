@@ -70,11 +70,6 @@ DESTDIR="$prefix" cmake --install "$build/http-build"
 mkdir -p "$out/usr/lib/ucode/luci" "$out/usr/lib/rpcd" "$out/usr/bin"
 "$cc" -Os -Wall -fPIC -shared -mfloat-abi=hard -I"$prefix/usr/include" -I"$stage/usr/include" \
  "$luci/contrib/package/ucode-mod-html/src/html.c" -o "$out/usr/lib/ucode/html.so"
-version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$here/sources.json")"
-rm -f "$luci/modules/luci-base/src/version.uc"
-make -C "$luci/modules/luci-base/src" CC="$cc" CFLAGS="-Os -mfloat-abi=hard -I$prefix/usr/include" FPIC=-fPIC \
- LDFLAGS="-Wl,-rpath,/tmp/luci-ram/usr/lib -L$stage/usr/lib" LUCI_VERSION="25.12+qsdk$version" \
- LUCI_GITBRANCH='LuCI openwrt-25.12 branch' DESTDIR="$out" install
 rpcd_header="$(find "$sdk/build_dir" -path '*/rpcd-*/include/rpcd/plugin.h' -print -quit)"
 [ -n "$rpcd_header" ]
 "$cc" -Os -Wall -Werror -fPIC -shared -mfloat-abi=hard -DINSTALL_PREFIX='"/usr"' -I"$prefix/usr/include" \
