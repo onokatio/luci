@@ -46,6 +46,7 @@ fetch() {
 		   ! { cat "$download/control"; printf 'Status: install ok installed\n\n'; } >> "$unpack/usr/lib/opkg/status" ||
 		   ! tar -tzf "$download/data.tar.gz" > "$download/filelist" ||
 		   ! sed -e '/\/$/d' -e 's,^\./,,' -e '/^etc\//d' -e '/^sbin\/luci-reload$/d' -e '/^sbin\/wifi$/d' \
+		     -e '/^lib\/upgrade\/keep.d\//d' \
 		     -e '/^usr\/bin\/ucode$/d' -e '/^usr\/sbin\/uhttpd$/d' -e '/^usr\/libexec\/cgi-io$/d' \
 		     -e '/^usr\/lib\/libiwinfo.so.20230701$/d' -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
 		     -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \

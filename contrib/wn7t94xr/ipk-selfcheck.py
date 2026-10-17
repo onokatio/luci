@@ -67,7 +67,7 @@ for filename in published + official:
         if isinstance(data, bytes) and data.startswith(b'\x7fELF'):
             assert data[:6] == b'\x7fELF\x01\x01' and data[18:20] == b'\x28\x00', file
     for file, data in hooks.items():
-        if file in ('preinst', 'postinst', 'prerm', 'postrm'):
+        if file.removesuffix('-pkg') in ('preinst', 'postinst', 'prerm', 'postrm'):
             subprocess.run(['sh', '-n'], input=data, check=True)
 
 assert len(records) == len(LOCK['base_packages']) + len(custom_names)
@@ -97,6 +97,13 @@ network = records['luci-mod-network'][1]
 assert b'qca_next_ifname' in network['www/luci-static/resources/view/network/wireless.js']
 assert b'getAccelerationStatus' in network['www/luci-static/resources/view/network/acceleration.js']
 assert b'network/acceleration' in network['usr/share/luci/menu.d/luci-mod-network.json']
+for name in ('luci-base', 'luci-mod-network', 'luci-lib-uqr', 'luci-theme-bootstrap',
+             'luci-app-package-manager', 'luci-app-sqm'):
+    fields, data, path = records[name]
+    assert fields['SourceName'] == name and fields['Version'] == '25.12+qsdk' + LOCK['version']
+    assert fields['Architecture'] == ('arm_cortex-a7_neon-vfpv4' if name == 'luci-base' else 'all')
+    assert not any(file.endswith('.js.o') for file in data)
+    assert 'postinst-pkg' in unpack(unpack(path.read_bytes())['control.tar.gz'])
 
 main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/ucitrack',
@@ -280,6 +287,7 @@ grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
 grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
 [ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq {len(ram_names)} ]
 ! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"
+! grep -q '^/lib/upgrade/' "$ram/usr/lib/opkg/info/luci-base.list"
 requests="$(wc -l < '{requests}')"
 fetch
 [ "$(wc -l < '{requests}')" = "$requests" ]
