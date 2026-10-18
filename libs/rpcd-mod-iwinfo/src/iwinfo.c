@@ -1,4 +1,4 @@
-/* Upstream: openwrt/rpcd commit d99f703e, with QSDK radio and rate metadata. */
+/* Upstream: openwrt/rpcd commit d99f703e, with optional metadata serialization. */
 /*
  * rpcd - UBUS RPC server
  *
@@ -511,7 +511,7 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 	char mac[18];
 	char res[IWINFO_BUFSIZE];
 	struct iwinfo_assoclist_entry *a;
-	bool qsdk;
+	bool have_masks;
 	uint16_t stats;
 	uint8_t flags;
 	struct ether_addr *macaddr = NULL;
@@ -549,13 +549,13 @@ rpc_iwinfo_assoclist(struct ubus_context *ctx, struct ubus_object *obj,
 					 a->mac[0], a->mac[1], a->mac[2],
 					 a->mac[3], a->mac[4], a->mac[5]);
 
-			qsdk = !strcmp(iw->name, "qcawificfg80211");
-			stats = qsdk ? a->stats_mask : UINT16_MAX;
-			flags = qsdk ? a->flags_mask : UINT8_MAX;
+			have_masks = a->stats_mask & IWINFO_ASSOC_S_VALID;
+			stats = have_masks ? a->stats_mask : UINT16_MAX;
+			flags = have_masks ? a->flags_mask : UINT8_MAX;
 
 			blobmsg_add_string(&buf, "mac", mac);
 			blobmsg_add_u32(&buf, "signal", a->signal);
-			if (stats) blobmsg_add_u32(&buf, "signal_avg", a->signal_avg);
+			if (stats & IWINFO_ASSOC_S_SIGNAL_AVG) blobmsg_add_u32(&buf, "signal_avg", a->signal_avg);
 			blobmsg_add_u32(&buf, "noise", a->noise);
 			if (stats & IWINFO_ASSOC_S_INACTIVE) blobmsg_add_u32(&buf, "inactive", a->inactive);
 			if (stats & IWINFO_ASSOC_S_CONNECTED_TIME) blobmsg_add_u32(&buf, "connected_time", a->connected_time);
@@ -687,8 +687,7 @@ rpc_iwinfo_freqlist(struct ubus_context *ctx, struct ubus_object *obj,
 				blobmsg_add_u32(&buf, "band", band);
 			blobmsg_add_u32(&buf, "channel", f->channel);
 			blobmsg_add_u32(&buf, "mhz", f->mhz);
-			blobmsg_add_u32(&buf, "band", f->mhz >= 57000 ? 60 : f->mhz >= 5925 ? 6 : f->mhz >= 4900 ? 5 : 2);
-			blobmsg_add_u8(&buf, "no_ir", f->restricted);
+			blobmsg_add_u8(&buf, "no_ir", !!(f->flags & IWINFO_FREQ_NO_IR));
 			blobmsg_add_u8(&buf, "restricted", f->restricted);
 
 			rpc_iwinfo_add_bit_array("flags", f->flags,

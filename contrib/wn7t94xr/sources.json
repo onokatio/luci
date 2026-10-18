@@ -38,9 +38,11 @@
     }
   ],
   "forks": {
-    "iwinfo": "c7fd02d29313f14b791b05f267b9bf0242149ee3",
+    "iwinfo": "93bb1e9e19fb382c37beeb1ec2f873543f64e355",
     "netifd": "067135717695c300c814e57a1bdd37e23cceb5bd"
   },
+  "iwinfo_upstream": "66bdd1a071895d91babc9b9228bb84626bbce226",
+  "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d",
   "rom_packages": {
     "curl": "7.80.0",
     "iptables": "1.8.3-1",
@@ -65,30 +67,28 @@
     "uci": "2019-09-01-415f9e48-4",
     "usign": "2020-05-23-f1f65026-1"
   },
-  "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
   "runtime_sources": {
-    "ucode": {
-      "url": "https://github.com/jow-/ucode.git",
-      "revision": "85922056ef7abeace3cca3ab28bc1ac2d88e31b1"
-    },
-    "rpcd": {
-      "url": "https://github.com/openwrt/rpcd.git",
-      "revision": "d99f703e4035d03fbcfbada3cb697db346c2b984"
+    "json-c": {
+      "sha256": "602cdefc1d2aab8318fc0814b7ce7d59e72514d4276ca3eff92f35f86cf1c160",
+      "url": "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18-nodoc.tar.gz"
     },
     "lucihttp": {
-      "url": "https://github.com/jow-/lucihttp.git",
-      "revision": "9b5b683fbb2bb0010aa031d620d0ab8105516757"
-    },
-    "json-c": {
-      "url": "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.18-nodoc.tar.gz",
-      "sha256": "602cdefc1d2aab8318fc0814b7ce7d59e72514d4276ca3eff92f35f86cf1c160"
+      "revision": "9b5b683fbb2bb0010aa031d620d0ab8105516757",
+      "url": "https://github.com/jow-/lucihttp.git"
     },
     "qsort": {
-      "url": "https://git.musl-libc.org/cgit/musl/plain/src/stdlib/qsort.c?h=v1.2.5",
-      "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
+      "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6",
+      "url": "https://git.musl-libc.org/cgit/musl/plain/src/stdlib/qsort.c?h=v1.2.5"
+    },
+    "rpcd": {
+      "revision": "d99f703e4035d03fbcfbada3cb697db346c2b984",
+      "url": "https://github.com/openwrt/rpcd.git"
+    },
+    "ucode": {
+      "revision": "85922056ef7abeace3cca3ab28bc1ac2d88e31b1",
+      "url": "https://github.com/jow-/ucode.git"
     }
   },
-  "version": "5.6.0-1",
-  "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d",
-  "iwinfo_upstream": "66bdd1a071895d91babc9b9228bb84626bbce226"
+  "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
+  "version": "5.7.0-1"
 }
