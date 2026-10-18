@@ -203,12 +203,21 @@ const addCode = wireless.slice(wireless.indexOf('s.handleAdd = function'), wirel
 const section = { renderMoreOptionsModal: id => Promise.resolve(id) };
 new Function('m', 's', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_mlo', 'qca_secure_band', addCode)({}, section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.mlo, qca.secureBand);
 const networkJS = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/network.js'), 'utf8');
-const saveCode = wireless.slice(wireless.indexOf('s.handleModalSave = function'), wireless.indexOf('s.handleScan = function'));
-const modalSection = { addedSection: 'new_ap', map: { load: () => Promise.resolve(), reset: () => Promise.resolve() } };
-new Function('s', 'L', 'ui', 'E', saveCode)(modalSection, { bind: (fn, ctx) => fn.bind(ctx) }, { hideModal() {}, addNotification() {} }, (tag, text) => ({ tag, text }));
+const saveCode = wireless.slice(wireless.indexOf('var modalSave = s.handleModalSave;'), wireless.indexOf('s.handleScan = function'));
+const formSource = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/form.js'), 'utf8');
+function formMethod(signature, start = 0) {
+	const a = formSource.indexOf(signature, start), b = formSource.indexOf('\n\t}', a);
+	assert(a >= 0 && b > a);
+	return formSource.slice(a + signature.length, b);
+}
+const valueStart = formSource.indexOf('write(section_id, formvalue) {');
+const officialWrite = new Function('section_id', 'formvalue', formMethod('write(section_id, formvalue) {', valueStart));
+const officialRemove = new Function('section_id', formMethod('remove(section_id) {', valueStart));
+const officialLoad = new Function('section_id', formMethod('load(section_id) {', formSource.indexOf('cbid(section_id) {')));
+const fieldForm = { ListValue: { prototype: { write: officialWrite } } };
 const frequencyCode = wireless.slice(wireless.indexOf('var CBIWifiFrequencyValue'), wireless.indexOf('var CBIWifiTxPowerValue'));
 const optionsStart = wireless.indexOf('ss.children = ss.children.filter');
-const optionsEnd = wireless.indexOf('var key = ({ wps_pushbutton:', optionsStart);
+const optionsEnd = wireless.indexOf('var key = ({', optionsStart);
 const nativeOptions = new Function('ss', wireless.slice(optionsStart, optionsEnd) + '}); return ss.children;')({children: [
 	{option: 'ppsk'}, {option: 'dynamic_vlan'},
 	{option: '_wpa_key', deps: [{encryption: 'psk2', ppsk: '0'}]},
@@ -218,17 +227,16 @@ assert.deepEqual(nativeOptions.map(o => o.option), ['_wpa_key', 'auth_server']);
 assert.deepEqual(nativeOptions[0].deps, [{encryption: 'psk2'}]);
 assert.deepEqual(nativeOptions[1].deps, [{encryption: 'wpa2'}]);
 const nativeSetup = wireless.slice(optionsStart, wireless.indexOf('\n\t\t\t\t\t});', optionsEnd) + '\n\t\t\t\t\t});'.length);
-const alias = { option: 'private_key', depends() {} };
-new Function('ss', 'uci', 'qca_shared', 'qca_set_shared', 'L', '_', nativeSetup)({ children: [alias] }, uci, ['priv_key'], qca.setShared, {toArray: v => v}, v => v);
-assert.equal(alias.ucioption, 'priv_key');
-assert.equal(alias.cfgvalue, undefined);
-alias.write('ath1', '/etc/client.key');
-assert.equal(data.ath1.priv_key, '/etc/client.key');
-alias.remove('ath1');
-assert.equal(data.ath1.priv_key, null);
+function nativeField(name, write = officialWrite) {
+	const section = { children: [] }, field = { option: name, depends() {}, write, remove: officialRemove, load: officialLoad, section, map: {config: 'wireless', data: uci} };
+	section.children.push(field);
+	new Function('ss', 'uci', 'qca_shared', 'qca_set_shared', 'L', '_', 'form', nativeSetup)(section, uci,
+		['priv_key', 'wps_pushbutton', 'eap_type', 'r0kh', 'ieee80211w', 'shpreamble'], qca.setShared, {toArray: v => v == null ? [] : [].concat(v)}, v => v, fieldForm);
+	return field;
+}
 const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_hwmode', frequencyCode + '\nreturn CBIWifiFrequencyValue;')(
 	{ Value: { extend: v => v } }, { declare: () => () => Promise.resolve([]) },
-	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['HT20', 'HT40', 'HE20', 'HE40', 'EHT20', 'EHT40'], getHWModes: () => ['n', 'ax', 'be'] }) },
+	{ getWifiDevice: () => Promise.resolve({ get: () => 'qcawificfg80211', getHTModes: () => ['HT20', 'HT40', 'HE20', 'HE40', 'EHT20', 'EHT40'], getHWModes: () => ['ax', 'be'] }) },
 	uci, { bind: (fn, ctx) => fn.bind(ctx), hasSystemFeature: () => true, toArray: v => v || [] }, v => v, qca.hwmode);
 (async () => {
 	let notifications = 0, saves = 0;
@@ -256,10 +264,71 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	assert.equal(qca.security('new_ap'), 'sae');
 	assert.equal(data.new_ap.ieee80211w, '2');
 	delete data.new_ap;
-	await modalSection.handleModalSave({ save: (cb, silent) => { assert.equal(silent, true); return Promise.reject(new Error('invalid key')); } });
-	assert.equal(modalSection.addedSection, 'new_ap');
-	await modalSection.handleModalSave({ save: () => Promise.resolve() });
-	assert.equal(modalSection.addedSection, null);
+	const alias = nativeField('private_key');
+	assert.equal(alias.ucioption, 'priv_key');
+	await alias.write('ath15', '/etc/client.key');
+	for (const id of qca.members('ath15')) assert.equal(data[id].priv_key, '/etc/client.key');
+	assert.equal(alias.load('ath15'), '/etc/client.key');
+	alias.section.children.push({ ucioption: 'priv_key', map: alias.map, section: alias.section, isActive: () => true });
+	await alias.remove('ath15');
+	for (const id of qca.members('ath15')) assert.equal(data[id].priv_key, '/etc/client.key');
+	alias.section.children.pop();
+	await alias.remove('ath15');
+	for (const id of qca.members('ath15')) assert.equal(data[id].priv_key, null);
+	const wps = nativeField('wps_pushbutton');
+	await wps.write('ath15', '1');
+	for (const id of qca.members('ath15')) assert.equal(data[id].wps, '1');
+	await wps.remove('ath15');
+	for (const id of qca.members('ath15')) assert.equal(data[id].wps, '0');
+	const eap = nativeField('eap_type'), rkh = nativeField('r0kh');
+	await eap.write('ath15', 'peap');
+	await rkh.write('ath15', ['aa,bb,key']);
+	for (const id of qca.members('ath15')) {
+		assert.equal(data[id].eap_type, 'PEAP');
+		assert.deepEqual(data[id].r0kh, ['aa bb key']);
+	}
+	assert.equal(await eap.load('ath15'), 'peap');
+	assert.deepEqual(await rkh.load('ath15'), ['aa,bb,key']);
+	const pmf = nativeField('ieee80211w', () => { throw new Error('native PMF must stay explicit'); });
+	for (const value of ['0', '1', '2']) {
+		await pmf.write('ath15', value);
+		for (const id of qca.members('ath15')) assert.equal(data[id].ieee80211w, value);
+	}
+	await nativeField('short_preamble').write('ath1', '1');
+	assert.equal(data.ath1.shpreamble, '1');
+	assert.equal(data.ath15.shpreamble, undefined);
+	assert.throws(() => alias.write('ath15', 'bad\npath'));
+	const failing = nativeField('private_key', () => Promise.reject(new Error('upstream rejected')));
+	await assert.rejects(failing.write('ath15', 'bad'), /upstream rejected/);
+	assert.equal(data.ath15.priv_key, null);
+	// Exercise the official modal methods rather than reproducing their lifecycle.
+	const L = {bind: (fn, ctx, ...args) => fn.bind(ctx, ...args)};
+	let active, hidden = 0, notices = 0;
+	const dom = {findClassInstance: () => active}, ui = {hideModal() { hidden++; }, addNotification() { notices++; }};
+	assert(wireless.includes("s = m.section(form.GridSection,"));
+	assert(formSource.indexOf('handleModalSave(...args) /* ... */{') > formSource.indexOf('const CBIGridSection ='));
+	const baseSave = new Function('dom', 'L', 'return function(modalMap,ev){' + formMethod('handleModalSave(modalMap, ev) {') + '}')(dom, L);
+	const baseCancel = new Function('dom', 'L', 'ui', 'return function(modalMap,ev){' + formMethod('handleModalCancel(modalMap, ev) {') + '}')(dom, L, ui);
+	const gridSave = new Function('...args', formMethod('handleModalSave(...args) /* ... */{'));
+	const gridCancel = new Function('modalMap', 'ev', 'isSaving', formMethod('handleModalCancel(modalMap, ev, isSaving) {'));
+	let loads = 0, resets = 0, fail = true;
+	const modal = {map: {config: 'wireless', addedSection: 'new_ap', data: uci, load: async () => loads++, reset: async () => resets++},
+		getActiveModalMap: () => ({}), getPreviousModalMap: () => null, handleModalCancel: gridCancel, handleModalSave: gridSave,
+		super(name, args) { return (name == 'handleModalSave' ? baseSave : baseCancel).apply(this, args); }};
+	active = { parent: modal.map, save: async (cb, silent) => { assert.equal(silent, true); if (fail) throw new Error('invalid key'); } };
+	const originalSave = active.save;
+	new Function('s', 'form', 'dom', 'ui', 'E', saveCode)(modal, {}, dom, ui, (tag, text) => ({tag, text}));
+	await modal.handleModalSave(active, {});
+	assert.equal(modal.map.addedSection, 'new_ap');
+	assert.equal(hidden, 0); assert.equal(notices, 1); assert.equal(active.save, originalSave);
+	data.new_ap = {};
+	await gridCancel.call(modal, active, {}, false);
+	assert.equal(data.new_ap, undefined); assert(!('addedSection' in modal.map));
+	modal.map.addedSection = 'new_ap'; data.new_ap = {}; fail = false;
+	await modal.handleModalSave(active, {});
+	assert(data.new_ap); assert(!('addedSection' in modal.map));
+	assert.equal(loads, 1); assert.equal(resets, 1); assert.equal(hidden, 2); assert.equal(active.save, originalSave);
+	delete data.new_ap;
 	await frequency.load('wifi0');
 	assert.equal(frequency.htmodes.be[0], 'EHT20');
 	assert.equal(frequency.htmodes.be[2].available, true);
@@ -276,9 +345,9 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	assert.equal(data.wifi2.band, '3');
 	frequency.callFrequencyList = () => Promise.resolve([{ channel: 5, mhz: 5975, band: 6 }]);
 	await frequency.load('wifi2');
-	assert.equal(frequency.modes[2].available, false);
-	assert.equal(frequency.modes[5].available, false);
-	assert.equal(frequency.modes[8].available, false);
+	assert(!frequency.modes[2].available);
+	assert(!frequency.modes[5].available);
+	assert(!frequency.modes[8].available);
 	frequency.qca = null;
 	frequency.write('wifi1', ['VHT80', '11a', '36']);
 	assert.equal(data.wifi1.hwmode, '11a');
