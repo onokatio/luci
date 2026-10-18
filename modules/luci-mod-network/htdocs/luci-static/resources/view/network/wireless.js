@@ -404,6 +404,13 @@ function next_free_sid(offset) {
 }
 
 function add_dependency_permutations(o, deps) {
+	if (uci.get('wireless', uci.get('wireless', o.section.cfgsections()[0], 'device'), 'type') == 'qcawificfg80211') {
+		if (deps.ppsk && !deps.ppsk.includes('0')) return;
+		deps = Object.assign({}, deps);
+		delete deps.ppsk;
+		if (deps.encryption?.includes('wpa3') && !deps.encryption.includes('wpa3-192'))
+			deps.encryption = deps.encryption.concat('wpa3-192');
+	}
 	let res = [{}];
 
 	Object.entries(deps).forEach(([key, list]) => {
@@ -1139,6 +1146,13 @@ return view.extend({
 		s.addModalOptions = function(s) {
 			return network.getWifiNetwork(s.section).then(function(radioNet) {
 				const hwtype = uci.get('wireless', radioNet.getWifiDeviceName(), 'type');
+				if (hwtype == 'qcawificfg80211') {
+					const map = s.map, save = map.save;
+					map.save = function(...args) {
+						return Promise.resolve().then(() => save.apply(this, args))
+							.catch(e => { ui.addNotification(null, E('p', e.message)); throw e; });
+					};
+				}
 				const have_mesh = L.hasSystemFeature('hostapd', 'mesh') || L.hasSystemFeature('wpasupplicant', 'mesh');
 				let o, ss;
 
@@ -1976,8 +1990,11 @@ return view.extend({
 				};
 				// End QR Code
 
+				if (hwtype != 'qcawificfg80211') {
 				o = ss.taboption('encryption', form.Flag, 'ppsk', _('Enable Private PSK (PPSK)'), _('Private Pre-Shared Key (PPSK) allows the use of different Pre-Shared Key for each STA MAC address. Private MAC PSKs are stored on the RADIUS server.'));
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['psk', 'psk2', 'psk+psk2', 'psk-mixed'] });
+				}
+
 
 				o = ss.taboption('encryption', form.Value, 'auth_server', _('RADIUS Authentication Server'));
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['wpa', 'wpa2', 'wpa3', 'wpa3-mixed', 'wpa3-192'] });
@@ -2025,6 +2042,7 @@ return view.extend({
 					return true;
 				};
 
+				if (hwtype != 'qcawificfg80211') {
 				const req_attr_syntax = _('Format:') + '<code>&lt;attr_id&gt;[:&lt;syntax:value&gt;]</code>' + '<br />' +
 					'<code>syntax: s = %s; '.format(_('string (UTF-8)')) + 'd = %s; '.format(_('integer')) + 'x = %s</code>'.format(_('octet string'));
 
@@ -2043,6 +2061,9 @@ return view.extend({
 				o.validate = attr_validate;
 				o.placeholder = '77:x:74657374696e67';
 
+				}
+
+				if (hwtype != 'qcawificfg80211') {
 				o = ss.taboption('encryption', form.ListValue, 'dynamic_vlan', _('RADIUS Dynamic VLAN Assignment'), _('Required: Rejects auth if RADIUS server does not provide appropriate VLAN attributes.'));
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['wpa', 'wpa2', 'wpa3', 'wpa3-mixed', 'wpa3-192'] });
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['psk', 'psk2', 'psk+psk2', 'psk-mixed'], ppsk: ['1'] });
@@ -2080,6 +2101,8 @@ return view.extend({
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['psk', 'psk2', 'psk+psk2', 'psk-mixed'], ppsk: ['1'] });
 				o.rmempty = true;
 
+				}
+
 				/* extra RADIUS settings end */
 
 				o = ss.taboption('encryption', form.Value, 'dae_client', _('DAE-Client'), _('Dynamic Authorization Extension client.'));
@@ -2099,8 +2122,11 @@ return view.extend({
 				o.password = true;
 
 				//WPA(1) has only WPA IE. Only >= WPA2 has RSN IE Preauth frames.
+				if (hwtype != 'qcawificfg80211') {
 				o = ss.taboption('encryption', form.Flag, 'rsn_preauth', _('RSN Preauth'), _('Robust Security Network (RSN): Allow roaming preauth for WPA2-EAP networks (and advertise it in WLAN beacons). Only works if the specified network interface is a bridge. Shortens the time-critical reassociation process.'));
 				add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['wpa2', 'wpa3', 'wpa3-mixed'] });
+				}
+
 
 
 				o = ss.taboption('encryption', form.Value, '_wpa_key', _('Key'));
@@ -2517,13 +2543,7 @@ return view.extend({
 
 				if (hwtype == 'qcawificfg80211') {
 
-					ss.children = ss.children.filter(function(o) {
-						return ['ppsk', 'dynamic_vlan', 'per_sta_vif', 'vlan_naming', 'vlan_tagged_interface', 'vlan_bridge', 'radius_auth_req_attr', 'radius_acct_req_attr', 'rsn_preauth'].indexOf(o.option) < 0;
-					});
-					ss.children.forEach(function(o) {
-						o.deps = (o.deps || []).filter(function(d) { return d.ppsk != '1'; });
-						o.deps.forEach(function(d) { delete d.ppsk; });
-						(o.deps || []).filter(function(d) { return d.encryption == 'wpa3'; }).forEach(function(d) { o.depends(Object.assign({}, d, { encryption: 'wpa3-192' })); });
+					Object.values(ss.getOption()).forEach(function(o) {
 						var key = ({ short_preamble: 'shpreamble', wps_pushbutton: 'wps_pbc', private_key: 'priv_key', private_key_passwd: 'priv_key_pwd', private_key2: 'priv_key2', private_key2_passwd: 'priv_key2_pwd' })[o.option] || o.option;
 						if (qca_shared.indexOf(key == 'wps_pbc' ? 'wps_pushbutton' : key) < 0) return;
 						o.ucioption = key;
@@ -2558,18 +2578,6 @@ return view.extend({
 			return form.TypedSection.prototype.handleRemove.apply(this, [section_id, ev]);
 		};
 
-		// Add an error notification without replacing the inherited modal lifecycle.
-		var modalSave = s.handleModalSave;
-		s.handleModalSave = function(modalMap, ev) {
-			var activeMap = dom.findClassInstance(this.getActiveModalMap()), save = activeMap.save;
-			activeMap.save = function() {
-				var args = arguments;
-				return Promise.resolve().then(function() { return save.apply(activeMap, args); })
-					.catch(function(e) { ui.addNotification(null, E('p', e.message)); throw e; });
-			};
-			return modalSave.apply(this, arguments)
-				.finally(function() { activeMap.save = save; });
-		};
 
 		s.handleScan = function(radioDev, ev) {
 			const table = E('table', { 'class': 'table' }, [
