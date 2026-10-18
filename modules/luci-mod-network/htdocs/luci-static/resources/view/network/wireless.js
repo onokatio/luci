@@ -486,10 +486,6 @@ var CBIWifiFrequencyValue = form.Value.extend({
 			const hwmodelist = L.toArray(wifidevs ? wifidevs.getHWModes() : null)
 				.reduce(function(o, v) { o[v] = true; return o; }, {});
 
-			if (this.qca && this.channels['6g'].length > 3) {
-				for (const mode of ['a', 'b', 'g', 'n', 'ac']) hwmodelist[mode] = false;
-			}
-
 			// Define supported modes
 			this.modes = [
 				'', 'Legacy', { available: hwmodelist.a || hwmodelist.b || hwmodelist.g },
@@ -502,11 +498,6 @@ var CBIWifiFrequencyValue = form.Value.extend({
 			// Create a list of HT modes based on device capabilities
 			const htmodelist = L.toArray(wifidevs ? wifidevs.getHTModes() : null)
 				.reduce(function(o, v) { o[v] = true; return o; }, {});
-
-			if (this.qca && this.channels['2g'].length > 3) {
-				for (const mode in htmodelist)
-					if (+mode.match(/\d+/)?.[0] > 40) htmodelist[mode] = false;
-			}
 
 			this.htmodes = {
 				'': [ '', '-', { available: true } ],
@@ -1481,7 +1472,7 @@ return view.extend({
 					o.datatype = "or('random',macaddr)";
 
 					}
-					o = ss.taboption('advanced', form.Flag, hwtype == 'qcawificfg80211' ? 'shpreamble' : 'short_preamble', _('Short Preamble'));
+					o = ss.taboption('advanced', form.Flag, 'short_preamble', _('Short Preamble'));
 					o.default = o.enabled;
 
 					o = ss.taboption('advanced', form.Value, 'dtim_period', _('DTIM Interval'), _('Delivery Traffic Indication Message Interval'));
@@ -1556,8 +1547,8 @@ return view.extend({
 
 				o.write = function(section_id, value) {
 					if (hwtype == 'qcawificfg80211') {
-						const e = this.section.children.filter(function(o) { return o.option == 'encryption' })[0].formvalue(section_id),
-						    c = this.section.children.filter(function(o) { return o.option == 'cipher' })[0];
+						const e = this.section.getOption('encryption').formvalue(section_id),
+						    c = this.section.getOption('cipher');
 						qca_write_security(section_id, e);
 						if (c.isActive(section_id)) {
 							var v = c.formvalue(section_id);
@@ -1596,13 +1587,13 @@ return view.extend({
 					o.value('ccmp-256', 'CCMP-256'); o.value('gcmp', 'GCMP'); o.value('gcmp-256', 'GCMP-256');
 					o.depends('encryption', 'sae'); o.depends('encryption', 'sae-mixed'); o.depends('encryption', 'owe');
 					o.depends('encryption', 'wpa3-192');
-					o.validate = function(id, value) { return this.section.children.filter(function(o) { return o.option == 'encryption' })[0].formvalue(id) != 'wpa3-192' || value == 'gcmp-256' || _('WPA3-EAP (192-bit) requires GCMP-256.'); };
+					o.validate = function(id, value) { return this.section.getOption('encryption').formvalue(id) != 'wpa3-192' || value == 'gcmp-256' || _('WPA3-EAP (192-bit) requires GCMP-256.'); };
 				}
 				if (hwtype != 'qcawificfg80211') {
 					o.value('tkip', _('Force TKIP'));
 					o.value('tkip+ccmp', _('Force TKIP and CCMP (AES)'));
 				}
-				o.write = ss.children.filter(function(o) { return o.option == 'encryption' })[0].write;
+				o.write = ss.getOption('encryption').write;
 
 				o.cfgvalue = function(section_id) {
 					if (hwtype == 'qcawificfg80211') { var c = (uci.get('wireless', section_id, 'encryption') || '').match(/(ccmp(?:-256)?|gcmp(?:-256)?)$/); return c ? c[1] : 'ccmp'; }
@@ -2121,7 +2112,7 @@ return view.extend({
 				o.datatype = 'wpakey';
 				if (hwtype == 'qcawificfg80211') {
 					o.validate = function(id, value) {
-						var mode = this.section.children.filter(function(o) { return o.option == 'encryption' })[0].formvalue(id);
+						var mode = this.section.getOption('encryption').formvalue(id);
 						return qca_valid_key(value, mode) || _('Use an 8 to 63 byte password without line breaks. A 64 digit hexadecimal key is supported only for WPA2. SAE passwords cannot contain |.');
 					};
 				}
@@ -2178,7 +2169,7 @@ return view.extend({
 
 				if (hwtype == 'mac80211' || hwtype == 'qcawificfg80211') {
 					// Probe 802.11r support (and EAP support as a proxy for Openwrt)
-					var has_80211r = hwtype == 'qcawificfg80211' || L.hasSystemFeature('hostapd', '11r') || L.hasSystemFeature('hostapd', 'eap');
+					var has_80211r = L.hasSystemFeature('hostapd', '11r') || L.hasSystemFeature('hostapd', 'eap');
 
 					o = ss.taboption('roaming', form.Flag, 'ieee80211r', _('802.11r Fast Transition'), _('Enables fast roaming among access points that belong to the same Mobility Domain'));
 					add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['wpa2', 'wpa3', 'wpa3-mixed', 'wpa3-192'] });
@@ -2241,7 +2232,7 @@ return view.extend({
 					// End of 802.11r options
 
 					// Probe 802.11k and 802.11v support via EAP support (full hostapd has EAP)
-					if (hwtype == 'qcawificfg80211' || L.hasSystemFeature('hostapd', 'eap')) {
+					if (L.hasSystemFeature('hostapd', 'eap')) {
 						/* 802.11k settings start */
 						o = ss.taboption('roaming', form.Flag, 'ieee80211k', _('802.11k RRM'), _('Radio Resource Measurement - Sends beacons to assist roaming. Not all clients support this.'));
 						// add_dependency_permutations(o, { mode: ['ap', 'ap-wds'], encryption: ['psk', 'psk2', 'psk-mixed', 'sae', 'sae-mixed'] });
@@ -2431,7 +2422,7 @@ return view.extend({
 								o.default = '0';
 								o.rmempty = false;
 								o.validate = function(id, value) {
-									const e = this.section.children.filter(function(o) { return o.option == 'encryption' })[0].formvalue(id);
+									const e = this.section.getOption('encryption').formvalue(id);
 									return [ 'sae', 'owe', 'wpa3', 'wpa3-192' ].indexOf(e) < 0 || value == '2' || _('This encryption mode requires management frame protection.');
 								};
 							}
@@ -2509,8 +2500,8 @@ return view.extend({
 
 						}
 
-						if (L.hasSystemFeature('hostapd', 'cli') && L.hasSystemFeature('wpasupplicant')) {
-							o = ss.taboption('encryption', form.Flag, 'wps_pushbutton', _('Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE'))
+						if (L.hasSystemFeature('hostapd', 'wps') && L.hasSystemFeature('wpasupplicant')) {
+							o = ss.taboption('encryption', form.Flag, 'wps_pushbutton', _('Enable WPS pushbutton, requires WPA(2)-PSK/WPA3-SAE'));
 							o.enabled = '1';
 							o.disabled = '0';
 							o.default = o.disabled;
@@ -2533,19 +2524,26 @@ return view.extend({
 						o.deps = (o.deps || []).filter(function(d) { return d.ppsk != '1'; });
 						o.deps.forEach(function(d) { delete d.ppsk; });
 						(o.deps || []).filter(function(d) { return d.encryption == 'wpa3'; }).forEach(function(d) { o.depends(Object.assign({}, d, { encryption: 'wpa3-192' })); });
-						var key = ({ wps_pushbutton: 'wps_pbc', private_key: 'priv_key', private_key_passwd: 'priv_key_pwd', private_key2: 'priv_key2', private_key2_passwd: 'priv_key2_pwd' })[o.option] || o.option;
+						var key = ({ short_preamble: 'shpreamble', wps_pushbutton: 'wps_pbc', private_key: 'priv_key', private_key_passwd: 'priv_key_pwd', private_key2: 'priv_key2', private_key2_passwd: 'priv_key2_pwd' })[o.option] || o.option;
 						if (qca_shared.indexOf(key == 'wps_pbc' ? 'wps_pushbutton' : key) < 0) return;
 						o.ucioption = key;
+						// QSDK needs explicit PMF=0; other fields keep their original storage methods.
+						var write = key == 'ieee80211w' ? form.ListValue.prototype.write : o.write,
+						    remove = o.remove, load = o.load;
+						function sync(id) {
+							var value = uci.get('wireless', id, key);
+							qca_set_shared(id, key, value == null ? null : value);
+							if (key == 'wps_pbc') qca_set_shared(id, 'wps', value == null ? '0' : value);
+						}
 						o.write = function(id, value) {
 							if (/[\r\n\0]/.test(value)) throw new Error(_('Line breaks are not allowed.'));
 							if (key == 'r0kh' || key == 'r1kh') value = L.toArray(value).map(function(v) { return v.replace(/,/g, ' '); });
 							if (key == 'eap_type') value = value.toUpperCase();
-							qca_set_shared(id, key, value);
-							if (key == 'wps_pbc') qca_set_shared(id, 'wps', value);
+							return Promise.resolve(write.call(this, id, value)).then(function() { sync(id); });
 						};
-						o.remove = function(id) { qca_set_shared(id, key, null); if (key == 'wps_pbc') qca_set_shared(id, 'wps', '0'); };
+						o.remove = function(id) { return Promise.resolve(remove.call(this, id)).then(function() { sync(id); }); };
 						if (key == 'r0kh' || key == 'r1kh' || key == 'eap_type')
-							o.cfgvalue = function(id) { var v = uci.get('wireless', id, key); return key == 'eap_type' ? (v || '').toLowerCase() : key == 'r0kh' || key == 'r1kh' ? L.toArray(v).map(function(s) { return s.trim().replace(/\s+/g, ','); }) : v; };
+							o.load = function(id) { return Promise.resolve(load.call(this, id)).then(function(v) { return key == 'eap_type' ? (v || '').toLowerCase() : L.toArray(v).map(function(s) { return s.trim().replace(/\s+/g, ','); }); }); };
 					});
 				}
 			});
@@ -2560,13 +2558,16 @@ return view.extend({
 			return form.TypedSection.prototype.handleRemove.apply(this, [section_id, ev]);
 		};
 
-		// Keep the new section cancellable when modal validation fails.
+		// Add an error notification without replacing the official modal lifecycle.
 		s.handleModalSave = function(modalMap, ev) {
-			return modalMap.save(null, true).then(L.bind(this.map.load, this.map))
-				.then(L.bind(this.map.reset, this.map)).then(L.bind(function() {
-					this.addedSection = null;
-					ui.hideModal();
-				}, this)).catch(function(e) { ui.addNotification(null, E('p', e.message)); });
+			var activeMap = dom.findClassInstance(this.getActiveModalMap()), save = activeMap.save;
+			activeMap.save = function() {
+				var args = arguments;
+				return Promise.resolve().then(function() { return save.apply(activeMap, args); })
+					.catch(function(e) { ui.addNotification(null, E('p', e.message)); throw e; });
+			};
+			return form.TypedSection.prototype.handleModalSave.apply(this, arguments)
+				.finally(function() { activeMap.save = save; });
 		};
 
 		s.handleScan = function(radioDev, ev) {
