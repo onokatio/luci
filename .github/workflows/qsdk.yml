@@ -1,9 +1,9 @@
 name: QSDK userspace IPK
 on:
   push:
-    branches: [qsdk-wn7t94xr]
+    branches: [qsdk-19.07]
   pull_request:
-    branches: [qsdk-wn7t94xr]
+    branches: [qsdk-19.07]
   workflow_dispatch:
 permissions:
   contents: read

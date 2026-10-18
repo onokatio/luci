@@ -4,7 +4,7 @@
 
 現行構成の[コンポーネントと呼び出し関係の図](https://github.com/onokatio/luci/blob/qsdk-25.12/README.md#コンポーネントと呼び出し関係)と、[実装・IPK・導入手順](https://github.com/onokatio/luci/blob/qsdk-25.12/contrib/wn7t94xr/README.md)を参照してください。図は現行ブランチの README で管理し、構成変更時に更新します。
 
-この既定ブランチ `qsdk-wn7t94xr` は旧系統です。[旧版の説明](contrib/wn7t94xr/README.md)も残しています。
+このブランチ `qsdk-19.07` は LuCI 19.07 対応の旧系統です。[旧版の説明](contrib/wn7t94xr/README.md)も残しています。
 
 # OpenWrt luci feed
 
