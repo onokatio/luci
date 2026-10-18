@@ -95,8 +95,6 @@ for original in LOCK['base_packages']:
     assert hashlib.sha256(path.read_bytes()).hexdigest() == original['sha256'], name
 network = records['luci-mod-network'][1]
 assert b'qca_next_ifname' in network['www/luci-static/resources/view/network/wireless.js']
-assert b'getAccelerationStatus' in network['www/luci-static/resources/view/network/acceleration.js']
-assert b'network/acceleration' in network['usr/share/luci/menu.d/luci-mod-network.json']
 for name in ('luci-base', 'luci-mod-network', 'luci-lib-uqr', 'luci-theme-bootstrap',
              'luci-app-package-manager', 'luci-app-sqm'):
     fields, data, path = records[name]

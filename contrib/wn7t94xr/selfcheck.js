@@ -49,20 +49,6 @@ String.prototype.format = function(...args) { let i = 0; return this.replace(/%s
 	assert.notEqual(validate.call(option, 'wan', ['eth0', 'eth1']), true);
 }
 const wireless = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js'), 'utf8');
-const diagnostics = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless-diagnostics.js'), 'utf8');
-const surveyUsage = new Function(diagnostics.slice(diagnostics.indexOf('function surveyUsage'), diagnostics.indexOf('function diagnosticTables')) + '\nreturn surveyUsage;')();
-assert.equal(surveyUsage({total:'100',busy:'25'}), '25.0%');
-assert.equal(surveyUsage({total:'9007199254741093',busy:'9007199254740993'}, {total:'9007199254740993',busy:'9007199254740993'}), '0.0%');
-assert.equal(surveyUsage({total:'10',busy:'5'}, {total:'20',busy:'8'}), '-');
-const steering=fs.readFileSync(path.join(root,'modules/luci-mod-network/htdocs/luci-static/resources/view/network/band-steering.js'),'utf8');
-let ownerEnabled=false;
-const steeringHelpers=new Function('uci',steering.slice(steering.indexOf('function steeringRunning'),steering.indexOf('function native'))+'return {running:steeringRunning,conflict:steeringConflict};')({get:()=>ownerEnabled?'1':'0'});
-assert.equal(steeringHelpers.running({}),false);
-assert.equal(steeringHelpers.running({lbd:{instances:{main:{running:true}}}}),true);
-assert.equal(steeringHelpers.conflict(),false);ownerEnabled=true;assert.equal(steeringHelpers.conflict(),true);
-const switchView=fs.readFileSync(path.join(root,'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch-advanced.js'),'utf8');
-const switchInteger=new Function(switchView.slice(switchView.indexOf('function integer'),switchView.indexOf('return view.extend'))+'return integer;')();
-assert.equal(switchInteger('1000',0,2500000),true);assert.equal(switchInteger('1e3',0,2500000),false);assert.equal(switchInteger('-1',0,7),false);
 const data = {
 	wifi0: { '.type': 'wifi-device', type: 'qcawificfg80211', disabled: '1', hwmode: '11beg', htmode: 'HT40', channel: 'auto' },
 	wifi1: { '.type': 'wifi-device', type: 'qcawificfg80211', hwmode: '11bea', htmode: 'EHT160', channel: '0' },
@@ -87,11 +73,20 @@ const modalStatus = new Function('E', '_', modalStatusCode + '\nreturn render_mo
 assert.deepEqual(modalStatus(null, undefined), { tag: 'em', text: 'No information available' });
 const hiddenStatus = {};
 assert.equal(modalStatus(hiddenStatus, undefined), hiddenStatus);
-const qca = new Function('uci', '_', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network, writeMLD: qca_write_mld };')(uci, v => v);
+const qca = new Function('uci', '_', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network };')(uci, v => v);
 assert.equal(qca.mlo('ath05'), true);
 assert.equal(qca.mlo('ath1'), false);
+const encryptionCode = wireless.match(/encr\.validate = function\(id, value\) \{[\s\S]*?\n\s*\};/)[0];
+const encryption = {};
+new Function('encr', 'qca_mlo', 'qca_secure_band', '_', encryptionCode)(encryption, qca.mlo, qca.secureBand, v => v);
+assert.equal(encryption.validate('ath15', 'sae'), true);
+assert.notEqual(encryption.validate('ath15', 'psk2'), true);
+assert.equal(encryption.validate('ath1', 'psk2'), true);
+
 data.new6 = { '.type': 'wifi-iface', device: 'wifi2' };
 assert.equal(qca.mlo('new6'), false);
+assert.notEqual(encryption.validate('new6', 'psk2'), true);
+assert.equal(encryption.validate('new6', 'owe'), true);
 assert.throws(() => qca.writeSecurity('new6', 'none'));
 delete data.new6;
 assert.equal(qca.security('ath1'), 'sae-mixed');
@@ -186,33 +181,6 @@ qca.removeNetwork('test_link1');
 assert(data.test_mld && data.test_link2);
 qca.removeNetwork('test_link2');
 assert(!data.test_mld && data.mld0);
-data.new_link1 = { '.type': 'wifi-iface', device: 'wifi0', mode: 'sta', ssid: 'new-mlo', encryption: 'ccmp', sae: '1', key: 'mlo-password', auth: 'EAP-MSCHAPV2', network: ['test_dhcp'] };
-data.new_link2 = { '.type': 'wifi-iface', device: 'wifi1', mode: 'ap', ssid: 'old', encryption: 'none' };
-data.duplicate = { '.type': 'wifi-iface', device: 'wifi0' };
-assert.equal(qca.writeMLD('new_link1', '_new'), 'mld3');
-assert.equal(data.mld3.role, 'Non-AP');
-qca.writeMLD('new_link2', 'mld3');
-assert.equal(data.new_link2.mode, 'sta');
-assert.equal(data.new_link2.key, 'mlo-password');
-assert.equal(data.new_link2.auth, 'EAP-MSCHAPV2');
-assert.equal(data.new_link2.ssid, 'new-mlo');
-const populateCode = wireless.match(/o\.renderWidget = function\(id, index, value\) \{[\s\S]*?return node;\s*\};/)[0];
-let populateListener, dependenciesChecked = false;
-const populated = {}, groupOption = { formvalue: () => 'mld3', map: {
-	lookupOption: key => key == 'missing' ? null : [{ default: key == 'unset' ? '1' : undefined, getUIElement: () => ({ setValue: value => { assert.notEqual(value, undefined); populated[key] = value; } }), cfgvalue: id => key == '_wpa_key' ? data[id].key : key == 'network' ? undefined : data[id][key] }],
-	checkDepends: () => { dependenciesChecked = true; }
-} };
-new Function('o', 'form', 'L', 'uci', 'qca_shared', populateCode)(groupOption,
-	{ ListValue: { prototype: { renderWidget: () => ({ addEventListener: (event, fn) => { assert.equal(event, 'widget-change'); populateListener = fn; } }) } } },
-	{ bind: (fn, context) => fn.bind(context) }, uci, ['auth', 'missing', 'unset']);
-groupOption.renderWidget('duplicate', 0, '');
-populateListener();
-assert.equal(populated.ssid, 'new-mlo');
-assert.equal(populated._wpa_key, 'mlo-password');
-assert.equal(populated.auth, 'EAP-MSCHAPV2');
-assert.deepEqual(populated.network, ['test_dhcp']);
-assert.equal(populated.unset, '1');
-assert(dependenciesChecked);
 const networkValidateCode = wireless.match(/o\.validate = function\(id, value\) \{\n\s*var mode = this\.map\.lookupOption\('mode'[\s\S]*?\n\s*\};/)[0];
 const clientNetwork = { map: { lookupOption: () => [{ formvalue: () => 'sta' }] } };
 new Function('o', 'uci', '_', networkValidateCode)(clientNetwork, { get: (config, id) => id == 'lan' ? 'bridge' : undefined }, v => v);
@@ -220,30 +188,17 @@ assert.notEqual(clientNetwork.validate('link', 'lan'), true);
 assert.notEqual(clientNetwork.validate('link', 'lan test_dhcp'), true);
 assert.notEqual(clientNetwork.validate('link', ['lan', 'test_dhcp']), true);
 assert.equal(clientNetwork.validate('link', ['test_dhcp']), true);
-qca.writeSecurity('new_link1', 'sae');
-assert.equal(data.new_link1.sae_pwe, '1');
-assert.equal(data.new_link2.sae_pwe, '1');
 const modeCode = wireless.slice(wireless.indexOf('mode.write = function(section_id, value)'), wireless.indexOf('mode.cfgvalue = function(section_id)'));
-let selectedGroup = 'mld3';
-const groupMode = { map: { lookupOption: () => [{ isActive: () => !!selectedGroup, formvalue: () => selectedGroup }] } };
+const groupMode = {};
 new Function('mode', 'hwtype', 'uci', 'qca_set_shared', modeCode)(groupMode, 'qcawificfg80211', uci, qca.setShared);
-data.mld3.role = 'AP';
-groupMode.write('new_link1', 'sta');
-assert.equal(data.mld3.role, 'Non-AP');
-assert.equal(data.new_link2.mode, 'sta');
-selectedGroup = '';
-groupMode.write('new_link1', 'ap');
-assert.equal(data.new_link2.mode, 'sta');
-assert.equal(data.mld3.role, 'Non-AP');
-assert.throws(() => qca.writeMLD('duplicate', 'mld3'));
-assert.throws(() => qca.writeMLD('duplicate', 'mld3/invalid'));
-assert.throws(() => qca.writeMLD('duplicate', 'wifi0'));
-qca.writeMLD('new_link1', '');
-assert(data.mld3 && data.new_link2.mld == 'mld3');
-qca.removeNetwork('new_link2');
-assert(!data.mld3 && data.mld0);
-delete data.new_link1;
-delete data.duplicate;
+groupMode.write('ath15', 'sta');
+assert.equal(data.mld0.role, 'Non-AP');
+assert.equal(data.ath05.mode, 'sta');
+assert.equal(data.ath25.mode, 'sta');
+groupMode.write('ath15', 'ap');
+assert.equal(data.mld0.role, 'AP');
+assert.equal(data.ath05.mode, 'ap');
+assert.equal(data.ath25.mode, 'ap');
 const addCode = wireless.slice(wireless.indexOf('s.handleAdd = function'), wireless.indexOf("\n\t\to = s.option(form.DummyValue, '_badge')"));
 const section = { renderMoreOptionsModal: id => Promise.resolve(id) };
 new Function('m', 's', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_mlo', 'qca_secure_band', addCode)({}, section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.mlo, qca.secureBand);
@@ -327,43 +282,11 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	frequency.qca = null;
 	frequency.write('wifi1', ['VHT80', '11a', '36']);
 	assert.equal(data.wifi1.hwmode, '11a');
-	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'])
+	for (const file of ['modules/luci-base/htdocs/luci-static/resources/network.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/wireless.js', 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/switch.js'])
 		new Function(fs.readFileSync(path.join(root, file), 'utf8'));
 	assert(!wireless.includes('require tools.qca'));
 	for (const removed of ['render_station_details', 'callStationStatistics', 'qca_wireless_actions', 'qca_neighbor_report', 'qsdk_dscp_map', 'atf_enabled']) assert(!wireless.includes(removed));
 	assert(wireless.includes('isClientDisconnectSupported()') && wireless.includes('disconnectClient(mac, true, 5, 60000)'));
-	const acceleration = fs.readFileSync(path.join(root, 'modules/luci-mod-network/htdocs/luci-static/resources/view/network/acceleration.js'), 'utf8');
-	async function checkApply(failure) {
-		const original = { enabled: '1', acceleration_engine: 'auto' }, wanted = { enabled: '1', acceleration_engine: 'sfe' };
-		let stored = original, staged = original, sets = 0, commits = 0, restarts = 0, reads = 0;
-		const mockRpc = { declare(options) { return async function(...args) {
-			assert.equal(options.reject, true);
-			if (options.method == 'set') {
-				if (++sets == 1 && failure == 'set') throw Error('set failed');
-				staged = args[2];
-			}
-			else if (options.method == 'commit') {
-				if (++commits == 2 && failure == 'rollback') throw Error('rollback failed');
-				stored = staged;
-			}
-			else {
-				reads++;
-				const engine = failure == 'mismatch' && reads == 1 ? 'ppe' : stored.acceleration_engine == 'sfe' ? 'sfe' : 'ppe';
-				return { loaded: stored.enabled == '1', engines: { [engine]: { ipv4: { accelerated_count: '0' } } } };
-			}
-		}; } };
-		const mockFs = { exec: async () => ({ code: ++restarts == 1 && ['restart', 'rollback'].includes(failure) ? 1 : 0 }) };
-		const mockUci = { sections: () => failure == 'sqm' ? [{ enabled: '1' }] : [] };
-		const apply = new Function('rpc', 'fs', 'uci', '_', acceleration.slice(acceleration.indexOf('var status'), acceleration.indexOf('function number')) + 'return applySettings;')(mockRpc, mockFs, mockUci, s => s);
-		if (failure == 'sqm') { await assert.rejects(apply(wanted, original), /Disable SQM/); assert.equal(sets, 0); assert.equal(restarts, 0); return; }
-		if (!failure) { await apply(wanted, original); assert.deepEqual(stored, wanted); assert.equal(restarts, 1); }
-		else {
-			await assert.rejects(apply(wanted, original), e => failure == 'rollback' ? !e.restored && e.message.includes('could not be restored') : e.restored === true);
-			if (failure != 'rollback') assert.deepEqual(stored, original);
-			assert.equal(restarts, failure == 'set' ? 0 : failure == 'rollback' ? 1 : 2);
-		}
-	}
-	for (const failure of ['', 'set', 'restart', 'mismatch', 'rollback', 'sqm']) await checkApply(failure);
 	assert(wireless.includes("if (hwtype != 'qcawificfg80211') o.value('fast', 'FAST');"));
 	console.log('Core Wireless selfcheck passed: AP lifecycle, standard iwinfo frequency routing, failed-save cancellation, MLO, validation and JS syntax');
 })().catch(e => { console.error(e); process.exitCode = 1; });

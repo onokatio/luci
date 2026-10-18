@@ -132,12 +132,8 @@ static int qsdk_hostapd_del_client(struct ubus_context *ctx, struct ubus_object 
 	return UBUS_STATUS_OK;
 }
 
-#include "qsdk-hostapd-info.h"
 
 static const struct ubus_method qsdk_hostapd_methods[] = {
-	UBUS_METHOD_NOARG("get_clients", qsdk_hostapd_info),
-	UBUS_METHOD_NOARG("get_status", qsdk_hostapd_info),
-	UBUS_METHOD_NOARG("get_features", qsdk_hostapd_info),
 	UBUS_METHOD("del_client", qsdk_hostapd_del_client, qsdk_hostapd_policy),
 };
 static struct ubus_object_type qsdk_hostapd_type = UBUS_OBJECT_TYPE("qsdk-hostapd", qsdk_hostapd_methods);

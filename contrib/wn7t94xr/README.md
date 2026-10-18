@@ -10,7 +10,7 @@ I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 25.12 の標
 | [iwinfo / qsdk-25.12](https://github.com/onokatio/iwinfo/tree/qsdk-25.12) | 新しい公式iwinfoを基に、QSDKのラジオ名とVAPの対応、純正hostapdの情報取得、WEXTスキャンを追加しています。HE/EHT・6 GHz・320 MHzの処理は公式実装を使います。 |
 | [LuCI / qsdk-25.12](https://github.com/onokatio/luci/tree/qsdk-25.12) | `rpcd-mod-luci` の MLO・純正APIとの連携、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
 
-状態の取得には `network.wireless`、`luci-rpc.getWirelessDevices`、`iwinfo` を使います。不足する情報の取得には既存の `rpcd-mod-luci` を拡張しています。常駐デーモンは追加せず、Band Steeringには本体の `lbd` を使います。`/lib/netifd/wireless/qcawificfg80211.sh` は netifd が読み込む標準形式のドライバープラグインです。
+状態の取得には `network.wireless`、`luci-rpc.getWirelessDevices`、`iwinfo` を使います。不足する情報の取得には既存の `rpcd-mod-luci` を拡張しています。常駐デーモンは追加しません。`/lib/netifd/wireless/qcawificfg80211.sh` は netifd が読み込む標準形式のドライバープラグインです。
 
 MLOを含む設定変更は、純正の制御処理でラジオ全体に適用します。同じ設定には、netifdから複数のsetup呼び出しが来ても適用を一度にまとめる処理があります。片方のラジオを停止した場合は、残る有効なラジオの再起動と共有MLDのブリッジ接続の復元も必要です。このため、単一ラジオの操作でもMLOグループの通信が一時的に切れることがあります。MLOのブリッジには `mld*` を接続し、LuCIには各リンクの `ath*` の情報を返します。
 
@@ -18,7 +18,7 @@ MLOを含む設定変更は、純正の制御処理でラジオ全体に適用�
 
 ## 25.12への移行
 
-LuCI本体は公式の `openwrt-25.12` ブランチを使います。周波数の選択、HE/EHTの速度表示、802.11k/v、SQM、パッケージ管理の画面は公式実装を使い、QSDKの設定名や値を変換する処理を加えています。MLOグループの編集、無線診断、NSS/PPEなど、公式画面にない機能は引き続きこのフォークで管理します。
+LuCI本体は公式の `openwrt-25.12` ブランチを使います。周波数の選択、HE/EHTの速度表示、802.11k/v、SQM、パッケージ管理の画面は公式実装を使い、QSDKの設定名や値を変換する処理を加えています。既存の純正MLOの設定と動作を維持し、グループ作成やリンク割り当ての独自UIは提供しません。
 
 25.12のucode実行環境を、純正v2.5.1のユーザー空間ABI向けにビルドします。ucodeが必要とする新しいJSONライブラリはlibucodeへ静的に組み込み、シンボルを非公開にします。純正rpcdやWeb設定画面は元のJSONライブラリを使い続けます。古いmuslにない `qsort_r()` には、musl 1.2.5の実装を組み込みます。カーネル、純正ドライバー、rpcd本体は置き換えません。
 
@@ -41,15 +41,13 @@ Webサーバーのubus公開先は `/ubus` にします。末尾にスラッシ�
 | 標準画面の機能 | QSDKへの反映 |
 | --- | --- |
 | AP追加・削除、スキャン、Client接続 | 純正制御処理とnetifdの標準インターフェースを使います。 |
-| AP/ClientのWDS、Monitor | 純正ドライバーのモードとWDS設定を使います。MLOグループを作成し、別ラジオのリンクを追加できます。MLO Clientにも対応します。 |
+| AP/ClientのWDS、Monitor | 純正ドライバーのモードとWDS設定を使います。既存MLOのSSID・暗号化・モード・ネットワークの編集はグループ内で同期します。 |
 | Legacy/N/AC/AX/BE、チャンネル、幅、国、送信出力 | ラジオの対応モードを取得し、QSDKのUCI形式へ保存します。送信出力の単位はdBmです。 |
 | MAC許可・拒否リスト | 純正hostapdの標準ACLで判定します。追加APで正しく動かないドライバー側のACLは、競合を避けるため解除します。許可・拒否リストは設定ファイルとしてoverlayに保存し、ダウンロード失敗時にも純正hostapdが読める形式でUCIへ登録します。 |
 | WMM、DTIM、ビーコン、RTS、プリアンブル、GTK更新、端末の無通信時間 | 純正の設定生成を使い、不足する標準項目はhostapdの起動前に補います。フラグメント閾値はLegacyモードで使えます。 |
 | Distance Optimization | ラジオの距離を0〜21150mで指定し、純正APIでACKタイムアウトを調整します。空欄・0で元の値に戻します。 |
 | WPA2/SAE、OWE、EAP/RADIUS、PMF、802.11r、WPSの有効化 | 純正hostapd/wpa_supplicantの設定へ反映します。6 GHzとMLOではSAE、OWE、WPA3-EAPの強い暗号化を選びます。 |
-| OFDMA、MU-MIMO、Beamforming、Multicast・IGMP、接続台数上限 | 純正UCIとドライバーAPIへ反映し、稼働中の値を読み取れます。空欄は純正の設定を使います。Multicastは純正モード5と無効、IGMPは接続先ブリッジのSnoopingを使います。 |
-| 802.11k/v、WPS操作 | Neighbor Report・Beacon Report・BSS Transitionを設定し、純正hostapdへ測定要求・移動要求・WPS開始／中止を送ります。 |
-| ATF、TWT、BSS Color | ATFはラジオ単位で有効にし、SSID・端末ごとの配分を設定します。TWT ResponderはAPごと、BSS Colorはラジオごとに設定します。 |
+| 802.11k/v | 標準のNeighbor Report・Beacon Report・BSS Transitionの有効化を純正hostapdへ反映します。 |
 | Associated Stations、Disconnect | iwinfoと標準の `hostapd.<ifname>.del_client` APIを使います。一時拒否は期限後に解除します。 |
 
 純正ドライバーが公開しないAd-Hoc、802.11sは表示しません。802.11rの実際のローミング、RADIUSサーバーとの認証、WDSのブリッジ通信には、対応する別のAPや認証サーバーが必要です。設定の反映・サービスの起動確認と、これらの相互接続確認は区別します。
@@ -60,7 +58,7 @@ Associated Stationsでは、純正 `wlanconfig` の端末一覧と、端末を�
 
 ## Switch構成情報
 
-純正の `/etc/board.json` にポート定義がないため、標準Switch画面は `has an unknown topology` と表示します。`rpcd-mod-luci` の標準API `luci-rpc.getBoardJSON` に、欠けている `switch1.ports` を補う処理を追加しました。既存のポート定義や、モデル・ネットワーク設定・他のSwitch情報は保持します。ファイルの書き換えや起動スクリプトの追加は行いません。
+純正の `/etc/board.json` にポート定義がないため、標準Switch画面は `has an unknown topology` と表示します。起動処理がRAM上の `board.json` に欠けている `switch1.ports` を補い、標準API `luci-rpc.getBoardJSON` が読み取ります。既存のポート定義や、モデル・ネットワーク設定・他のSwitch情報は保持します。純正のファイルは書き換えず、LuCI停止時にRAMのマウントを解除します。
 
 実行中のDTSがAP-MI01.6とQCA8386を示し、デバイス番号・CPU/LAN/WANのビットマップ・Ethernet1のエイリアスとdp2の接続属性が一致した場合だけ補完します。QSDKのeth1はsysfsではvirtualデバイスとして公開されるため、DTS側の対応情報を参照します。CPU側はポート0のeth1、外部ポートは1〜3です。10GbpsのWAN側eth0は、この外部Switchのポートには含めません。
 
@@ -76,43 +74,12 @@ QSDKランタイムのバージョンごとにJavaScriptのキャッシュキー
 
 EAP ClientはPEAP・TTLSの内部認証をwpa_supplicantの設定へ変換します。TTLSのEAP方式には `autheap=`、PEAPには `auth=` を使います。純正wpa_supplicantにFASTは組み込まれていないため、WN-7T94XRでは選択肢から外しています。
 
-MLOはGeneral SetupのMulti-Link Operationでグループを作成・選択します。各ラジオを1リンクずつ、最大3リンク追加できます。全ラジオでBEモードを使い、Clientにはブリッジではないネットワークを割り当ててください。リンクを削除してグループが空になると、そのグループも削除します。MLO Clientの接続先にはMLOが有効なAPが必要です。
-
-## アクセラレーション
-
-Network → Accelerationで、純正ECMの有効・無効と加速エンジンを設定できます。WN-7T94XRではAuto、PPE、SFE、PPE＋SFEを選べます。搭載されていないNSSの選択肢は表示しません。設定は純正の`/etc/config/ecm`へ保存し、純正の`qca-nss-ecm restart`で反映します。適用時にECMを再読み込みするため、通信速度が一時的に低下する場合があります。適用に失敗した場合は元の設定へ戻して再読み込みを試みます。
-
-標準RPCdモジュールの`luci-rpc.getAccelerationStatus`で、IPv4/IPv6・エンジン別の加速接続数、TCP/UDPの内訳、処理待ち数、PPEの資源・フロー・失敗統計、Wi-Fi Direct Switchの送受信パケット数を取得します。画面は5秒間隔で更新し、取得できない値は「-」で表示します。64ビットの累積カウンターは文字列で返し、JavaScriptでの丸めを避けます。
-
-純正ドライバーとECMの起動処理は変更しません。標準OpenWrtのFlow Offloadingとは別の設定です。
-
-## Wirelessの独自UIの整理
-
-ATF、TWT、BSS Color、OFDMA、MU-MIMO、Beamforming、puncturing、詳細WMM、DSCP→TID、接続台数上限、Neighbor APの独自入力欄と、手動WPS・BSS Transition Request・Beacon Measurement Requestの操作欄を削除しました。専用のRPCと権限、テストも削除しています。標準のWMM有効化、802.11k/v、フラグメント閾値、距離設定、SSID・暗号化・チャンネル、AP追加・削除・スキャン・端末切断は維持しています。
-
-保存済みのUCI設定値は変更しません。既存設定を反映するnetifdのQSDKプラグインと、別の診断画面でも使う読み取りRPCは維持します。純正ドライバー・rpcd・netifd本体と、起動時に取得してRAMへ展開する方式も変更しません。
 
 ## SQM・帯域制御
 
 Network → SQM QoSは公式 `luci-app-sqm` と `sqm-scripts` を使います。CAKE・IFBは純正カーネルの既存モジュールを使います。SQMが有効な間はECMのPPE/SFE加速を止め、全キューを無効にしたときやLuCIを停止したときに、開始前の加速設定へ戻します。加速を元から無効にしていた場合は無効を保ちます。
 
 設定とSQMの起動・復旧処理はoverlay、SQM本体と依存パッケージは起動時にRAMへ取得します。取得に失敗した場合は、SQMのために止めていた加速を元に戻します。初期状態ではSQMを無効にしています。対象インターフェースと回線速度を設定して有効にしてください。ソフトウェア処理になるため、最大速度はCPU性能に制限されます。AP／ブリッジ構成では、実際の通信経路が指定したキューを通ることを確認してください。
-
-## 無線診断
-
-Network → Wireless diagnosticsで、純正ドライバーのChannel Survey、前回取得からのBusy率、Noise、ACS・CAC状態、チャンネル選択履歴、適用中のpuncture bitmapを確認できます。スキャン結果には古いサンプルが残るため、現在のチャンネルと区別して表示します。QoS・ATFの詳細はボタンを押したときに取得します。
-
-純正hostapdの情報から標準の `get_clients`、`get_status`、`get_features` を返します。DAWN／usteerが使う通知や応答制御のAPI全体には対応していません。
-
-## Band Steering
-
-Network → Band steeringで、純正 `lbd` の有効・無効、RSSIとChannel Loadのしきい値を変更できます。2.4GHzと5GHzのAPに同じSSID・暗号化を設定してください。RSSIしきい値は純正の正のdB指標で、負のdBm値ではありません。EasyMesh／SONの管理処理が有効な間は、単独 `lbd` の編集を拒否します。起動には純正initサービスを使います。
-
-## Switchの詳細設定
-
-Network → Advanced switchで、外部SwitchのLAN1〜3のミラー、送信速度制限、受信ポリサー、Broadcast・Unknown Unicast／Multicastのストーム制御、既定優先度、DSCP／802.1p分類を設定できます。受信の帯域制限とストーム制御は同じポリサーを使うため、同一ポートでは片方を選びます。VLAN、CPUポート、WANは変更しません。
-
-設定は `/etc/config/luci_qsdk_switch` に保存し、RAM上のLuCIが起動すると再適用します。要求値と、ハードウェアの粒度で丸められた適用値を分けて表示します。適用後の値を純正SSDKの変換式と照合し、失敗時には変更前の実測値へ戻します。LuCIのダウンロードに失敗した場合、追加したSwitch設定は再適用されません。
 
 ## IPK のビルド
 
@@ -141,20 +108,6 @@ QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起�
 準備・起動用の2個と、RAM用の21個の、計23個のIPKを生成します。互換性のある4個のIPK（cgi-io、uhttpd、uhttpd-mod-ubus、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
 
 機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
-
-### 残りのビルド処理の比較
-
-v5.2.0-1を基準に、公式方式への移行版を実際にビルドして比較しました。空行・コメントを含む行数で、呼び出し側・追加Makefile・公式ソースへのパッチも数えています。試作だけの検証コードは含めません。
-
-| 試作した変更 | 独自コードの増減 | 採否 |
-| --- | ---: | --- |
-| 準備・起動IPKを `package.mk` で生成 | +39行 | 見送り。Makefile、フック引き渡し、SDKのrootfsステージ分離が必要 |
-| ucodeをソース同梱の公式Makefileでビルド | +2行 | 見送り。純正ABIと独立したJSONライブラリの指定が残る |
-| rpcd-mod-luciを公式Makefile・CMakeでビルド | +1行 | 見送り。ヘッダー選択の指定とCMake最低バージョンのパッチが必要 |
-| 依存IPK取得をSDKへ委譲し、既存IPKビルドへ統合 | −17行 | 採用。独立した取得スクリプトとCIの呼び出しを削除 |
-| rpcdヘッダーをSDK標準の配置先から取得 | −5行 | 採用。ビルドディレクトリへの依存を削除 |
-
-採用後のビルドスクリプトは533行から512行へ減り、CIも1行減りました。既存の6個のLuCIパッケージは引き続き公式の `luci.mk` で生成します。純正ABIの維持やRAM向けのリンク設定に必要な処理は残しています。
 
 ## RAMとoverlayの配置
 
@@ -193,8 +146,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.3.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.3.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.4.0-2
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.4.0-2_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -208,7 +161,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.3.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.4.0-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

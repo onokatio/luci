@@ -143,9 +143,7 @@ start() {
 		rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*.json
 		"$ram/etc/init.d/ucitrack" start || { stop; return 1; }
 		"$ram/etc/init.d/uhttpd" start || { stop; return 1; }
-		if [ -f /etc/config/luci_qsdk_switch ]; then
-			ubus call luci-rpc applySwitchSettings || logger -t luci-ram 'Switch profile failed; check system logs'
-		fi
+
 		touch "$ram/.started"
 	fi
 	if [ -x /etc/init.d/sqm ]; then

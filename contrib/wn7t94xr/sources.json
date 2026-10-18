@@ -39,7 +39,7 @@
   ],
   "forks": {
     "iwinfo": "1b78014878f5ebfb0ef901e3ceb785d48c6cb2d6",
-    "netifd": "61ec92e000a8e33868f1b2cb24f5748615123d48"
+    "netifd": "067135717695c300c814e57a1bdd37e23cceb5bd"
   },
   "rom_packages": {
     "curl": "7.80.0",
@@ -88,7 +88,7 @@
       "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
     }
   },
-  "version": "5.3.0-1",
+  "version": "5.4.0-2",
   "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d",
   "iwinfo_upstream": "66bdd1a071895d91babc9b9228bb84626bbce226"
 }
