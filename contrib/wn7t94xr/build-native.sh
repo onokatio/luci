@@ -25,29 +25,19 @@ cp "$iwinfo/iwinfo" "$output/usr/bin/"
 	-L"$iwinfo" -L"$stage/usr/lib" -liwinfo -lubox -lubus -luci -Wl,-rpath,/tmp/luci-ram/usr/lib -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so.20230701" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
-python3 - "$iwinfo" "$output" <<'RATE'
-import pathlib, sys
-source = (pathlib.Path(sys.argv[1]) / 'iwinfo_nl80211.c').read_text()
-start = source.index('static void nl80211_parse_rateinfo(')
-end = source.index('static int nl80211_get_survey_cb(', start)
-(pathlib.Path(sys.argv[2]) / 'qsdk-nl-rate.inc').write_text(source[start:end])
-RATE
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$output" -I"$iwinfo/include" \
-	"$iwinfo/tests/qsdk-selfcheck.c" -o /tmp/qsdk-iwinfo-selfcheck
-/tmp/qsdk-iwinfo-selfcheck
-host="$sdk/staging_dir/host"
-python3 - "$luci" "$output" <<'PY'
-import pathlib, sys
-luci, output = map(pathlib.Path, sys.argv[1:])
-control = (luci / 'libs/rpcd-mod-luci/src/qsdk-hostapd.h').read_text()
-(output / 'qsdk-hostapd-control.inc').write_text(control[:control.index('struct qsdk_hostapd_ban')])
-rpc = (luci / 'libs/rpcd-mod-iwinfo/src/iwinfo.c').read_text()
-(output / 'qsdk-rate.inc').write_text(rpc[rpc.index('static void\nrpc_iwinfo_add_rateinfo('):rpc.index('static int\nrpc_iwinfo_assoclist(')])
-PY
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luci/src" \
-	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
-/tmp/qsdk-hostapd-selfcheck
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
-	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
-	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
-/tmp/qsdk-rate-selfcheck
+# Compile complete sources with SDK types; execute the ARM tests with the same libraries.
+checks="$output/selfchecks"
+mkdir -p "$checks"
+test_cflags="-Os -D_GNU_SOURCE -std=gnu99 -Wall -Werror -Wno-unused-function -mfloat-abi=hard -ffunction-sections -fdata-sections $includes"
+test_ldflags="-L$stage/usr/lib -Wl,--gc-sections"
+"$cc" $test_cflags "$iwinfo/tests/nl80211-selfcheck.c" $test_ldflags -lnl-tiny -o "$checks/nl80211"
+"$cc" $test_cflags "$iwinfo/tests/qsdk-selfcheck.c" $test_ldflags -o "$checks/iwinfo"
+"$cc" $test_cflags -I"$luci/libs/rpcd-mod-luci/src" \
+	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" $test_ldflags -o "$checks/hostapd"
+"$cc" $test_cflags "$luci/contrib/wn7t94xr/rate-selfcheck.c" $test_ldflags \
+	-lubox -ldl -Wl,--export-dynamic -o "$checks/rpc-rate"
+for check in nl80211 iwinfo hostapd; do
+	qemu-arm -L "$toolchain" -E "LD_LIBRARY_PATH=$stage/usr/lib" "$checks/$check"
+done
+qemu-arm -L "$toolchain" -E "LD_LIBRARY_PATH=$stage/usr/lib:$output/usr/lib" \
+	"$checks/rpc-rate" "$output/usr/lib/rpcd/iwinfo.so"

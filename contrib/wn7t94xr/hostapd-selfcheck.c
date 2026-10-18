@@ -6,7 +6,10 @@
 #include <unistd.h>
 #include <net/if.h>
 #include <sys/wait.h>
-#include "qsdk-hostapd-control.inc"
+#include <dirent.h>
+#include <libubus.h>
+#include <libubox/uloop.h>
+#include "qsdk-hostapd.h"
 
 int main(void)
 {
