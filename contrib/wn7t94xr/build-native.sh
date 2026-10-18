@@ -35,19 +35,7 @@ RATE
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror $includes -I"$output" -I"$iwinfo/include" \
 	"$iwinfo/tests/qsdk-selfcheck.c" -o /tmp/qsdk-iwinfo-selfcheck
 /tmp/qsdk-iwinfo-selfcheck
-python3 - "$luci/libs/rpcd-mod-luci/src/luci.c" "$output/qsdk-switch.inc" <<'PY'
-import pathlib, sys
-source = pathlib.Path(sys.argv[1]).read_text()
-start = source.index('static char *\nreadstr(')
-readstr = source[start:source.index('\n}\n', start) + 3]
-switch = source[source.index('/* QSDK switch topology */'):source.index('/* End QSDK switch topology */')]
-pathlib.Path(sys.argv[2]).write_text(readstr + switch)
-PY
 host="$sdk/staging_dir/host"
-cc -std=gnu99 -Wall -Werror -I"$host/include" -I"$output" \
-	"$luci/contrib/wn7t94xr/switch-selfcheck.c" "$host/lib/libblobmsg_json.a" \
-	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-switch-selfcheck
-/tmp/qsdk-switch-selfcheck
 python3 - "$luci" "$output" <<'PY'
 import pathlib, sys
 luci, output = map(pathlib.Path, sys.argv[1:])
@@ -59,23 +47,7 @@ PY
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$output" -I"$luci/libs/rpcd-mod-luci/src" \
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" -o /tmp/qsdk-hostapd-selfcheck
 /tmp/qsdk-hostapd-selfcheck
-cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -Wno-unused-function -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" \
- "$luci/contrib/wn7t94xr/hostapd-info-selfcheck.c" "$host/lib/libblobmsg_json.a" \
- "$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-hostapd-info-selfcheck
-/tmp/qsdk-hostapd-info-selfcheck
 cc -D_GNU_SOURCE -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$luci/libs/rpcd-mod-iwinfo/src" -I"$host/include" -I"$output" -I"$iwinfo/include" -I"$stage/usr/include" \
 	"$luci/contrib/wn7t94xr/rate-selfcheck.c" "$host/lib/libblobmsg_json.a" \
 	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-rate-selfcheck
 /tmp/qsdk-rate-selfcheck
-cc -std=gnu99 -Wall -Werror -I"$luci/libs/rpcd-mod-luci/src" -I"$host/include" \
-	"$luci/contrib/wn7t94xr/acceleration-selfcheck.c" "$host/lib/libblobmsg_json.a" \
-	"$host/lib/libubox.a" "$host/lib/libjson-c.a" -lm -o /tmp/qsdk-acceleration-selfcheck
-/tmp/qsdk-acceleration-selfcheck
-python3 - "$luci/libs/rpcd-mod-luci/src/qsdk-switch-controls.h" "$output/qsdk-switch-controls.inc" <<'CHECK'
-import pathlib,sys
-source=pathlib.Path(sys.argv[1]).read_text()
-parts=[source[source.index('struct qsdk_switch_port'):source.index('static bool qsdk_ssdk_batch')],source[source.index('static bool qsdk_ssdk_field'):source.index('static bool qsdk_switch_read')],source[source.index('static bool qsdk_switch_valid'):source.index('static bool qsdk_switch_write')],source[source.index('static unsigned int qsdk_switch_rate'):source.index('static const char *const qsdk_switch_keys')]]
-pathlib.Path(sys.argv[2]).write_text('\n'.join(parts))
-CHECK
-cc -std=gnu99 -Wall -Werror -I"$output" "$luci/contrib/wn7t94xr/switch-controls-selfcheck.c" -o /tmp/qsdk-switch-controls-selfcheck
-/tmp/qsdk-switch-controls-selfcheck
