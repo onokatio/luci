@@ -93,10 +93,11 @@ SDK のファイル名は `openwrt-sdk-19.07.10-ipq40xx-generic_gcc-7.5.0_musl_e
 
 `sources.json` の `forks` に記載したコミットを使います。SDK の base フィードも同ファイルの `sdk_base` に固定し、`libubox ubus uci lua libnl-tiny rpcd` を登録してビルドします。ソースを保持するため `CONFIG_AUTOREMOVE` を無効にしてください。SDK は Python 2 を要求します。
 
+Cの検査には `qemu-user` も必要です。`build-native.sh` は、SDKのコンパイラー・型・ライブラリでテストをビルドし、QEMUでARM版を実行します。nl80211の速度解析とチャンネル変換はCファイル全体、hostapd制御はヘッダー全体を読み込みます。RPCの速度情報は、生成したプラグインを標準の登録APIと `assoclist` 経由で検査します。関数の文字列切り出しや、テスト専用の公開APIは使いません。旧SDKのlibnl-tinyにある `const` 宣言の差への対応は、nl80211の読み込み箇所に限定しています。
+
 ```sh
 node contrib/wn7t94xr/selfcheck.js
 python3 ../netifd/contrib/qsdk/selfcheck.py
-python3 ../iwinfo/tests/channel-selfcheck.py
 sh contrib/wn7t94xr/build-native.sh /path/to/sdk ../iwinfo /tmp/wn7-native
 sh contrib/wn7t94xr/build-runtime.sh /path/to/sdk /tmp/wn7-runtime-sources /tmp/wn7-native
 python3 contrib/wn7t94xr/build-ipk.py /path/to/sdk /tmp/wn7-native ../netifd /tmp/wn7-base-cache ./dist/wn7t94xr
