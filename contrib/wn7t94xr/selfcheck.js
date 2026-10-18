@@ -76,8 +76,17 @@ assert.equal(modalStatus(hiddenStatus, undefined), hiddenStatus);
 const qca = new Function('uci', '_', helpers + '\nreturn { members: qca_members, setShared: qca_set_shared, security: qca_security, ssid: qca_ssid, writeSecurity: qca_write_security, validSSID: qca_valid_ssid, validKey: qca_valid_key, writeKey: qca_write_key, nextIfname: qca_next_ifname, mlo: qca_mlo, secureBand: qca_secure_band, hwmode: qca_hwmode, removeNetwork: qca_remove_network };')(uci, v => v);
 assert.equal(qca.mlo('ath05'), true);
 assert.equal(qca.mlo('ath1'), false);
+const encryptionCode = wireless.match(/encr\.validate = function\(id, value\) \{[\s\S]*?\n\s*\};/)[0];
+const encryption = {};
+new Function('encr', 'qca_mlo', 'qca_secure_band', '_', encryptionCode)(encryption, qca.mlo, qca.secureBand, v => v);
+assert.equal(encryption.validate('ath15', 'sae'), true);
+assert.notEqual(encryption.validate('ath15', 'psk2'), true);
+assert.equal(encryption.validate('ath1', 'psk2'), true);
+
 data.new6 = { '.type': 'wifi-iface', device: 'wifi2' };
 assert.equal(qca.mlo('new6'), false);
+assert.notEqual(encryption.validate('new6', 'psk2'), true);
+assert.equal(encryption.validate('new6', 'owe'), true);
 assert.throws(() => qca.writeSecurity('new6', 'none'));
 delete data.new6;
 assert.equal(qca.security('ath1'), 'sae-mixed');

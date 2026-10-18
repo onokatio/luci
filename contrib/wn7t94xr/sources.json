@@ -88,7 +88,7 @@
       "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
     }
   },
-  "version": "5.4.0-1",
+  "version": "5.4.0-2",
   "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d",
   "iwinfo_upstream": "66bdd1a071895d91babc9b9228bb84626bbce226"
 }

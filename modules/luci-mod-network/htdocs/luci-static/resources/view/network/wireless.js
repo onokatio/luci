@@ -1773,8 +1773,7 @@ return view.extend({
 					for (let i = crypto_modes.length - 1; i >= 0; i--)
 						if (!allowed.includes(crypto_modes[i][0])) crypto_modes.splice(i, 1);
 					encr.validate = function(id, value) {
-						const mld = this.map.lookupOption('mld', id)[0];
-						return (!(mld.isActive(id) && mld.formvalue(id)) && !qca_secure_band(id)) || [ 'sae', 'owe', 'wpa3', 'wpa3-192' ].includes(value) || _('MLO and 6 GHz require WPA3-SAE, OWE or WPA3-EAP.');
+						return (!qca_mlo(id) && !qca_secure_band(id)) || [ 'sae', 'owe', 'wpa3', 'wpa3-192' ].includes(value) || _('MLO and 6 GHz require WPA3-SAE, OWE or WPA3-EAP.');
 					};
 				}
 				else crypto_modes.push(['wep-open', _('WEP Open System'), 11], ['wep-shared', _('WEP Shared Key'), 10], ['none', _('No Encryption'), 0]);
