@@ -1,6 +1,10 @@
 # WN-7T94XR QSDK 対応フォーク
 
-純正ドライバーを使い、LuCI の標準 Wireless 画面で AP を管理するためのフォークです。[実装・IPK・導入手順](contrib/wn7t94xr/README.md)を参照してください。
+純正ドライバーを使い、LuCI の標準 Wireless 画面で AP を管理するためのフォークです。現行の LuCI 25.12 対応は [`qsdk-25.12`](https://github.com/onokatio/luci/tree/qsdk-25.12) で管理しています。
+
+現行構成の[コンポーネントと呼び出し関係の図](https://github.com/onokatio/luci/blob/qsdk-25.12/README.md#コンポーネントと呼び出し関係)と、[実装・IPK・導入手順](https://github.com/onokatio/luci/blob/qsdk-25.12/contrib/wn7t94xr/README.md)を参照してください。図は現行ブランチの README で管理し、構成変更時に更新します。
+
+この既定ブランチ `qsdk-wn7t94xr` は旧系統です。[旧版の説明](contrib/wn7t94xr/README.md)も残しています。
 
 # OpenWrt luci feed
 
