@@ -2558,7 +2558,8 @@ return view.extend({
 			return form.TypedSection.prototype.handleRemove.apply(this, [section_id, ev]);
 		};
 
-		// Add an error notification without replacing the official modal lifecycle.
+		// Add an error notification without replacing the inherited modal lifecycle.
+		var modalSave = s.handleModalSave;
 		s.handleModalSave = function(modalMap, ev) {
 			var activeMap = dom.findClassInstance(this.getActiveModalMap()), save = activeMap.save;
 			activeMap.save = function() {
@@ -2566,7 +2567,7 @@ return view.extend({
 				return Promise.resolve().then(function() { return save.apply(activeMap, args); })
 					.catch(function(e) { ui.addNotification(null, E('p', e.message)); throw e; });
 			};
-			return form.TypedSection.prototype.handleModalSave.apply(this, arguments)
+			return modalSave.apply(this, arguments)
 				.finally(function() { activeMap.save = save; });
 		};
 

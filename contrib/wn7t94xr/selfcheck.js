@@ -203,7 +203,7 @@ const addCode = wireless.slice(wireless.indexOf('s.handleAdd = function'), wirel
 const section = { renderMoreOptionsModal: id => Promise.resolve(id) };
 new Function('m', 's', 'uci', 'next_free_sid', 'qca_next_ifname', 'qca_write_security', 'qca_mlo', 'qca_secure_band', addCode)({}, section, uci, () => 'new_ap', qca.nextIfname, qca.writeSecurity, qca.mlo, qca.secureBand);
 const networkJS = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/network.js'), 'utf8');
-const saveCode = wireless.slice(wireless.indexOf('s.handleModalSave = function'), wireless.indexOf('s.handleScan = function'));
+const saveCode = wireless.slice(wireless.indexOf('var modalSave = s.handleModalSave;'), wireless.indexOf('s.handleScan = function'));
 const formSource = fs.readFileSync(path.join(root, 'modules/luci-base/htdocs/luci-static/resources/form.js'), 'utf8');
 function formMethod(signature, start = 0) {
 	const a = formSource.indexOf(signature, start), b = formSource.indexOf('\n\t}', a);
@@ -305,22 +305,24 @@ const frequency = new Function('form', 'rpc', 'network', 'uci', 'L', '_', 'qca_h
 	const L = {bind: (fn, ctx, ...args) => fn.bind(ctx, ...args)};
 	let active, hidden = 0, notices = 0;
 	const dom = {findClassInstance: () => active}, ui = {hideModal() { hidden++; }, addNotification() { notices++; }};
+	assert(wireless.includes("s = m.section(form.GridSection,"));
+	assert(formSource.indexOf('handleModalSave(...args) /* ... */{') > formSource.indexOf('const CBIGridSection ='));
 	const baseSave = new Function('dom', 'L', 'return function(modalMap,ev){' + formMethod('handleModalSave(modalMap, ev) {') + '}')(dom, L);
 	const baseCancel = new Function('dom', 'L', 'ui', 'return function(modalMap,ev){' + formMethod('handleModalCancel(modalMap, ev) {') + '}')(dom, L, ui);
-	const typedSave = new Function('...args', formMethod('handleModalSave(...args) /* ... */{'));
-	const typedCancel = new Function('modalMap', 'ev', 'isSaving', formMethod('handleModalCancel(modalMap, ev, isSaving) {'));
+	const gridSave = new Function('...args', formMethod('handleModalSave(...args) /* ... */{'));
+	const gridCancel = new Function('modalMap', 'ev', 'isSaving', formMethod('handleModalCancel(modalMap, ev, isSaving) {'));
 	let loads = 0, resets = 0, fail = true;
 	const modal = {map: {config: 'wireless', addedSection: 'new_ap', data: uci, load: async () => loads++, reset: async () => resets++},
-		getActiveModalMap: () => ({}), getPreviousModalMap: () => null, handleModalCancel: typedCancel,
+		getActiveModalMap: () => ({}), getPreviousModalMap: () => null, handleModalCancel: gridCancel, handleModalSave: gridSave,
 		super(name, args) { return (name == 'handleModalSave' ? baseSave : baseCancel).apply(this, args); }};
 	active = { parent: modal.map, save: async (cb, silent) => { assert.equal(silent, true); if (fail) throw new Error('invalid key'); } };
 	const originalSave = active.save;
-	new Function('s', 'form', 'dom', 'ui', 'E', saveCode)(modal, {TypedSection: {prototype: {handleModalSave: typedSave}}}, dom, ui, (tag, text) => ({tag, text}));
+	new Function('s', 'form', 'dom', 'ui', 'E', saveCode)(modal, {}, dom, ui, (tag, text) => ({tag, text}));
 	await modal.handleModalSave(active, {});
 	assert.equal(modal.map.addedSection, 'new_ap');
 	assert.equal(hidden, 0); assert.equal(notices, 1); assert.equal(active.save, originalSave);
 	data.new_ap = {};
-	await typedCancel.call(modal, active, {}, false);
+	await gridCancel.call(modal, active, {}, false);
 	assert.equal(data.new_ap, undefined); assert(!('addedSection' in modal.map));
 	modal.map.addedSection = 'new_ap'; data.new_ap = {}; fail = false;
 	await modal.handleModalSave(active, {});
