@@ -8,7 +8,7 @@ I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 25.12 の標
 
 | フォーク | 変更内容 |
 | --- | --- |
-| [netifd / qsdk-legacy](https://github.com/onokatio/netifd/tree/qsdk-legacy) | 標準の wireless driver プラグイン。純正の制御処理を呼び、無線インターフェースの状態とブリッジへの接続を netifd に通知します。 |
+| [netifd / qsdk-19.07](https://github.com/onokatio/netifd/tree/qsdk-19.07) | OpenWrt 19.07 系を基にした、純正 netifd 向けの標準 wireless driver プラグイン。LuCI 25.12 構成でも使います。純正の制御処理を呼び、無線インターフェースの状態とブリッジへの接続を netifd に通知します。 |
 | [iwinfo / qsdk-25.12](https://github.com/onokatio/iwinfo/tree/qsdk-25.12) | 新しい公式iwinfoを基に、QSDKのラジオ名とVAPの対応、純正hostapdの情報取得、WEXTスキャンを追加しています。HE/EHT・6 GHz・320 MHzの処理は公式実装を使います。 |
 | [LuCI / qsdk-25.12](https://github.com/onokatio/luci/tree/qsdk-25.12) | `rpcd-mod-luci` の MLO・純正APIとの連携、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
 
