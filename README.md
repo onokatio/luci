@@ -70,12 +70,12 @@ flowchart TD
 
     subgraph RPC["［純正］rpcd プロセス内に追加して動く"]
         LRPC["［フォーク］rpcd-mod-luci<br/>無線状態・MLO リンクの補正<br/>board.json の取得"]
-        IRPC["［フォーク］rpcd-mod-iwinfo<br/>標準 iwinfo RPC"]
+        IRPC["［フォーク］rpcd-mod-iwinfo<br/>公式 RPC ＋ 汎用の未取得項目処理"]
         URPC["［公式］rpcd-mod-ucode<br/>＋ QSDK 対応した LuCI スクリプト<br/>機能情報・Switch の状態を返す"]
         DISCONNECT["［独自］hostapd 互換 API<br/>hostapd.ath*.del_client"]
     end
 
-    IW["［フォーク］新しい libiwinfo<br/>QSDK バックエンド<br/>＋ 公式 nl80211／WEXT 処理"]
+    IW["［フォーク］新しい libiwinfo<br/>QSDK 固有の取得・帯域補正<br/>＋ 公式 nl80211／WEXT 処理"]
     NET["［純正］netifd<br/>network.wireless の状態"]
     NATIVE["［純正］wlanconfig・sysfs<br/>nl80211・WEXT／ドライバー"]
     HOST["［純正］hostapd"]
@@ -101,6 +101,8 @@ flowchart TD
 `rpcd-mod-*` は純正 rpcd が読み込む拡張です。端末切断用の互換 API は `rpcd-mod-luci` に含まれ、同じプロセス内で動きます。別の常駐デーモンは追加しません。図の `ubus` は純正の ubus バスを経由する呼び出しを表します。
 
 新しい `libiwinfo.so.20230701` は LuCI の RPC 拡張が使います。純正プログラムが使う旧 libiwinfo は残し、両者を分けています。既知の純正 hostapd／wpa_supplicant はハッシュで判定し、対応する機能情報を返します。未知のバイナリには公式の機能検査を使います。
+
+QSDK 固有の取得と周波数帯の補正は libiwinfo が担当します。`rpcd-mod-iwinfo` はバックエンド名で分岐せず、libiwinfo が返す取得済み項目のマスクに従い、不明な統計・状態を応答から省きます。マスクを提供しない従来のバックエンドでは、公式と同じ出力を保ちます。不明な MCS・GI の省略と、標準画面が使う `no_ir` の出力も汎用処理として残しており、RPC は公式の無改変版ではありません。
 
 ### 起動時の RAM 展開
 

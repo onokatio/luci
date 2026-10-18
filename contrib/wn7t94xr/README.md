@@ -34,6 +34,8 @@ v5.5.0-2では、共通設定の読み書き・削除に公式フォームの処
 
 v5.6.0-1では、保存失敗の通知を公開APIの `addModalOptions()` と `Map.save()` へ接続し、保存・取消の内部メソッドへの依存を外しました。設定項目の列挙には `getOption()` を使います。非対応の項目は生成時に除外し、表示条件は `depends()` へ渡す前にQSDK向けに調整します。フォーム内部の `children` や `deps` は書き換えません。JavaScriptの検査は、公式ローダーでモジュール全体を読み込み、実際に生成したフォーム項目の公開APIを通して行います。DOM描画と外部I/Oはテスト用に置き換え、保存・取消・QR画面の操作は実機ブラウザーで確認します。
 
+v5.7.0-1では、QSDK の周波数帯の補正を libiwinfo へ移し、`rpcd-mod-iwinfo` のバックエンド名による分岐を削除しました。libiwinfo が取得済みの統計・状態をマスクで返し、RPC はその有無に従って出力します。取得した `0`・`false` と未取得を区別し、不明な MCS・GI は省略します。マスクを持たない従来のバックエンドの出力は維持します。RPC には汎用の変換処理が残るため、公式の無改変版ではありません。
+
 Switchのポート構成は、DTSで機種と配線を確認してからRAM上の `board.json` に補います。既存の項目やポート情報は上書きしません。標準の `getBoardJSON` がこの情報を返すため、RPC内の専用JSON生成処理は不要になりました。LuCI停止時は元の `board.json` が見える状態へ戻します。
 
 LuCIの起動とSQMにはLuaを使いません。追加するLuCI拡張も25.12用を使ってください。19.07用のLuCI拡張は混在できません。25.12公式配布のAPKを、この本体のopkgで直接インストールすることもできません。拡張はこのSDK向けにIPK化する必要があります。
@@ -153,8 +155,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.6.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.6.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.7.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.7.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -168,7 +170,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.6.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.7.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
