@@ -181,8 +181,9 @@ wifi = (NETIFD / 'contrib/qsdk/wifi').read_bytes()
 driver = (NETIFD / 'examples/wireless/qcawificfg80211.sh').read_bytes()
 runtime_payload = {'etc/init.d/network': (network, 0o755), 'sbin/wifi': (wifi, 0o755),
                    'lib/netifd/wireless/qcawificfg80211.sh': (driver, 0o755),
+                   'usr/lib/rpcd/qsdk-hostapd.so': ((NATIVE / 'usr/lib/rpcd/qsdk-hostapd.so').read_bytes(), 0o755),
                    'etc/hotplug.d/iface/11-sqm': ((HERE / 'root/etc/hotplug.d/iface/11-sqm').read_bytes(), 0o755)}
-emit('luci-qsdk-wn7t94xr-runtime', 'libc, netifd, ubus, jshn', runtime_payload, 'kmod-sched-cake')
+emit('luci-qsdk-wn7t94xr-runtime', 'libc, netifd, ubus, jshn, rpcd, libubus20210603, libubox20191228', runtime_payload, 'kmod-sched-cake')
 
 manifest = []
 for name, version in versions.items():

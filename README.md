@@ -69,10 +69,10 @@ flowchart TD
     HTTP["［公式］uhttpd → LuCI CGI<br/>ubus の HTTP 中継"]
 
     subgraph RPC["［純正］rpcd プロセス内に追加して動く"]
-        LRPC["［フォーク］rpcd-mod-luci<br/>無線状態・MLO リンクの補正<br/>board.json の取得"]
+        LRPC["［公式］rpcd-mod-luci<br/>ソース無改変でビルド<br/>ネットワーク・ホスト・board.json の取得"]
         IRPC["［公式］rpcd-mod-iwinfo<br/>ソース無改変でビルド"]
         URPC["［公式］rpcd-mod-ucode<br/>＋ QSDK 対応した LuCI スクリプト<br/>機能情報・Switch の状態を返す"]
-        DISCONNECT["［独自］hostapd 互換 API<br/>hostapd.ath*.del_client"]
+        DISCONNECT["［独自］qsdk-hostapd 拡張<br/>hostapd.ath*.del_client"]
     end
 
     IW["［フォーク］新しい libiwinfo<br/>QSDK 固有の取得・帯域補正<br/>＋ 公式 nl80211／WEXT 処理"]
@@ -88,8 +88,7 @@ flowchart TD
     HTTP -->|"ubus"| IRPC
     HTTP -->|"ubus"| URPC
     HTTP -->|"ubus：端末切断"| DISCONNECT
-    LRPC -->|"ubus"| NET
-    LRPC -->|"同一プロセス内のライブラリ呼び出し"| IW
+    HTTP -->|"ubus：network.wireless.status"| NET
     IRPC -->|"同一プロセス内のライブラリ呼び出し"| IW
     IW --> NATIVE
     LRPC --> BOARD
@@ -98,13 +97,17 @@ flowchart TD
     DISCONNECT -->|"UNIX 制御ソケット"| HOST
 ```
 
-`rpcd-mod-*` は純正 rpcd が読み込む拡張です。端末切断用の互換 API は `rpcd-mod-luci` に含まれ、同じプロセス内で動きます。別の常駐デーモンは追加しません。図の `ubus` は純正の ubus バスを経由する呼び出しを表します。
+`rpcd-mod-*` は純正 rpcd が読み込む拡張です。端末切断用の互換 API は独立した `qsdk-hostapd.so` に含まれ、同じプロセス内で動きます。別の常駐デーモンは追加しません。図の `ubus` は純正の ubus バスを経由する呼び出しを表します。
 
 新しい `libiwinfo.so.20230701` は LuCI の RPC 拡張が使います。純正プログラムが使う旧 libiwinfo は残し、両者を分けています。既知の純正 hostapd／wpa_supplicant はハッシュで判定し、対応する機能情報を返します。未知のバイナリには公式の機能検査を使います。
 
 QSDK 固有の取得と周波数帯の補正は libiwinfo が担当します。`rpcd-mod-iwinfo` は `sources.json` に固定した公式ソースを無改変でビルドし、純正 rpcd の拡張として読み込みます。両者の間に独自の有効項目マスクはありません。
 
-LuCI は公式の `rpc.declare()` の `filter` を使い、ネットワークモデルで MCS・GI の不明値を除去し、周波数一覧では公式の `flags` から `no_ir` を補います。表示処理や private メソッドには補正を追加しません。未取得統計・状態は公式 RPC と同じ値で返り、実測の 0・false と区別できません。直接 ubus を使うツールには LuCI 側の補正は適用されません。
+`rpcd-mod-luci` も公式ソースを無改変でビルドします。旧 netifd 環境の LuCI ネットワークモデルは `network.wireless.status` を読み、QSDK の無線機と VAP の情報を公式 `iwinfo.info` から取得します。MLO のブリッジ所有者は保持し、画面には物理リンクを表示します。純正の旧 libiwinfo は置き換えません。旧ライブラリと ABI が異なるため、QSDK 環境では `luci-rpc.getWirelessDevices` の iwinfo 付加処理を使いません。
+
+無線状態の取得後、無線機・VAP ごとの `iwinfo.info` を次の RPC バッチで呼び出します。呼び出し数は増えますが、公式 C 内部へのパッチが不要になります。端末切断の検証・タイマー・復旧処理は従来のまま独立した拡張へ移しています。
+
+LuCI は公式の `rpc.declare()` の `filter` を使い、ネットワークモデルで無線状態をまとめて MCS・GI の不明値を除去し、周波数一覧では公式の `flags` から `no_ir` を補います。表示処理や private メソッドには補正を追加しません。未取得統計・状態は公式 RPC と同じ値で返り、実測の 0・false と区別できません。直接 ubus を使うツールには LuCI 側の補正は適用されません。
 
 ### 起動時の RAM 展開
 

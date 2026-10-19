@@ -23,10 +23,13 @@ cp "$iwinfo/iwinfo" "$output/usr/bin/"
 	"$luci/libs/rpcd-mod-luci/src/luci.c" -L"$stage/usr/lib" -lubox -lubus -luci -lnl-tiny -ldl \
 	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/luci.so"
 "$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
+	"$luci/contrib/wn7t94xr/qsdk-hostapd.c" -L"$stage/usr/lib" -lubox -lubus \
+	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/qsdk-hostapd.so"
+"$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
 	"$rpcd/iwinfo.c" \
 	-L"$iwinfo" -L"$stage/usr/lib" -liwinfo -lubox -lubus -luci -Wl,-rpath,/tmp/luci-ram/usr/lib -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so.20230701" "$output/usr/lib/lua/iwinfo.so" \
-	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
+	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/lib/rpcd/qsdk-hostapd.so" "$output/usr/bin/iwinfo"
 # Compile complete sources with SDK types; execute the ARM tests with the same libraries.
 checks="$output/selfchecks"
 mkdir -p "$checks"
@@ -34,7 +37,7 @@ test_cflags="-Os -D_GNU_SOURCE -std=gnu99 -Wall -Werror -Wno-unused-function -mf
 test_ldflags="-L$stage/usr/lib -Wl,--gc-sections"
 "$cc" $test_cflags "$iwinfo/tests/nl80211-selfcheck.c" $test_ldflags -lnl-tiny -o "$checks/nl80211"
 "$cc" $test_cflags "$iwinfo/tests/qsdk-selfcheck.c" $test_ldflags -o "$checks/iwinfo"
-"$cc" $test_cflags -I"$luci/libs/rpcd-mod-luci/src" \
+"$cc" $test_cflags -I"$luci/contrib/wn7t94xr" \
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" $test_ldflags -o "$checks/hostapd"
 "$cc" $test_cflags "$luci/contrib/wn7t94xr/rate-selfcheck.c" $test_ldflags \
 	-lubox -lblobmsg_json -ldl -Wl,--export-dynamic -o "$checks/rpc-rate"

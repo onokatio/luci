@@ -35,7 +35,6 @@
 #include <netinet/ether.h>
 #include <linux/rtnetlink.h>
 #include <linux/if_packet.h>
-#include <dirent.h>
 
 #include <netlink/msg.h>
 #include <netlink/attr.h>
@@ -52,7 +51,6 @@
 #include <iwinfo.h>
 
 #include <rpcd/plugin.h>
-#include "qsdk-hostapd.h"
 
 #ifndef IN6_IS_ADDR_ULA
 #define IN6_IS_ADDR_ULA(a) (((a)->s6_addr[0] & 0xfe) == 0xfc)
@@ -974,7 +972,7 @@ static bool rpc_luci_get_iwinfo(struct blob_buf *buf, const char *devname,
 
 	if (!iw_backend || !iw_close || !iw_format_hwmodes || !iw_modenames || !iw_80211names ||
 	    !iw_htmodenames || !iw_authnames || !iw_kmgmtnames || !iw_ciphernames) {
-		if (glob("/tmp/luci-ram/usr/lib/libiwinfo.so.20230701", 0, NULL, &paths) != 0)
+		if (glob("/usr/lib/libiwinfo.so*", 0, NULL, &paths) != 0)
 			return false;
 
 		for (i = 0; i < paths.gl_pathc && !iwlib; i++)
@@ -1097,27 +1095,12 @@ static bool rpc_luci_get_iwinfo(struct blob_buf *buf, const char *devname,
 	return true;
 }
 
-static const char *rpc_luci_config_string(struct blob_attr *section, const char *key)
-{
-	struct blob_attr *cur, *option;
-	int rem, rem2;
-	blobmsg_for_each_attr(cur, section, rem) {
-		if (strcmp(blobmsg_name(cur), "config") || blobmsg_type(cur) != BLOBMSG_TYPE_TABLE)
-			continue;
-		blobmsg_for_each_attr(option, cur, rem2)
-			if (!strcmp(blobmsg_name(option), key) && blobmsg_type(option) == BLOBMSG_TYPE_STRING)
-				return blobmsg_get_string(option);
-	}
-	return NULL;
-}
-
 static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
                                              int type, struct blob_attr *msg)
 {
 	struct blob_attr *wifi, *cur, *iface, *cur2;
 	struct reply_context *rctx = req->priv;
-	const char *name, *first_ifname, *link_ifname, *driver;
-	bool qca;
+	const char *name, *first_ifname;
 	int rem, rem2, rem3, rem4;
 	void *o, *a, *o2;
 
@@ -1130,8 +1113,6 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 
 		rem2 = blobmsg_data_len(wifi);
 		first_ifname = NULL;
-		driver = rpc_luci_config_string(wifi, "type");
-		qca = driver && !strcmp(driver, "qcawificfg80211");
 
 		__blob_for_each_attr(cur, blobmsg_data(wifi), rem2) {
 			name = blobmsg_name(cur);
@@ -1155,19 +1136,10 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 
 					rem4 = blobmsg_data_len(iface);
 					name = NULL;
-					link_ifname = qca ? rpc_luci_config_string(iface, "ifname") : NULL;
 
 					__blob_for_each_attr(cur2, blobmsg_data(iface), rem4) {
-						if (!strcmp(blobmsg_name(cur2), "ifname")) {
+						if (!strcmp(blobmsg_name(cur2), "ifname"))
 							name = blobmsg_get_string(cur2);
-							if (link_ifname) {
-								/* MLO bridge ownership stays in netifd; show its physical link. */
-								blobmsg_add_string(&rctx->blob, "bridge_ifname", name);
-								name = link_ifname;
-								blobmsg_add_string(&rctx->blob, "ifname", name);
-								continue;
-							}
-						}
 						else if (!strcmp(blobmsg_name(cur2), "iwinfo"))
 							continue;
 
@@ -1189,7 +1161,7 @@ static void rpc_luci_get_wireless_devices_cb(struct ubus_request *req,
 		}
 
 		rpc_luci_get_iwinfo(&rctx->blob,
-		                    qca ? blobmsg_name(wifi) : first_ifname ? first_ifname : blobmsg_name(wifi),
+		                    first_ifname ? first_ifname : blobmsg_name(wifi),
 		                    true);
 
 		blobmsg_close_table(&rctx->blob, o);
@@ -1941,7 +1913,6 @@ rpc_luci_get_board_json(struct ubus_context *ctx, struct ubus_object *obj,
 	if (!blobmsg_add_json_from_file(&blob, "/etc/board.json"))
 		return UBUS_STATUS_UNKNOWN_ERROR;
 
-
 	ubus_send_reply(ctx, req, blob.head);
 	return UBUS_STATUS_OK;
 }
@@ -2078,9 +2049,7 @@ rpc_luci_api_init(const struct rpc_daemon_ops *o, struct ubus_context *ctx)
 		.n_methods = ARRAY_SIZE(luci_methods),
 	};
 
-	int ret = ubus_add_object(ctx, &obj);
-	if (!ret) qsdk_hostapd_init(ctx);
-	return ret;
+	return ubus_add_object(ctx, &obj);
 }
 
 struct rpc_plugin rpc_plugin = {
