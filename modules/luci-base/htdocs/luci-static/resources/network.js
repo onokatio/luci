@@ -78,7 +78,7 @@ const callIwinfoAssoclist = rpc.declare({
 		// Official iwinfo RPC serializes libiwinfo's unknown-value sentinels as integers.
 		for (const station of stations) {
 			for (const rate of [ station.rx, station.tx ]) {
-				if (rate?.mcs === 0xffffffff) delete rate.mcs;
+				if (rate?.mcs === -1 || rate?.mcs === 0xffffffff) delete rate.mcs;
 				if (rate?.he_gi === 0xff) delete rate.he_gi;
 				if (rate?.eht_gi === 0xff) delete rate.eht_gi;
 			}

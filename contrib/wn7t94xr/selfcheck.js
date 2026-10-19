@@ -80,9 +80,11 @@ async function check(radioType) {
 	assert.equal(peers[0].signal_avg, 0); assert.equal(peers[0].authorized, false);
 	stationReply = fixtures[1]; peers = await stationNetwork.getAssocList();
 	assert.equal(peers[0].rx.mcs, 0); assert.equal(peers[0].tx.eht_gi, 0);
-	stationReply = { results: [{ rx: { mcs: 11, he_gi: 255 }, tx: { mcs: 0, he_gi: 0 } }] };
-	peers = await stationNetwork.getAssocList();
-	assert.equal(peers[0].rx.mcs, 11); assert.equal(peers[0].rx.he_gi, undefined); assert.equal(peers[0].tx.he_gi, 0);
+	for (const mcs of [-1, 0xffffffff]) {
+		stationReply = { results: [{ rx: { mcs, he_gi: 255 }, tx: { mcs: 0, he_gi: 0 } }] };
+		peers = await stationNetwork.getAssocList();
+		assert.equal(peers[0].rx.mcs, undefined); assert.equal(peers[0].rx.he_gi, undefined); assert.equal(peers[0].tx.he_gi, 0);
+	}
 	stationReply = { results: [{ rx: { mcs: 7, he_gi: 1, short_gi: false }, tx: { mcs: 15, eht_gi: 2 } }] };
 	peers = await stationNetwork.getAssocList();
 	assert.deepEqual(peers[0], stationReply.results[0]);
