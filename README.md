@@ -65,12 +65,12 @@ LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で�
 
 ```mermaid
 flowchart TD
-    UI["LuCI の標準画面<br/>Wireless・Associated Stations・Switch"]
+    UI["LuCI の標準画面<br/>Wireless・Associated Stations・Switch<br/>［互換処理］公式 RPC 応答の表示用補正"]
     HTTP["［公式］uhttpd → LuCI CGI<br/>ubus の HTTP 中継"]
 
     subgraph RPC["［純正］rpcd プロセス内に追加して動く"]
         LRPC["［フォーク］rpcd-mod-luci<br/>無線状態・MLO リンクの補正<br/>board.json の取得"]
-        IRPC["［フォーク］rpcd-mod-iwinfo<br/>公式 RPC ＋ 汎用の未取得項目処理"]
+        IRPC["［公式］rpcd-mod-iwinfo<br/>ソース無改変でビルド"]
         URPC["［公式］rpcd-mod-ucode<br/>＋ QSDK 対応した LuCI スクリプト<br/>機能情報・Switch の状態を返す"]
         DISCONNECT["［独自］hostapd 互換 API<br/>hostapd.ath*.del_client"]
     end
@@ -102,7 +102,9 @@ flowchart TD
 
 新しい `libiwinfo.so.20230701` は LuCI の RPC 拡張が使います。純正プログラムが使う旧 libiwinfo は残し、両者を分けています。既知の純正 hostapd／wpa_supplicant はハッシュで判定し、対応する機能情報を返します。未知のバイナリには公式の機能検査を使います。
 
-QSDK 固有の取得と周波数帯の補正は libiwinfo が担当します。`rpcd-mod-iwinfo` はバックエンド名で分岐せず、libiwinfo が返す取得済み項目のマスクに従い、不明な統計・状態を応答から省きます。マスクを提供しない従来のバックエンドでは、公式と同じ出力を保ちます。不明な MCS・GI の省略と、標準画面が使う `no_ir` の出力も汎用処理として残しており、RPC は公式の無改変版ではありません。
+QSDK 固有の取得と周波数帯の補正は libiwinfo が担当します。`rpcd-mod-iwinfo` は `sources.json` に固定した公式ソースを無改変でビルドし、純正 rpcd の拡張として読み込みます。両者の間に独自の有効項目マスクはありません。
+
+LuCI は公式の `rpc.declare()` の `filter` を使い、ネットワークモデルで MCS・GI の不明値を除去し、周波数一覧では公式の `flags` から `no_ir` を補います。表示処理や private メソッドには補正を追加しません。未取得統計・状態は公式 RPC と同じ値で返り、実測の 0・false と区別できません。直接 ubus を使うツールには LuCI 側の補正は適用されません。
 
 ### 起動時の RAM 展開
 

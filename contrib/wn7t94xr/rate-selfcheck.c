@@ -1,6 +1,8 @@
 #include <assert.h>
 #include <dlfcn.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <libubox/blobmsg_json.h>
 #include <string.h>
 #include <libubus.h>
 #include <rpcd/plugin.h>
@@ -9,7 +11,7 @@
 static struct ubus_object *registered;
 static struct iwinfo_assoclist_entry station;
 static int replies;
-static enum { UNKNOWN, KNOWN, LEGACY, FREQUENCIES } testcase;
+static enum { UNKNOWN, KNOWN, FREQUENCIES } testcase;
 
 static struct blob_attr *field(struct blob_attr *table, const char *name)
 {
@@ -46,7 +48,7 @@ static int channel(const char *device, int *value) { *value = 1; return 0; }
 
 const struct iwinfo_ops *iwinfo_backend(const char *device)
 {
-	/* Optional metadata must work independently of the backend name. */
+	/* Exercise the compiled official plugin through its registered ubus methods. */
 	static const struct iwinfo_ops backend = { .name = "metadata-test", .assoclist = assoclist, .freqlist = freqlist, .channel = channel };
 	assert(!strcmp(device, "ath-test"));
 	return &backend;
@@ -72,7 +74,8 @@ int ubus_send_reply(struct ubus_context *ctx, struct ubus_request_data *request,
 			int band_keys = 0, rem2;
 			assert(count < 4);
 			assert(blobmsg_get_u32(field(entry, "band")) == bands[count]);
-			assert(blobmsg_get_bool(field(entry, "no_ir")) == (count == 2));
+			assert(!field(entry, "no_ir"));
+			assert(field(entry, "flags"));
 			assert(blobmsg_get_bool(field(entry, "restricted")) == (count == 2));
 			blobmsg_for_each_attr(value, entry, rem2)
 				if (!strcmp(blobmsg_name(value), "band")) band_keys++;
@@ -82,33 +85,22 @@ int ubus_send_reply(struct ubus_context *ctx, struct ubus_request_data *request,
 		assert(count == 4);
 	}
 	else {
-		const char *unknown[] = { "inactive", "thr", "authenticated", "preamble", "wme", "mfp", "tdls" };
 		entry = blobmsg_data(array);
-		for (i = 0; i < sizeof(unknown) / sizeof(unknown[0]); i++)
-			assert(!!field(entry, unknown[i]) == (testcase == LEGACY));
-		assert(!!field(entry, "signal_avg") == (testcase != UNKNOWN));
-		assert(!!field(entry, "connected_time") == (testcase != UNKNOWN));
-		assert(!!field(entry, "authorized") == (testcase != UNKNOWN));
-		if (testcase != UNKNOWN) {
-			assert(!blobmsg_get_u32(field(entry, "signal_avg")));
-			assert(!blobmsg_get_u32(field(entry, "connected_time")));
-			assert(!blobmsg_get_bool(field(entry, "authorized")));
-		}
+		assert(field(entry, "signal_avg") && !blobmsg_get_u32(field(entry, "signal_avg")));
+		assert(field(entry, "authorized") && !blobmsg_get_bool(field(entry, "authorized")));
 		for (i = 0; i < 2; i++) {
 			rate = field(entry, i ? "tx" : "rx");
 			assert(rate && blobmsg_get_u32(field(rate, "mhz")) == 320);
 			assert(blobmsg_get_bool(field(rate, "eht")));
 			assert(blobmsg_get_u32(field(rate, "nss")) == 2);
-			assert(!!field(rate, "mcs") == (testcase != UNKNOWN));
-			assert(!!field(rate, "eht_gi") == (testcase != UNKNOWN));
-			if (testcase != UNKNOWN) {
-				assert(!blobmsg_get_u32(field(rate, "mcs")));
-				assert(!blobmsg_get_u32(field(rate, "eht_gi")));
-			}
-			assert(!!field(rate, i ? "packets" : "bytes") == (testcase != UNKNOWN));
-			assert(!!field(rate, i ? "bytes" : "packets") == (testcase == LEGACY));
+			assert(blobmsg_get_u32(field(rate, "mcs")) == (testcase == UNKNOWN ? UINT32_MAX : 0));
+			assert(blobmsg_get_u32(field(rate, "eht_gi")) == (testcase == UNKNOWN ? UINT8_MAX : 0));
 		}
 	}
+	char *json = blobmsg_format_json(reply, true);
+	assert(json);
+	puts(json);
+	free(json);
 	replies++;
 	return 0;
 }
@@ -139,22 +131,16 @@ int main(int argc, char **argv)
 	plugin = dlsym(library, "rpc_plugin");
 	assert(plugin && !plugin->init(NULL, NULL));
 	assert(registered);
-	station.stats_mask = IWINFO_ASSOC_S_VALID;
 	station.rx_rate = (struct iwinfo_rate_entry) { .rate = 5764800, .mcs = -1, .is_eht = 1, .mhz_hi = 1, .mhz = 64, .eht_gi = UINT8_MAX, .nss = 2 };
 	station.tx_rate = station.rx_rate;
 	call("assoclist");
 	testcase = KNOWN;
-	station.stats_mask |= IWINFO_ASSOC_S_SIGNAL_AVG | IWINFO_ASSOC_S_CONNECTED_TIME | IWINFO_ASSOC_S_RX_BYTES | IWINFO_ASSOC_S_TX_PACKETS;
-	station.flags_mask = IWINFO_ASSOC_F_AUTHORIZED;
 	station.rx_rate.mcs = station.tx_rate.mcs = 0;
 	station.rx_rate.eht_gi = station.tx_rate.eht_gi = 0;
-	call("assoclist");
-	testcase = LEGACY;
-	station.stats_mask = station.flags_mask = 0;
 	call("assoclist");
 	testcase = FREQUENCIES;
 	call("freqlist");
 	dlclose(library);
-	puts("PASS: compiled RPC via public ABI; generic optional metadata, known zero values, legacy fields, 320 MHz, unknown MCS/GI, normalized bands and no-IR");
+	fprintf(stderr, "PASS: compiled official RPC via public ABI; zero values, 320 MHz, unknown MCS/GI sentinels and frequency flags\n");
 	return 0;
 }

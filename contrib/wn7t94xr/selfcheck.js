@@ -41,9 +41,29 @@ async function check(radioType) {
 		unset: (c, s, k) => { delete configs[c][s][k]; },
 		sections: (c, t) => Object.entries(configs[c] || {}).filter(([, v]) => !t || v['.type'] == t).map(([id, v]) => ({ '.name': id, ...v }))
 	};
+	request.get = async url => {
+		const relative = url.substring(url.indexOf('/') + 1).split('?')[0];
+		const module = relative.startsWith('view/network/') ? 'luci-mod-network' : 'luci-base';
+		return { ok: true, url, text: () => fs.readFileSync(path.join(root, 'modules', module, 'htdocs/luci-static/resources', relative), 'utf8') };
+	};
 	const notices = [];
+	const rpc = await L.require('rpc');
+	const fixtures = process.argv[2] ? fs.readFileSync(process.argv[2], 'utf8').trim().split('\n').map(JSON.parse) : [
+		{ results: [{ signal_avg: 0, authorized: false,
+			rx: { rate: 5764800, mhz: 320, eht: true, nss: 2, mcs: 0xffffffff, eht_gi: 255 },
+			tx: { rate: 5764800, mhz: 320, eht: true, nss: 2, mcs: 0xffffffff, eht_gi: 255 } }] },
+		{ results: [{ rx: { mcs: 0, eht_gi: 0 }, tx: { mcs: 0, eht_gi: 0 } }] },
+		{ results: [{ channel: 5, mhz: 5975, band: 6, restricted: true, flags: ['no_ir'] }] }
+	];
+	let stationReply = fixtures[0];
+	request.post = async (url, msg) => {
+		const [, object, method] = msg.params;
+		const result = method == 'assoclist' ? stationReply : method == 'freqlist' ? fixtures[2] :
+			method == 'getWirelessDevices' ? { wifi1: { interfaces: [{ section: 'ath1', ifname: 'ath1' }] } } : {};
+		return { ok: true, json: () => ({ jsonrpc: '2.0', id: msg.id, result: [0, structuredClone(result)] }) };
+	};
 	const mocks = {
-		uci, rpc: { declare: spec => async () => spec.method == 'freqlist' ? [{ channel: 5, mhz: 5975, band: 6 }] : {} },
+		uci, rpc,
 		ui: { createHandlerFn: () => () => {}, changes: { init: async () => {} }, addNotification: (...args) => notices.push(args) },
 		dom: { elem: () => false }, validation: {}, firewall: {}, view: baseclass, poll: { add() {} }, fs: {}, uqr: {}
 	};
@@ -51,12 +71,23 @@ async function check(radioType) {
 	L.require = function(name, from) {
 		return Object.hasOwn(mocks, name) ? Promise.resolve(mocks[name]) : requireModule.call(this, name, from);
 	};
-	request.get = async url => {
-		const relative = url.substring(url.indexOf('/') + 1).split('?')[0];
-		const module = relative.startsWith('view/network/') ? 'luci-mod-network' : 'luci-base';
-		return { ok: true, url, text: () => fs.readFileSync(path.join(root, 'modules', module, 'htdocs/luci-static/resources', relative), 'utf8') };
-	};
 	const form = await L.require('form'), actualNetwork = await L.require('network');
+	const stationNetwork = await actualNetwork.getWifiNetwork('ath1');
+	assert(stationNetwork);
+	let peers = await stationNetwork.getAssocList();
+	assert.equal(peers[0].rx.mcs, undefined); assert.equal(peers[0].tx.eht_gi, undefined);
+	assert.equal(peers[0].rx.rate, 5764800); assert.equal(peers[0].rx.mhz, 320); assert.equal(peers[0].rx.nss, 2);
+	assert.equal(peers[0].signal_avg, 0); assert.equal(peers[0].authorized, false);
+	stationReply = fixtures[1]; peers = await stationNetwork.getAssocList();
+	assert.equal(peers[0].rx.mcs, 0); assert.equal(peers[0].tx.eht_gi, 0);
+	stationReply = { results: [{ rx: { mcs: 11, he_gi: 255 }, tx: { mcs: 0, he_gi: 0 } }] };
+	peers = await stationNetwork.getAssocList();
+	assert.equal(peers[0].rx.mcs, 11); assert.equal(peers[0].rx.he_gi, undefined); assert.equal(peers[0].tx.he_gi, 0);
+	stationReply = { results: [{ rx: { mcs: 7, he_gi: 1, short_gi: false }, tx: { mcs: 15, eht_gi: 2 } }] };
+	peers = await stationNetwork.getAssocList();
+	assert.deepEqual(peers[0], stationReply.results[0]);
+	stationReply = { results: [{}] }; assert.deepEqual(await stationNetwork.getAssocList(), [{}]);
+	stationReply = { results: [] }; assert.deepEqual(await stationNetwork.getAssocList(), []);
 	const sections = [], namedSections = [], dependencies = new Map();
 	const depends = form.AbstractValue.prototype.depends;
 	form.AbstractValue.prototype.depends = function(...args) {
@@ -181,6 +212,11 @@ async function check(radioType) {
 		assert.equal(field('network').validate('ath15', ['test_dhcp']), true);
 		await mode.write('ath15', 'ap'); shared('mode', 'ap'); assert.equal(data.mld0.role, 'AP');
 		const freq = radio.getOption('_freq'); await freq.load('wifi1');
+		const channels = await freq.callFrequencyList('wifi1');
+		assert.equal(channels.length, fixtures[2].results.length);
+		for (const channel of channels) assert.equal(channel.no_ir, channel.flags?.includes('no_ir') ?? false);
+		fixtures[2] = { results: [{ band: 6, channel: 5, flags: ['no_ir'], no_ir: false }, { band: 5, channel: 36 }] };
+		assert.deepEqual((await freq.callFrequencyList('wifi1')).map(c => c.no_ir), [false, false]);
 		assert.notEqual(freq.validate('wifi2', ['HE160', '11axa', '0']), true);
 		freq.write('wifi2', ['EHT320', '11bea', '0']); assert.equal(data.wifi2.band, '3');
 		assert.deepEqual(freq.formvalue('wifi0'), ['HT40', '11beg', 'auto']);
@@ -202,6 +238,6 @@ async function check(radioType) {
 	wan.set('device', '@lan'); assert.equal(wan.isAlias(), 'lan');
 	legacy = false; wan.set('device', 'eth4');
 	assert.equal(configs.network.wan.device, 'eth4'); assert.equal(configs.network.wan.ifname, '@lan');
-	console.log('PASS: ' + radioType + ' full LuCI loader, public form registration/dependencies, storage/security/MLO and legacy protocol APIs');
+	console.log('PASS: ' + radioType + ' full LuCI loader, public form registration/dependencies, storage/security/MLO, official RPC filters and legacy protocol APIs');
 }
 check('qcawificfg80211').then(() => check('mac80211')).catch(e => { console.error(e); process.exitCode = 1; });
