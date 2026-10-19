@@ -34,7 +34,7 @@ v5.5.0-2では、共通設定の読み書き・削除に公式フォームの処
 
 v5.6.0-1では、保存失敗の通知を公開APIの `addModalOptions()` と `Map.save()` へ接続し、保存・取消の内部メソッドへの依存を外しました。設定項目の列挙には `getOption()` を使います。非対応の項目は生成時に除外し、表示条件は `depends()` へ渡す前にQSDK向けに調整します。フォーム内部の `children` や `deps` は書き換えません。JavaScriptの検査は、公式ローダーでモジュール全体を読み込み、実際に生成したフォーム項目の公開APIを通して行います。DOM描画と外部I/Oはテスト用に置き換え、保存・取消・QR画面の操作は実機ブラウザーで確認します。
 
-v5.8.0-1では `rpcd-mod-iwinfo` の独自ソースを削除し、固定した公式ソースを無改変でビルドします。QSDK固有の取得・帯域補正はlibiwinfoに残し、両者の間で使っていた有効項目マスクは削除しました。標準画面に必要なMCS・GIの不明値の除去と、チャンネル制約の `no_ir` の補完は、LuCIの公開API `rpc.declare()` の `filter` にまとめています。未取得の統計・状態は公式RPCの出力に合わせるため、実測の0・falseとは区別できません。直接ubusを呼ぶ場合は、MCS・GIの不明値も公式RPCの数値のまま返ります。
+v5.9.0-1では `rpcd-mod-iwinfo` の独自ソースを削除し、固定した公式ソースを無改変でビルドします。QSDK固有の取得・帯域補正はlibiwinfoに残し、両者の間で使っていた有効項目マスクは削除しました。標準画面に必要なMCS・GIの不明値の除去と、チャンネル制約の `no_ir` の補完は、LuCIの公開API `rpc.declare()` の `filter` にまとめています。未取得の統計・状態は公式RPCの出力に合わせるため、実測の0・falseとは区別できません。直接ubusを呼ぶ場合は、MCS・GIの不明値も公式RPCの数値のまま返ります。
 
 Switchのポート構成は、DTSで機種と配線を確認してからRAM上の `board.json` に補います。既存の項目やポート情報は上書きしません。標準の `getBoardJSON` がこの情報を返すため、RPC内の専用JSON生成処理は不要になりました。LuCI停止時は元の `board.json` が見える状態へ戻します。
 
@@ -156,8 +156,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.8.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.8.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.9.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.9.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -171,7 +171,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.8.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.9.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
