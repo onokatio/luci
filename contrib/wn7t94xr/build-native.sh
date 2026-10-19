@@ -4,6 +4,8 @@ set -eu
 sdk="$(realpath "$1")"
 iwinfo="$(realpath "$2")"
 output="$(realpath -m "$3")"
+rpcd="$(realpath "$4")"
+git -C "$rpcd" diff --exit-code HEAD -- iwinfo.c
 luci="$(CDPATH= cd -- "$(dirname "$0")/../.." && pwd)"
 stage="$sdk/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi"
 toolchain="$sdk/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.5.0_musl_eabi"
@@ -21,7 +23,7 @@ cp "$iwinfo/iwinfo" "$output/usr/bin/"
 	"$luci/libs/rpcd-mod-luci/src/luci.c" -L"$stage/usr/lib" -lubox -lubus -luci -lnl-tiny -ldl \
 	-Wl,-z,relro,-z,now -o "$output/usr/lib/rpcd/luci.so"
 "$cc" -Os -Wall -Werror -std=gnu99 -fPIC -shared -mfloat-abi=hard $includes \
-	"$luci/libs/rpcd-mod-iwinfo/src/iwinfo.c" \
+	"$rpcd/iwinfo.c" \
 	-L"$iwinfo" -L"$stage/usr/lib" -liwinfo -lubox -lubus -luci -Wl,-rpath,/tmp/luci-ram/usr/lib -o "$output/usr/lib/rpcd/iwinfo.so"
 "$strip" "$output/usr/lib/libiwinfo.so.20230701" "$output/usr/lib/lua/iwinfo.so" \
 	"$output/usr/lib/rpcd/luci.so" "$output/usr/lib/rpcd/iwinfo.so" "$output/usr/bin/iwinfo"
@@ -35,9 +37,9 @@ test_ldflags="-L$stage/usr/lib -Wl,--gc-sections"
 "$cc" $test_cflags -I"$luci/libs/rpcd-mod-luci/src" \
 	"$luci/contrib/wn7t94xr/hostapd-selfcheck.c" $test_ldflags -o "$checks/hostapd"
 "$cc" $test_cflags "$luci/contrib/wn7t94xr/rate-selfcheck.c" $test_ldflags \
-	-lubox -ldl -Wl,--export-dynamic -o "$checks/rpc-rate"
+	-lubox -lblobmsg_json -ldl -Wl,--export-dynamic -o "$checks/rpc-rate"
 for check in nl80211 iwinfo hostapd; do
 	qemu-arm -L "$toolchain" -E "LD_LIBRARY_PATH=$stage/usr/lib" "$checks/$check"
 done
 qemu-arm -L "$toolchain" -E "LD_LIBRARY_PATH=$stage/usr/lib:$output/usr/lib" \
-	"$checks/rpc-rate" "$output/usr/lib/rpcd/iwinfo.so"
+	"$checks/rpc-rate" "$output/usr/lib/rpcd/iwinfo.so" > "$checks/iwinfo.jsonl"

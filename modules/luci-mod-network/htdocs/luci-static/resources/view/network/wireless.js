@@ -453,7 +453,12 @@ var CBIWifiFrequencyValue = form.Value.extend({
 		object: 'iwinfo',
 		method: 'freqlist',
 		params: [ 'device' ],
-		expect: { results: [] }
+		expect: { results: [] },
+		filter: frequencies => {
+			for (const frequency of frequencies)
+				frequency.no_ir ??= frequency.flags?.includes('no_ir') ?? false;
+			return frequencies;
+		}
 	}),
 
 	// Load method to fetch WiFi device details and frequency list
