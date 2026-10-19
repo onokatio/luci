@@ -10,9 +10,9 @@ I-O DATA WN-7T94XR の純正ファームウェア v2.5.1 で、LuCI 25.12 の標
 | --- | --- |
 | [netifd / qsdk-19.07](https://github.com/onokatio/netifd/tree/qsdk-19.07) | OpenWrt 19.07 系を基にした、純正 netifd 向けの標準 wireless driver プラグイン。LuCI 25.12 構成でも使います。純正の制御処理を呼び、無線インターフェースの状態とブリッジへの接続を netifd に通知します。 |
 | [iwinfo / qsdk-25.12](https://github.com/onokatio/iwinfo/tree/qsdk-25.12) | 新しい公式iwinfoを基に、QSDKのラジオ名とVAPの対応、純正hostapdの情報取得、WEXTスキャンを追加しています。HE/EHT・6 GHz・320 MHzの処理は公式実装を使います。 |
-| [LuCI / qsdk-25.12](https://github.com/onokatio/luci/tree/qsdk-25.12) | `rpcd-mod-luci` の MLO・純正APIとの連携、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
+| [LuCI / qsdk-25.12](https://github.com/onokatio/luci/tree/qsdk-25.12) | 公開 RPC を使う MLO 表示補正、独立した hostapd 互換拡張、QSDK の UCI 形式に合わせた標準 Wireless フォーム、IPK のビルド処理を含みます。 |
 
-状態の取得には `network.wireless`、`luci-rpc.getWirelessDevices`、`iwinfo` を使います。不足する情報の取得には既存の `rpcd-mod-luci` を拡張しています。常駐デーモンは追加しません。`/lib/netifd/wireless/qcawificfg80211.sh` は netifd が読み込む標準形式のドライバープラグインです。
+状態の取得には `network.wireless.status` と公式 `iwinfo.info` を使い、LuCI のネットワークモデルで表示用にまとめます。`rpcd-mod-luci` と `rpcd-mod-iwinfo` は公式ソースを無改変でビルドします。端末切断は独立した `qsdk-hostapd.so` が標準の hostapd API を提供します。常駐デーモンは追加しません。`/lib/netifd/wireless/qcawificfg80211.sh` は netifd が読み込む標準形式のドライバープラグインです。
 
 MLOを含む設定変更は、純正の制御処理でラジオ全体に適用します。同じ設定には、netifdから複数のsetup呼び出しが来ても適用を一度にまとめる処理があります。片方のラジオを停止した場合は、残る有効なラジオの再起動と共有MLDのブリッジ接続の復元も必要です。このため、単一ラジオの操作でもMLOグループの通信が一時的に切れることがあります。MLOのブリッジには `mld*` を接続し、LuCIには各リンクの `ath*` の情報を返します。
 

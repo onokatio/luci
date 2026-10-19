@@ -52,10 +52,38 @@ const callLuciNetworkDevices = rpc.declare({
 	expect: { '': {} }
 });
 
-const callLuciWirelessDevices = rpc.declare({
-	object: 'luci-rpc',
-	method: 'getWirelessDevices',
+const callIwinfoInfo = rpc.declare({
+	object: 'iwinfo',
+	method: 'info',
+	params: [ 'device' ],
 	expect: { '': {} }
+});
+
+const callLuciWirelessDevices = rpc.declare({
+	// Stock netifd supplies state; official iwinfo RPC uses the isolated QSDK library.
+	object: L.hasSystemFeature('netifd_legacy') ? 'network.wireless' : 'luci-rpc',
+	method: L.hasSystemFeature('netifd_legacy') ? 'status' : 'getWirelessDevices',
+	expect: { '': {} },
+	filter: async radios => {
+		await Promise.all(Object.entries(radios).map(async ([name, radio]) => {
+			if (radio.config?.type !== 'qcawificfg80211') return;
+			await Promise.all([
+				L.resolveDefault(callIwinfoInfo(name), {}).then(info => {
+					if (Array.isArray(info.hwmodes)) info.hwmodes = info.hwmodes.map(mode => mode.toLowerCase());
+					radio.iwinfo = info;
+				}),
+				...(radio.interfaces || []).map(async iface => {
+					// Preserve netifd's MLO bridge owner while displaying the physical link.
+					if (iface.config?.ifname) {
+						iface.bridge_ifname = iface.ifname;
+						iface.ifname = iface.config.ifname;
+					}
+					iface.iwinfo = iface.ifname ? await L.resolveDefault(callIwinfoInfo(iface.ifname), {}) : {};
+				})
+			]);
+		}));
+		return radios;
+	}
 });
 
 const callLuciBoardJSON = rpc.declare({

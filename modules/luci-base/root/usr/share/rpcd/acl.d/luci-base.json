@@ -38,6 +38,8 @@
 		"read": {
 			"ubus": {
 				"luci-rpc": [ "getBoardJSON", "getHostHints", "getNetworkDevices", "getWirelessDevices" ],
+				"network.wireless": [ "status" ],
+				"iwinfo": [ "info" ],
 				"network": [ "get_proto_handlers" ],
 				"network.device": [ "status" ],
 				"network.interface": [ "dump" ]

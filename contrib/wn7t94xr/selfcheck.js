@@ -56,10 +56,18 @@ async function check(radioType) {
 		{ results: [{ channel: 5, mhz: 5975, band: 6, restricted: true, flags: ['no_ir'] }] }
 	];
 	let stationReply = fixtures[0];
+	const infoDevices = [];
+	const wirelessReply = { wifi1: { config: { type: radioType }, up: true, pending: false,
+		interfaces: [{ section: 'ath1', ifname: 'mld0', config: { ifname: 'ath1' } },
+			{ section: 'ath15', ifname: 'ath15', config: { ifname: 'ath15' } }] },
+		wifi0: { config: { type: radioType }, disabled: true, interfaces: [] } };
+
 	request.post = async (url, msg) => {
 		const [, object, method] = msg.params;
-		const result = method == 'assoclist' ? stationReply : method == 'freqlist' ? fixtures[2] :
-			method == 'getWirelessDevices' ? { wifi1: { interfaces: [{ section: 'ath1', ifname: 'ath1' }] } } : {};
+		if (object == 'iwinfo' && method == 'info') infoDevices.push(msg.params[3].device);
+		const result = object == 'iwinfo' && method == 'info' ?
+			(msg.params[3].device == 'ath15' ? {} : { hwmodes: ['A', 'AX', 'BE'], channel: 36, signal: 0, ssid: 'fixture' }) : method == 'assoclist' ? stationReply : method == 'freqlist' ? fixtures[2] :
+			method == 'getWirelessDevices' || (object == 'network.wireless' && method == 'status') ? wirelessReply : {};
 		return { ok: true, json: () => ({ jsonrpc: '2.0', id: msg.id, result: [0, structuredClone(result)] }) };
 	};
 	const mocks = {
@@ -74,6 +82,19 @@ async function check(radioType) {
 	const form = await L.require('form'), actualNetwork = await L.require('network');
 	const stationNetwork = await actualNetwork.getWifiNetwork('ath1');
 	assert(stationNetwork);
+	if (radioType == 'qcawificfg80211') {
+		assert.equal(stationNetwork.getIfname(), 'ath1');
+		assert.equal(stationNetwork.ubus('net', 'bridge_ifname'), 'mld0');
+		assert.equal(stationNetwork.ubus('net', 'iwinfo', 'ssid'), 'fixture');
+		assert.equal(stationNetwork.ubus('dev', 'pending'), false);
+		assert.deepEqual((await actualNetwork.getWifiDevice('wifi1')).getHWModes(), ['a', 'ax', 'be']);
+		assert.equal((await actualNetwork.getWifiDevice('wifi0')).ubus('dev', 'disabled'), true);
+		assert.deepEqual((await actualNetwork.getWifiNetwork('ath15')).ubus('net', 'iwinfo'), {});
+		assert.deepEqual(infoDevices.sort(), ['ath1', 'ath15', 'wifi0', 'wifi1']);
+	} else {
+		assert.equal(stationNetwork.getIfname(), 'mld0');
+		assert.deepEqual(infoDevices, []);
+	}
 	let peers = await stationNetwork.getAssocList();
 	assert.equal(peers[0].rx.mcs, undefined); assert.equal(peers[0].tx.eht_gi, undefined);
 	assert.equal(peers[0].rx.rate, 5764800); assert.equal(peers[0].rx.mhz, 320); assert.equal(peers[0].rx.nss, 2);
