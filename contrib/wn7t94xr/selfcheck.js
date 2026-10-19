@@ -13,10 +13,10 @@ async function check(radioType) {
 		window, document, class {}, E, v => v, () => {});
 	const L = window.LuCI.prototype;
 	const baseclass = await L.require('baseclass'), request = await L.require('request');
-	let legacy = radioType == 'qcawificfg80211';
+	let legacy = radioType == 'qcawificfg80211', featuresReady = true;
 	Object.assign(L, {
 		hasViewPermission: () => true,
-		hasSystemFeature: group => group == 'hostapd' || group == 'wpasupplicant' || (group == 'netifd_legacy' && legacy),
+		hasSystemFeature: group => { assert(featuresReady, 'Feature queries must wait until LuCI initialization'); return group == 'hostapd' || group == 'wpasupplicant' || (group == 'netifd_legacy' && legacy); },
 		env: {}
 	});
 	const configs = {
@@ -80,7 +80,10 @@ async function check(radioType) {
 	L.require = function(name, from) {
 		return Object.hasOwn(mocks, name) ? Promise.resolve(mocks[name]) : requireModule.call(this, name, from);
 	};
-	const form = await L.require('form'), actualNetwork = await L.require('network');
+	const form = await L.require('form');
+	featuresReady = false;
+	const actualNetwork = await L.require('network');
+	featuresReady = true;
 	const stationNetwork = await actualNetwork.getWifiNetwork('ath1');
 	assert(stationNetwork);
 	if (radioType == 'qcawificfg80211') {

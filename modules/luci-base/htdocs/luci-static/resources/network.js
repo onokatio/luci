@@ -60,9 +60,15 @@ const callIwinfoInfo = rpc.declare({
 });
 
 const callLuciWirelessDevices = rpc.declare({
+	object: 'luci-rpc',
+	method: 'getWirelessDevices',
+	expect: { '': {} }
+});
+
+const callNetworkWirelessStatus = rpc.declare({
 	// Stock netifd supplies state; official iwinfo RPC uses the isolated QSDK library.
-	object: L.hasSystemFeature('netifd_legacy') ? 'network.wireless' : 'luci-rpc',
-	method: L.hasSystemFeature('netifd_legacy') ? 'status' : 'getWirelessDevices',
+	object: 'network.wireless',
+	method: 'status',
 	expect: { '': {} },
 	filter: async radios => {
 		await Promise.all(Object.entries(radios).map(async ([name, radio]) => {
@@ -402,7 +408,7 @@ function initNetworkState(refresh) {
 			L.resolveDefault(callNetworkInterfaceDump(), []),
 			L.resolveDefault(callLuciBoardJSON(), {}),
 			L.resolveDefault(callLuciNetworkDevices(), {}),
-			L.resolveDefault(callLuciWirelessDevices(), {}),
+			L.resolveDefault((L.hasSystemFeature('netifd_legacy') ? callNetworkWirelessStatus : callLuciWirelessDevices)(), {}),
 			L.resolveDefault(callLuciHostHints(), {}),
 			getProtocolHandlers(),
 			L.resolveDefault(uci.load('network')),
