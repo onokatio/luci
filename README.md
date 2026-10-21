@@ -15,15 +15,21 @@
 
 純正コンポーネントにも OpenWrt 由来のコードは含まれます。ここではコードの起源ではなく、本体に元からあるものを使うか、今回追加したものかで区別しています。
 
-### Wireless の設定変更
+### Wireless の設定変更と無線状態・接続端末・Switch 情報の取得
+
+LuCI と HTTP 中継は、設定変更と情報取得で共通です。図では設定変更・制御を実線、情報取得を破線で示します。
 
 ```mermaid
 flowchart TD
-    UI["ブラウザー内の LuCI<br/>［フォーク］Wireless・network.js<br/>［公式］フォーム・保存・適用"]
+    UI["ブラウザー内の LuCI<br/>Wireless・Associated Stations・Switch<br/>［フォーク］Wireless・network.js<br/>設定変換・RPC 応答の表示補正<br/>［公式］フォーム・保存・適用"]
     HTTP["［公式］追加 uhttpd :8080<br/>LuCI CGI／ucode<br/>HTTP → ubus の中継"]
 
-    subgraph RPC["［純正］rpcd プロセス"]
+    subgraph RPC["［純正］rpcd プロセス：公式・独自の拡張を追加"]
         UCIAPI["純正 UCI RPC<br/>設定の保存・適用"]
+        LRPC["［公式］rpcd-mod-luci<br/>ネットワーク・ホスト・board.json の取得"]
+        IRPC["［公式］rpcd-mod-iwinfo<br/>無線機・接続端末・スキャンの情報取得"]
+        URPC["［公式］rpcd-mod-ucode<br/>＋ QSDK 対応した LuCI スクリプト<br/>機能情報・Switch の状態を返す"]
+        DISCONNECT["［独自］qsdk-hostapd 拡張<br/>hostapd.ath*.del_client"]
     end
 
     CONFIG[("永続設定<br/>/etc/config/wireless<br/>/etc/config/network")]
@@ -31,71 +37,52 @@ flowchart TD
     WRAP["［独自］network 起動処理・/sbin/wifi<br/>無線操作を標準 ubus へ接続"]
 
     subgraph NET["［純正］netifd プロセス"]
-        CORE["変更していない netifd 本体"]
+        CORE["変更していない netifd 本体<br/>network.wireless の状態"]
     end
 
     PLUGIN["［フォーク：netifd リポジトリ］<br/>qcawificfg80211.sh<br/>標準形式の無線プラグイン"]
     OEM["［純正］/rom/sbin/wifi<br/>QSDK の無線制御・設定生成"]
     AUTH["［純正］hostapd／wpa_supplicant"]
     DRIVER["［純正］無線ドライバー・ファームウェア<br/>無線ハードウェア"]
+    NATIVE["［純正］情報取得 API・ツール<br/>wlanconfig・sysfs・nl80211・WEXT"]
+    IW["［フォーク］新しい libiwinfo<br/>QSDK 固有の取得・帯域補正<br/>＋ 公式 nl80211／WEXT 処理"]
+    BOARD[("RAM 上の board.json<br/>［独自］不足するポート定義を補完")]
+    SW["［純正］swconfig<br/>Switch の状態・VLAN"]
     WEB["純正 Web 設定画面<br/>→ 純正 FcgiApp"]
 
-    UI -->|"HTTP・JSON-RPC"| HTTP
+    UI -->|"HTTP・JSON-RPC：共通経路"| HTTP
     HTTP -->|"ubus：uci"| UCIAPI
     UCIAPI -->|"保存"| CONFIG
     UCIAPI -->|"適用通知"| EVENT
     EVENT --> WRAP
     WRAP -->|"ubus：network／network.wireless"| CORE
     CORE -->|"setup／teardown"| PLUGIN
-    PLUGIN -->|"UCI を読む"| CONFIG
+    PLUGIN -.->|"UCI を読む"| CONFIG
     PLUGIN -->|"純正処理を呼ぶ"| OEM
     OEM --> AUTH
     OEM --> DRIVER
     AUTH --> DRIVER
-    PLUGIN -.->|"起動前に不足する標準設定を補完"| AUTH
+    PLUGIN -->|"起動前に不足する標準設定を補完"| AUTH
     PLUGIN -->|"VAP・ブリッジの状態を通知"| CORE
     WEB -->|"同じ UCI 設定を保存"| CONFIG
+
+    HTTP -.->|"ubus：状態・ホスト・board.json"| LRPC
+    HTTP -.->|"ubus：iwinfo.info など"| IRPC
+    HTTP -.->|"ubus：機能情報・Switch"| URPC
+    HTTP -->|"ubus：端末切断"| DISCONNECT
+    HTTP -.->|"ubus：network.wireless.status"| CORE
+    IRPC -.->|"同一プロセス内のライブラリ呼び出し"| IW
+    IW -.-> NATIVE
+    NATIVE -.->|"純正ドライバーへ照会"| DRIVER
+    LRPC -.-> BOARD
+    URPC -.-> SW
+    URPC -.->|"既知バイナリの機能判定"| AUTH
+    DISCONNECT -->|"hostapd の UNIX 制御ソケット"| AUTH
 ```
 
 LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で共有設定を同期します。その後は純正 netifd、追加した無線プラグイン、純正 QSDK 制御処理の順に反映します。netifd リポジトリのフォークから使うのは無線プラグインと `/sbin/wifi` の処理であり、netifd 本体のバイナリは交換しません。
 
 純正 Web 設定画面も同じ UCI 設定を使います。純正画面からの反映経路は API ごとに異なるため、図では共通の保存先までを示しています。
-
-### 無線状態・接続端末・Switch 情報の取得
-
-```mermaid
-flowchart TD
-    UI["LuCI の標準画面<br/>Wireless・Associated Stations・Switch<br/>［互換処理］公式 RPC 応答の表示用補正"]
-    HTTP["［公式］uhttpd → LuCI CGI<br/>ubus の HTTP 中継"]
-
-    subgraph RPC["［純正］rpcd プロセス内に追加して動く"]
-        LRPC["［公式］rpcd-mod-luci<br/>ソース無改変でビルド<br/>ネットワーク・ホスト・board.json の取得"]
-        IRPC["［公式］rpcd-mod-iwinfo<br/>ソース無改変でビルド"]
-        URPC["［公式］rpcd-mod-ucode<br/>＋ QSDK 対応した LuCI スクリプト<br/>機能情報・Switch の状態を返す"]
-        DISCONNECT["［独自］qsdk-hostapd 拡張<br/>hostapd.ath*.del_client"]
-    end
-
-    IW["［フォーク］新しい libiwinfo<br/>QSDK 固有の取得・帯域補正<br/>＋ 公式 nl80211／WEXT 処理"]
-    NET["［純正］netifd<br/>network.wireless の状態"]
-    NATIVE["［純正］wlanconfig・sysfs<br/>nl80211・WEXT／ドライバー"]
-    HOST["［純正］hostapd"]
-    BOARD[("RAM 上の board.json<br/>［独自］不足するポート定義を補完")]
-    SW["［純正］swconfig<br/>Switch の状態・VLAN"]
-    BIN["［純正］hostapd／wpa_supplicant<br/>既知バイナリの機能情報"]
-
-    UI --> HTTP
-    HTTP -->|"ubus"| LRPC
-    HTTP -->|"ubus"| IRPC
-    HTTP -->|"ubus"| URPC
-    HTTP -->|"ubus：端末切断"| DISCONNECT
-    HTTP -->|"ubus：network.wireless.status"| NET
-    IRPC -->|"同一プロセス内のライブラリ呼び出し"| IW
-    IW --> NATIVE
-    LRPC --> BOARD
-    URPC --> SW
-    URPC --> BIN
-    DISCONNECT -->|"UNIX 制御ソケット"| HOST
-```
 
 `rpcd-mod-*` は純正 rpcd が読み込む拡張です。端末切断用の互換 API は独立した `qsdk-hostapd.so` に含まれ、同じプロセス内で動きます。別の常駐デーモンは追加しません。図の `ubus` は純正の ubus バスを経由する呼び出しを表します。
 
