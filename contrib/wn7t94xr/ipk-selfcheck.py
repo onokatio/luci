@@ -193,7 +193,7 @@ with tempfile.TemporaryDirectory() as directory:
     board = targets / 'etc/board.json'
     board.write_text('{"network":{"keep":true},"switch":{"switch1":{"enable":false}}}')
     jshn = HERE.parents[2] / 'sdk/staging_dir/host'
-    assert (jshn / 'bin/opkg').is_file(), 'Build package/opkg/host/compile in the SDK first'
+    assert (jshn / 'bin/opkg').is_file(), 'Pinned SDK must provide its host opkg binary'
     script = init[init.index('fetch()'):].replace('/proc/mounts', str(mounts))
     script = script.replace('/sys/firmware/devicetree/base', str(device)).replace('/sys/class/net/eth1/type', str(device / 'type'))
     (device / 'type').write_text('1\n')

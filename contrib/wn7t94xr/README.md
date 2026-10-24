@@ -121,7 +121,11 @@ QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起�
 
 ## RAMとoverlayの配置
 
-`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256を確認し、純正 `opkg --offline-root` でRAM内の別ルートへインストールした後、パッケージ名・バージョンを照合します。展開・control・ファイル一覧・インストール状態の生成はopkgに任せます。`--nodeps` でビルド時に依存関係を検査した固定IPKだけを使い、フィードから追加取得しません。`--force-postinstall` は指定せず、`IPKG_NO_SCRIPT=1` も設定して、インストール用スクリプトを実行しません。純正DBと追加拡張の情報の統合、永続設定とbootstrapリンクを削除対象にしないためのファイル一覧の除外は、起動処理に残します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256を確認し、純正 `opkg --offline-root` でRAM内の別ルートへインストールした後、パッケージ名・バージョンを照合します。展開・control・ファイル一覧・インストール状態の生成はopkgに任せます。
+
+`--nodeps` でビルド時に依存関係を検査した固定IPKだけを使い、フィードから追加取得しません。`--force-postinstall` は指定せず、`IPKG_NO_SCRIPT=1` も設定して、インストール用スクリプトを実行しません。純正DBと追加拡張の情報の統合、永続設定とbootstrapリンクを削除対象にしないためのファイル一覧の除外は、起動処理に残します。
+
+別形式への再圧縮や、overlayへのダウンロード保存は行いません。
 
 | 内容 | 保存先 |
 | --- | --- |
