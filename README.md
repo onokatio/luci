@@ -22,7 +22,7 @@ LuCI と HTTP 中継は、設定変更と情報取得で共通です。図では
 ```mermaid
 flowchart TD
     UI["ブラウザー内の LuCI<br/>Wireless・Associated Stations・Switch<br/>［フォーク］Wireless・network.js<br/>設定変換・RPC 応答の表示補正<br/>［公式］フォーム・保存・適用"]
-    HTTP["［公式］追加 uhttpd :8080<br/>LuCI CGI／ucode<br/>HTTP → ubus の中継"]
+    HTTP["［公式］追加 uhttpd :8080<br/>公式 uhttpd-mod-ucode → LuCI<br/>HTTP → ubus の中継"]
 
     subgraph RPC["［純正］rpcd プロセス：公式・独自の拡張を追加"]
         UCIAPI["純正 UCI RPC<br/>設定の保存・適用"]
@@ -84,6 +84,10 @@ LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で�
 
 純正 Web 設定画面も同じ UCI 設定を使います。純正画面からの反映経路は API ごとに異なるため、図では共通の保存先までを示しています。
 
+追加の uhttpd 本体、ubus・ucode モジュールは、同じ公式ソースを無改変でビルドします。LuCI の入口には公式 `uhttpd-mod-ucode` と `/usr/share/ucode/luci/uhttpd.uc` を使います。ucode の実行環境を読み込んだ親プロセスから要求ごとに子プロセスを作るため、CGI のように毎回 ucode コマンドを起動する必要がありません。LuCI の ubus 要求は引き続き公式 `/cgi-bin/luci/admin/ubus` を経由します。
+
+HTTPS 用の公式 ustream-ssl は `/tmp/luci-ram/usr/lib/uhttpd` に分離し、uhttpd だけが読み込みます。純正プログラムが使う TLS ライブラリや OpenSSL は交換しません。uhttpd の起動処理・初期設定も、固定した OpenWrt 公式ファイルを使います。
+
 `rpcd-mod-*` は純正 rpcd が読み込む拡張です。端末切断用の互換 API は独立した `qsdk-hostapd.so` に含まれ、同じプロセス内で動きます。別の常駐デーモンは追加しません。図の `ubus` は純正の ubus バスを経由する呼び出しを表します。
 
 新しい `libiwinfo.so.20230701` は LuCI の RPC 拡張が使います。純正プログラムが使う旧 libiwinfo は残し、両者を分けています。既知の純正 hostapd／wpa_supplicant はハッシュで判定し、対応する機能情報を返します。未知のバイナリには公式の機能検査を使います。
@@ -110,7 +114,7 @@ flowchart TD
     MOUNT["［独自］OverlayFS・bind mount<br/>必要なファイルを実行環境へ接続"]
     RPC["純正 rpcd を再起動<br/>追加 RPC 拡張を読み込む"]
     NET["純正 netifd を再起動<br/>無線プラグインを検出"]
-    WEB["追加 uhttpd・LuCI が起動"]
+    WEB["公式 uhttpd-mod-ucode で LuCI が起動<br/>専用 TLS ライブラリも RAM から読み込む"]
     UPPER[("永続 overlay<br/>設定・後から追加した拡張・変更")]
     FAILURE["LuCI は起動しない<br/>純正ルーター機能・SSH を維持<br/>必要なら SQM 用に止めた加速を復旧"]
 

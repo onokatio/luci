@@ -42,7 +42,7 @@ LuCIの起動とSQMにはLuaを使いません。追加するLuCI拡張も25.12�
 
 Interfaces画面は、純正netifdの `ifname` とインターフェース内のブリッジ設定を維持します。新形式への設定移行は行わず、デバイスの選択・ブリッジ・STP・IGMP snoopingを同じ画面で編集できます。新形式の独立したブリッジデバイスの作成は表示しません。
 
-Webサーバーのubus公開先は `/ubus` にします。末尾にスラッシュがあると、クエリ付き要求が404になり、同じ接続の次の要求も400になるためです。LuCIは公式のCGI版ubus処理 `/cgi-bin/luci/admin/ubus` を使います。この本体では旧uhttpdの直接ubus処理がタイムアウトするため、標準の代替経路を設定します。
+v5.11.0-1ではuhttpd本体・ubus・ucodeモジュールを、公式ソース `ca796d7d` から無改変でビルドします。起動処理と初期設定にも固定した公式ファイルを使い、LuCIの入口を公式 `uhttpd-mod-ucode` へ切り替えます。HTTPS用の公式ustream-sslはuhttpd専用ディレクトリへ配置し、純正のTLSライブラリやOpenSSLは置き換えません。Webサーバーのubus公開先は `/ubus` にします。新版の直接ubus処理ではLuCIが使うメソッド名付きURLに対応できないため、LuCIは引き続き公式の `/cgi-bin/luci/admin/ubus` を使います。
 
 ## Wirelessの対応範囲
 
@@ -115,13 +115,13 @@ python3 contrib/wn7t94xr/ipk-selfcheck.py ./dist/wn7t94xr /tmp/wn7-base-cache
 
 QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起動用のパッケージは従来のビルド処理を使います。公式Makefileへの移行により、互換処理が増える部分は移していません。LuCIのIPKに含まれる設定ファイルもRAMへ展開し、起動時にパッケージのインストールスクリプトは実行しません。overlay上の設定とサービスの準備は、引き続き起動パッケージが担当します。
 
-準備・起動用の2個と、RAM用の21個の、計23個のIPKを生成します。互換性のある4個のIPK（cgi-io、uhttpd、uhttpd-mod-ubus、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
+準備・起動用の2個と、RAM用の24個の、計26個のIPKを生成します。互換性のある2個のIPK（cgi-io、sqm-scripts）は公式リポジトリから取得します。25.12の画面と、純正ABI向けにビルドする実行環境は、このフォークのIPKとして配布します。ソースと依存IPKの取得先、コミット、SHA-256は `sources.json` に固定しています。ビルド手順は `.github/workflows/qsdk.yml` にもあります。
 
 機種・認証・容量の検査は専用の `luci-qsdk-wn7t94xr-prepare` に含めています。iwinfoのIPKは標準のライブラリパッケージです。準備IPKは署名検証用の公開鍵とフィード設定も登録します。フィードを公開する際は `usign -S -m Packages -s <秘密鍵> -x Packages.sig` で署名してください。秘密鍵は配布物に含めません。
 
 ## RAMとoverlayの配置
 
-`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256を確認し、純正 `opkg --offline-root` でRAM内の別ルートへインストールした後、パッケージ名・バージョンを照合します。展開・control・ファイル一覧・インストール状態の生成はopkgに任せます。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の26個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256を確認し、純正 `opkg --offline-root` でRAM内の別ルートへインストールした後、パッケージ名・バージョンを照合します。展開・control・ファイル一覧・インストール状態の生成はopkgに任せます。
 
 `--nodeps` でビルド時に依存関係を検査した固定IPKだけを使い、フィードから追加取得しません。`--force-postinstall` は指定せず、`IPKG_NO_SCRIPT=1` も設定して、インストール用スクリプトを実行しません。純正DBと追加拡張の情報の統合、永続設定とbootstrapリンクを削除対象にしないためのファイル一覧の除外は、起動処理に残します。
 
@@ -130,8 +130,8 @@ QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起�
 | 内容 | 保存先 |
 | --- | --- |
 | 起動処理、取得先とSHA-256の一覧、LuCI設定、フィード設定、設定したMAC許可・拒否リスト | overlay |
-| 公式の4個のIPK | 公式アーカイブからRAMへ取得 |
-| LuCI 25.12とQSDK対応の21個のIPK | このフォークのGitHub ReleaseからRAMへ取得 |
+| 公式の2個のIPK | 公式アーカイブからRAMへ取得 |
+| LuCI 25.12とQSDK対応の24個のIPK | このフォークのGitHub ReleaseからRAMへ取得 |
 | 展開したLuCI、ライブラリ、uhttpd、QSDK連携 | `/tmp/luci-ram` |
 | 取得したIPKと展開途中のファイル | 展開後に削除 |
 | 後からopkgで追加した拡張や変更 | `/overlay/luci-ram/upper` |
@@ -142,7 +142,7 @@ QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起�
 
 取得成功後はOverlayFSでucode、RPC、実行補助スクリプト、opkg管理情報、共有データ、Webファイル、netifdプラグインのディレクトリにRAM上のファイルを重ねます。ネットワーク起動処理、`/sbin/wifi`、`board.json`はbind mountし、新規の実行ファイルとライブラリにはRAMを参照するシンボリックリンクを使います。純正領域のドライバー、ファームウェア、校正データは維持します。netifdはプロセス起動時にドライバープラグインを検出するため、RAMへの展開後にネットワーク管理サービスを一度再起動します。この際、通信が一時的に切れます。
 
-25個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
+26個の実行用パッケージの管理情報もRAMに生成するため、Software画面に表示され、opkgが依存関係を解決できます。後から追加した拡張の書き込み先はoverlayです。標準構成には追加拡張を保存せず、次回起動時に取得するファイルをRAMだけに配置します。`/etc/rc.local` にLuCIの起動処理を書く必要はありません。
 
 ## 旧バージョンからの更新
 
@@ -160,8 +160,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.10.0-1
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.10.0-1_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.11.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.11.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -175,7 +175,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.10.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.11.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 
