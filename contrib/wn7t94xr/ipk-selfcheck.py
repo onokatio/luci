@@ -308,6 +308,8 @@ grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
 grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
 [ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq {len(ram_names)} ]
 ! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"
+! grep -qx /usr/lib/uhttpd_ucode.so "$ram/usr/lib/opkg/info/uhttpd-mod-ucode.list"
+! grep -qx /usr/lib/uhttpd_ubus.so "$ram/usr/lib/opkg/info/uhttpd-mod-ubus.list"
 ! grep -q '^/lib/upgrade/' "$ram/usr/lib/opkg/info/luci-base.list"
 cmp '{status}' '{status}.before'
 requests="$(wc -l < '{requests}')"

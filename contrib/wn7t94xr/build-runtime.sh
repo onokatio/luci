@@ -40,7 +40,7 @@ set(CMAKE_FIND_ROOT_PATH "$prefix" "$stage")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_INSTALL_RPATH /tmp/luci-ram/usr/lib)
+set(CMAKE_INSTALL_RPATH /tmp/luci-ram/usr/lib CACHE STRING "Runtime library search path")
 CMAKE
 cmake -S "$build/json-c" -B "$build/json-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
  -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_APPS=OFF
