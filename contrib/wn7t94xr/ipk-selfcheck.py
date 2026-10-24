@@ -104,7 +104,7 @@ for name in ('luci-base', 'luci-mod-network', 'luci-lib-uqr', 'luci-theme-bootst
     assert 'postinst-pkg' in unpack(unpack(path.read_bytes())['control.tar.gz'])
 
 main, payload, _ = records['luci-qsdk-wn7t94xr']
-assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/ucitrack',
+assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/uhttpd', 'etc/init.d/ucitrack',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages',
                         'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
                         'usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so', 'usr/lib/uhttpd_ucode.so'}
