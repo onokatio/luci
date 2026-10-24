@@ -10,24 +10,6 @@
       "version": "2021-09-08-98cef9dd-20"
     },
     {
-      "depends": "libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2",
-      "feed": "base",
-      "filename": "uhttpd_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "license": "ISC",
-      "name": "uhttpd",
-      "sha256": "089bb730a68477e336e4d00826fa1b4edfb39f7b8515ec447af06ee99fd37171",
-      "version": "2020-10-01-3abcc891-1"
-    },
-    {
-      "depends": "libc, uhttpd, libubus20210603, libblobmsg-json",
-      "feed": "base",
-      "filename": "uhttpd-mod-ubus_2020-10-01-3abcc891-1_arm_cortex-a7_neon-vfpv4.ipk",
-      "license": "ISC",
-      "name": "uhttpd-mod-ubus",
-      "sha256": "936c8888d1b9c3375fe135a14fc6d9a1742a41e2e3028857a8277b48d9fb50be",
-      "version": "2020-10-01-3abcc891-1"
-    },
-    {
       "depends": "libc, tc, kmod-sched-core, kmod-sched-cake, kmod-ifb, iptables, iptables-mod-ipopt, iptables-mod-conntrack-extra",
       "feed": "packages",
       "filename": "sqm-scripts_1.4.0-2_all.ipk",
@@ -65,7 +47,8 @@
     "rpcd-mod-rrdns": "20170710",
     "tc": "5.0.0-2.1",
     "uci": "2019-09-01-415f9e48-4",
-    "usign": "2020-05-23-f1f65026-1"
+    "usign": "2020-05-23-f1f65026-1",
+    "libopenssl1.1": "1.1.1q-1"
   },
   "runtime_sources": {
     "json-c": {
@@ -87,8 +70,26 @@
     "ucode": {
       "revision": "85922056ef7abeace3cca3ab28bc1ac2d88e31b1",
       "url": "https://github.com/jow-/ucode.git"
+    },
+    "uhttpd": {
+      "revision": "ca796d7dec5697a2d1a7a42be79677f239b64282",
+      "url": "https://github.com/openwrt/uhttpd.git"
+    },
+    "ustream-ssl": {
+      "revision": "99f1c0db5a729f615bc5114b3b52fd8ac8083f34",
+      "url": "https://github.com/openwrt/ustream-ssl.git"
+    },
+    "uhttpd-init": {
+      "filename": "uhttpd.init",
+      "sha256": "f87e3c58bf1eb78a6eb52643ef974ba6f2eddbfa103b5acb333bb77d53c534b9",
+      "url": "https://raw.githubusercontent.com/openwrt/openwrt/f3f5c2e54bf432b444e36b1a77077ff476361825/package/network/services/uhttpd/files/uhttpd.init"
+    },
+    "uhttpd-config": {
+      "filename": "uhttpd.config",
+      "sha256": "0f02b5c22e7b174eba61bf0c7599572392d76fa9d78652a21448da9342493df3",
+      "url": "https://raw.githubusercontent.com/openwrt/openwrt/f3f5c2e54bf432b444e36b1a77077ff476361825/package/network/services/uhttpd/files/uhttpd.config"
     }
   },
   "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
-  "version": "5.10.0-1"
+  "version": "5.11.0-1"
 }

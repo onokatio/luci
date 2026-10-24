@@ -14,7 +14,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 LOCK = json.loads((HERE / 'sources.json').read_text())
 records, owners = {}, {}
 OUT, CACHE = map(pathlib.Path, sys.argv[1:])
-custom_names = {'libiwinfo20230701', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
+custom_names = {'uhttpd', 'uhttpd-mod-ubus', 'uhttpd-mod-ucode', 'libiwinfo20230701', 'rpcd-mod-iwinfo', 'rpcd-mod-luci', 'libucode20230711', 'ucode',
                 'liblucihttp0', 'liblucihttp-ucode', 'rpcd-mod-ucode', 'luci-base', 'luci-mod-network',
                 'luci-theme-bootstrap', 'luci-lib-uqr', 'luci-app-package-manager', 'luci-app-sqm',
                 'luci-qsdk-wn7t94xr-runtime', 'luci-qsdk-wn7t94xr', 'luci-qsdk-wn7t94xr-prepare'}
@@ -107,7 +107,13 @@ main, payload, _ = records['luci-qsdk-wn7t94xr']
 assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/ucitrack',
                         'etc/init.d/luci-ram', 'etc/luci-qsdk/ram-packages',
                         'etc/config/sqm', 'etc/init.d/sqm', 'etc/hotplug.d/iface/11-sqm',
-                        'usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'}
+                        'usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so', 'usr/lib/uhttpd_ucode.so'}
+http = records['uhttpd'][1]
+assert set(http) == {'usr/sbin/uhttpd', 'usr/lib/uhttpd/libustream-ssl.so', 'etc/init.d/uhttpd'}
+assert b'/tmp/luci-ram/usr/lib/uhttpd' in http['usr/sbin/uhttpd']
+assert b'libssl.so.1.1' in http['usr/lib/uhttpd/libustream-ssl.so']
+assert hashlib.sha256(http['etc/init.d/uhttpd']).hexdigest() == LOCK['runtime_sources']['uhttpd-init']['sha256']
+assert hashlib.sha256(payload['etc/config/uhttpd']).hexdigest() == LOCK['runtime_sources']['uhttpd-config']['sha256']
 assert payload['usr/bin/ucode'] == '/tmp/luci-ram/usr/bin/ucode'
 init = payload['etc/init.d/luci-ram'].decode()
 subprocess.run(['sh', '-n'], input=init.encode(), check=True)
@@ -162,6 +168,7 @@ main_hooks = unpack(unpack(records['luci-qsdk-wn7t94xr'][2].read_bytes())['contr
 assert 'exec /' + prepare_path in main_hooks['preinst'].decode()
 assert b'luci-ram enable' in main_hooks['postinst'] and b'network restart' not in main_hooks['postinst']
 assert b'uci set uhttpd.main.ubus_prefix=/ubus\n' in main_hooks['postinst']
+assert b"uci add_list uhttpd.main.ucode_prefix='/cgi-bin/luci=/usr/share/ucode/luci/uhttpd.uc'\n" in main_hooks['postinst']
 assert b'uci set luci.main.ubuspath=/cgi-bin/luci/admin/ubus\n' in main_hooks['postinst']
 assert 64 <= json.loads((OUT / 'sizes.json').read_text())['preflight_kib'] < 100
 

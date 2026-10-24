@@ -123,6 +123,9 @@ for package in LOCK['base_packages']:
     record(original, read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])['control'][0].decode())
 
 native = {
+    'uhttpd': (['usr/sbin/uhttpd', 'usr/lib/uhttpd/libustream-ssl.so'], 'libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2, libopenssl1.1'),
+    'uhttpd-mod-ubus': (['usr/lib/uhttpd_ubus.so'], 'libc, uhttpd, libubus20210603, libblobmsg-json'),
+    'uhttpd-mod-ucode': (['usr/lib/uhttpd_ucode.so'], 'libc, uhttpd, libucode20230711, libubox20191228'),
     'libiwinfo20230701': (['usr/lib/libiwinfo.so.20230701'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),
     'rpcd-mod-iwinfo': (['usr/lib/rpcd/iwinfo.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104'),
     'rpcd-mod-luci': (['usr/lib/rpcd/luci.so'], 'libc, rpcd, libiwinfo20230701, libubox20191228, libubus20210603, libuci20130104, libnl-tiny'),
@@ -137,6 +140,9 @@ for module in ['fs', 'log', 'uci', 'ubus', 'math', 'html']:
         (', libuci20130104' if module == 'uci' else ', libubus20210603, libubox20191228' if module == 'ubus' else ''))
 # Keep compatibility fixes newer than the archived packages on the active feeds.
 component_versions = {
+    'uhttpd': '2026-10-19-ca796d7d-1',
+    'uhttpd-mod-ubus': '2026-10-19-ca796d7d-1',
+    'uhttpd-mod-ucode': '2026-10-19-ca796d7d-1',
     'libiwinfo20230701': '2026-05-26-66bdd1a0-1',
     'rpcd-mod-iwinfo': '2026-10-04-d99f703e-1',
     'rpcd-mod-luci': '20210614-1',
@@ -152,6 +158,10 @@ for name, (filenames, depends) in native.items():
         if isinstance(binary, bytes):
             assert binary[:6] == b'\x7fELF\x01\x01' and binary[18:20] == b'\x28\x00', filename
         payload[filename] = (binary, 0o755)
+    if name == 'uhttpd':
+        payload['etc/init.d/uhttpd'] = ((NATIVE / 'etc/init.d/uhttpd').read_bytes(), 0o755)
+    if name.startswith('uhttpd-mod-'):
+        depends = depends.replace('uhttpd,', 'uhttpd (= ' + component_versions['uhttpd'] + '),')
     if name == 'libucode20230711':
         payload.update({file.relative_to(NATIVE).as_posix(): (file.read_bytes(), 0o644)
                         for file in (NATIVE / 'usr/share/licenses/libucode20230711').iterdir()})
@@ -195,17 +205,15 @@ for name, version in versions.items():
     manifest.append(f'{name} {version} {hashlib.sha256(path.read_bytes()).hexdigest()} {url}\n')
 manifest = ''.join(manifest).encode()
 
-original = next(p for p in LOCK['base_packages'] if p['name'] == 'uhttpd')
-http = read_archive(read_archive((CACHE / original['filename']).read_bytes())['data.tar.gz'][0])
 payload = {name: ((LUCI / 'modules/luci-base/root' / name).read_bytes(), 0o644) for name in ('etc/config/luci',)}
-payload['etc/config/uhttpd'] = http['etc/config/uhttpd']
+payload['etc/config/uhttpd'] = ((NATIVE / 'etc/config/uhttpd').read_bytes(), 0o644)
 payload['etc/init.d/luci-ram'] = ((HERE / 'root/etc/init.d/luci-ram').read_bytes(), 0o755)
 payload['etc/luci-qsdk/ram-packages'] = (manifest, 0o644)
 payload['etc/init.d/ucitrack'] = ('/tmp/luci-ram/etc/init.d/ucitrack', 0o755)
 payload['etc/init.d/sqm'] = ((HERE / 'root/etc/init.d/sqm').read_bytes(), 0o755)
 payload['etc/hotplug.d/iface/11-sqm'] = ('/tmp/luci-ram/etc/hotplug.d/iface/11-sqm', 0o755)
 payload['etc/config/sqm'] = (b"config queue 'uplink'\n\toption enabled '0'\n\toption interface 'eth0'\n\toption download '85000'\n\toption upload '10000'\n\toption qdisc 'cake'\n\toption script 'piece_of_cake.qos'\n\toption linklayer 'none'\n", 0o644)
-for name in ('usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so'):
+for name in ('usr/lib/libiwinfo.so.20230701', 'usr/sbin/uhttpd', 'usr/bin/ucode', 'usr/libexec/cgi-io', 'usr/lib/liblucihttp.so.0', 'usr/lib/uhttpd_ubus.so', 'usr/lib/uhttpd_ucode.so'):
     payload[name] = ('/tmp/luci-ram/' + name, 0o755)
 
 md5 = lambda data: hashlib.md5(data).hexdigest()
@@ -292,6 +300,7 @@ uci -q delete uhttpd.main.listen_http || true
 uci -q delete uhttpd.main.listen_https || true
 uci -q delete uhttpd.main.lua_prefix || true
 uci -q delete uhttpd.main.ucode_prefix || true
+uci add_list uhttpd.main.ucode_prefix='/cgi-bin/luci=/usr/share/ucode/luci/uhttpd.uc'
 uci add_list uhttpd.main.listen_http=0.0.0.0:8080
 uci set uhttpd.main.ubus_prefix=/ubus
 uci set uhttpd.main.redirect_https=0

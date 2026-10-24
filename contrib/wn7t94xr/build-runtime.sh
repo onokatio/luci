@@ -22,7 +22,7 @@ for name, record in lock['runtime_sources'].items():
         subprocess.run(['git','-C',str(dest),'checkout','--detach',record['revision']],check=True)
         assert subprocess.check_output(['git','-C',str(dest),'rev-parse','HEAD'],text=True).strip()==record['revision']
     else:
-        dest=root/(name + ('.tar.gz' if name=='json-c' else '.c'))
+        dest=root/record.get('filename', name + ('.tar.gz' if name=='json-c' else '.c'))
         if not dest.exists():
             subprocess.run(['curl','-fsSL','--retry','2','--connect-timeout','20','--max-time','120',record['url'],'-o',str(dest)],check=True)
         assert hashlib.sha256(dest.read_bytes()).hexdigest()==record['sha256'],name
@@ -85,3 +85,22 @@ find "$out/usr" -type f \( -name '*.so' -o -name '*.so.[0-9]*' -o -name ucode \)
 
 "$tc/arm-openwrt-linux-muslgnueabi-readelf" -d "$out/usr/lib/ucode/lucihttp.so" | grep -q 'Shared library: \[libucode.so.20230711\]'
 "$tc/arm-openwrt-linux-muslgnueabi-readelf" -d "$out/usr/bin/ucode" | grep -q 'Shared library: \[libucode.so.20230711\]'
+
+# Keep the new TLS ABI private to uhttpd; native services retain their TLS library.
+cmake -S "$sources/ustream-ssl" -B "$build/ustream-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
+ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_C_FLAGS="-Os -mfloat-abi=hard -I$stage/usr/include"
+cmake --build "$build/ustream-build" -j4
+mkdir -p "$build/uhttpd-include/libubox" "$out/usr/lib/uhttpd" "$out/usr/sbin" "$out/etc/init.d" "$out/etc/config"
+cp "$sources/ustream-ssl/ustream-ssl.h" "$build/uhttpd-include/libubox/"
+cmake -S "$sources/uhttpd" -B "$build/uhttpd-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
+ -DCMAKE_C_FLAGS="-Os -mfloat-abi=hard -I$build/uhttpd-include -I$stage/usr/include -I$prefix/usr/include" \
+ -DCMAKE_MODULE_LINKER_FLAGS="-L$prefix/usr/lib" -DCMAKE_EXE_LINKER_FLAGS="-L$prefix/usr/lib" \
+ -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_INSTALL_RPATH="/tmp/luci-ram/usr/lib/uhttpd;/tmp/luci-ram/usr/lib" \
+ -Dlibjson="$stage/usr/lib/libjson-c.so" -DTLS_SUPPORT=ON -DLUA_SUPPORT=OFF -DUBUS_SUPPORT=ON -DUCODE_SUPPORT=ON
+cmake --build "$build/uhttpd-build" -j4
+cp "$build/uhttpd-build/uhttpd" "$out/usr/sbin/"
+cp "$build/uhttpd-build/uhttpd_ucode.so" "$build/uhttpd-build/uhttpd_ubus.so" "$out/usr/lib/"
+cp "$build/ustream-build/libustream-ssl.so" "$out/usr/lib/uhttpd/"
+cp "$sources/uhttpd.init" "$out/etc/init.d/uhttpd"
+cp "$sources/uhttpd.config" "$out/etc/config/uhttpd"
+"$strip" "$out/usr/sbin/uhttpd" "$out/usr/lib/uhttpd_"*.so "$out/usr/lib/uhttpd/libustream-ssl.so"

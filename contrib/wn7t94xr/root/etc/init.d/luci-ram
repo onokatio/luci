@@ -61,14 +61,15 @@ fetch() {
 		     -e '/^\/lib\/upgrade\/keep.d\//d' \
 		     -e '/^\/usr\/bin\/ucode$/d' -e '/^\/usr\/sbin\/uhttpd$/d' -e '/^\/usr\/libexec\/cgi-io$/d' \
 		     -e '/^\/usr\/lib\/libiwinfo.so.20230701$/d' -e '/^\/usr\/lib\/liblucihttp.so$/d' -e '/^\/usr\/lib\/liblucihttp.so.0$/d' \
-		     -e '/^\/usr\/lib\/uhttpd_ubus.so$/d' \
+		     -e '/^\/usr\/lib\/uhttpd_\(ubus\|ucode\).so$/d' \
 		     "$unpack/usr/lib/opkg/info/$name.list" > "$download/filelist" ||
 		   ! mv "$download/filelist" "$unpack/usr/lib/opkg/info/$name.list"; then
 			rm -rf "$unpack" "$download"
 			return 1
 		fi
 	done < "$manifest"
-	[ -x "$unpack/usr/sbin/uhttpd" ] && [ -x "$unpack/usr/bin/ucode" ] && [ -f "$unpack/usr/share/ucode/luci/dispatcher.uc" ] &&
+	[ -f "$unpack/usr/lib/uhttpd_ucode.so" ] && [ -f "$unpack/usr/lib/uhttpd/libustream-ssl.so" ] &&
+	   [ -x "$unpack/usr/sbin/uhttpd" ] && [ -x "$unpack/usr/bin/ucode" ] && [ -f "$unpack/usr/share/ucode/luci/dispatcher.uc" ] &&
 	   [ -f "$unpack/lib/netifd/wireless/qcawificfg80211.sh" ] &&
 	   [ -f "$unpack/etc/init.d/network" ] && [ -f "$unpack/sbin/wifi" ] || { rm -rf "$unpack" "$download"; return 1; }
 	# Supply board metadata in RAM; the vendor file is restored when LuCI stops.
