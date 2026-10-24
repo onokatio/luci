@@ -123,7 +123,7 @@ for package in LOCK['base_packages']:
     record(original, read_archive(ipk['data.tar.gz'][0]), read_archive(ipk['control.tar.gz'][0])['control'][0].decode())
 
 native = {
-    'uhttpd': (['usr/sbin/uhttpd', 'usr/lib/uhttpd/libustream-ssl.so'], 'libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2, libopenssl1.1'),
+    'uhttpd': (['usr/sbin/uhttpd', 'usr/lib/uhttpd/libustream-ssl.so'], 'libc, libubox20191228, libblobmsg-json, libjson-script, libjson-c2, libmbedtls12'),
     'uhttpd-mod-ubus': (['usr/lib/uhttpd_ubus.so'], 'libc, uhttpd, libubus20210603, libblobmsg-json'),
     'uhttpd-mod-ucode': (['usr/lib/uhttpd_ucode.so'], 'libc, uhttpd, libucode20230711, libubox20191228'),
     'libiwinfo20230701': (['usr/lib/libiwinfo.so.20230701'], 'libc, libgcc, libuci20130104, libubus20210603, libubox20191228, libnl-tiny'),

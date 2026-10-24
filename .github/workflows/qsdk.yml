@@ -36,10 +36,10 @@ jobs:
           ./scripts/feeds update base
           git -C feeds/base checkout "$(python3 -c 'import json; print(json.load(open("../luci/contrib/wn7t94xr/sources.json"))["sdk_base"])')"
           ./scripts/feeds update -i base
-          ./scripts/feeds install libubox ubus uci lua libnl-tiny rpcd libopenssl
+          ./scripts/feeds install libubox ubus uci lua libnl-tiny rpcd libmbedtls
           make defconfig
           sed -i 's/^CONFIG_AUTOREMOVE=y/# CONFIG_AUTOREMOVE is not set/' .config
-          make -j1 package/libubox/compile package/ubus/compile package/uci/compile package/lua/compile package/libnl-tiny/compile package/rpcd/compile package/openssl/compile
+          make -j1 package/libubox/compile package/ubus/compile package/uci/compile package/lua/compile package/libnl-tiny/compile package/rpcd/compile package/mbedtls/compile
       - name: Build and check
         run: |
           python3 luci/contrib/wn7t94xr/sqm-selfcheck.py

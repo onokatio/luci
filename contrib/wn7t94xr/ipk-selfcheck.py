@@ -111,7 +111,7 @@ assert set(payload) == {'etc/config/luci', 'etc/config/uhttpd', 'etc/init.d/ucit
 http = records['uhttpd'][1]
 assert set(http) == {'usr/sbin/uhttpd', 'usr/lib/uhttpd/libustream-ssl.so', 'etc/init.d/uhttpd'}
 assert b'/tmp/luci-ram/usr/lib/uhttpd' in http['usr/sbin/uhttpd']
-assert b'libssl.so.1.1' in http['usr/lib/uhttpd/libustream-ssl.so']
+assert b'libmbedtls.so.12' in http['usr/lib/uhttpd/libustream-ssl.so']
 assert hashlib.sha256(http['etc/init.d/uhttpd']).hexdigest() == LOCK['runtime_sources']['uhttpd-init']['sha256']
 assert hashlib.sha256(payload['etc/config/uhttpd']).hexdigest() == LOCK['runtime_sources']['uhttpd-config']['sha256']
 assert payload['usr/bin/ucode'] == '/tmp/luci-ram/usr/bin/ucode'

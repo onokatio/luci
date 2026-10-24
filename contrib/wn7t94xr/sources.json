@@ -48,7 +48,7 @@
     "tc": "5.0.0-2.1",
     "uci": "2019-09-01-415f9e48-4",
     "usign": "2020-05-23-f1f65026-1",
-    "libopenssl1.1": "1.1.1q-1"
+    "libmbedtls12": "2.16.12-1"
   },
   "runtime_sources": {
     "json-c": {

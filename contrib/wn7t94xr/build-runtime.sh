@@ -88,7 +88,7 @@ find "$out/usr" -type f \( -name '*.so' -o -name '*.so.[0-9]*' -o -name ucode \)
 
 # Keep the new TLS ABI private to uhttpd; native services retain their TLS library.
 cmake -S "$sources/ustream-ssl" -B "$build/ustream-build" -DCMAKE_TOOLCHAIN_FILE="$build/toolchain.cmake" \
- -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_C_FLAGS="-Os -mfloat-abi=hard -I$stage/usr/include"
+ -DCMAKE_INSTALL_PREFIX=/usr -DMBEDTLS=ON -DCMAKE_C_FLAGS="-Os -mfloat-abi=hard -I$stage/usr/include"
 cmake --build "$build/ustream-build" -j4
 mkdir -p "$build/uhttpd-include/libubox" "$out/usr/lib/uhttpd" "$out/usr/sbin" "$out/etc/init.d" "$out/etc/config"
 cp "$sources/ustream-ssl/ustream-ssl.h" "$build/uhttpd-include/libubox/"
