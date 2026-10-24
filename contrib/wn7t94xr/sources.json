@@ -76,7 +76,7 @@
       "url": "https://github.com/openwrt/uhttpd.git"
     },
     "ustream-ssl": {
-      "revision": "99f1c0db5a729f615bc5114b3b52fd8ac8083f34",
+      "revision": "7621339d7694abef5da5e5353ac440f2d39dcecb",
       "url": "https://github.com/openwrt/ustream-ssl.git"
     },
     "uhttpd-init": {
