@@ -121,7 +121,7 @@ QSDKのABIに合わせるライブラリ・RPC拡張と、機種検査・RAM起�
 
 ## RAMとoverlayの配置
 
-`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256とパッケージ名・バージョンを確認し、標準の `data.tar.gz` を展開します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
+`luci-base`、Network・Wireless・Software画面、Bootstrapテーマ、依存ライブラリ、uhttpd、QSDK連携の25個のIPKを、毎回の起動時にRAMへ取得します。各IPKのSHA-256を確認し、純正 `opkg --offline-root` でRAM内の別ルートへインストールした後、パッケージ名・バージョンを照合します。展開・control・ファイル一覧・インストール状態の生成はopkgに任せます。`--nodeps` でビルド時に依存関係を検査した固定IPKだけを使い、フィードから追加取得しません。`--force-postinstall` は指定せず、`IPKG_NO_SCRIPT=1` も設定して、インストール用スクリプトを実行しません。純正DBと追加拡張の情報の統合、永続設定とbootstrapリンクを削除対象にしないためのファイル一覧の除外は、起動処理に残します。別形式への再圧縮や、overlayへのダウンロード保存は行いません。
 
 | 内容 | 保存先 |
 | --- | --- |
@@ -156,8 +156,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.9.0-2
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.9.0-2_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.10.0-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.10.0-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -171,7 +171,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.9.0-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.10.0-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

@@ -135,6 +135,7 @@ for file, data in libraries.items():
         exposed.add(str(pathlib.PurePosixPath(file).parent / data))
 assert libraries.keys() <= exposed, f'RAM libraries are not exposed to the system loader: {libraries.keys() - exposed}'
 assert {line.split()[0] for line in manifest.splitlines() if 'archive.openwrt.org' in line} == {p['name'] for p in LOCK['base_packages']}
+assert records['luci-qsdk-wn7t94xr-runtime'][0]['Replaces'] == 'sqm-scripts'
 assert records['luci-qsdk-wn7t94xr-runtime'][1].keys() == {'etc/init.d/network', 'sbin/wifi', 'lib/netifd/wireless/qcawificfg80211.sh', 'etc/hotplug.d/iface/11-sqm', 'usr/lib/rpcd/qsdk-hostapd.so'}
 assert b'/sbin/wifi reload' in records['luci-qsdk-wn7t94xr-runtime'][1]['etc/init.d/network']
 base = records['luci-base'][1]
@@ -192,6 +193,7 @@ with tempfile.TemporaryDirectory() as directory:
     board = targets / 'etc/board.json'
     board.write_text('{"network":{"keep":true},"switch":{"switch1":{"enable":false}}}')
     jshn = HERE.parents[2] / 'sdk/staging_dir/host'
+    assert (jshn / 'bin/opkg').is_file(), 'Build package/opkg/host/compile in the SDK first'
     script = init[init.index('fetch()'):].replace('/proc/mounts', str(mounts))
     script = script.replace('/sys/firmware/devicetree/base', str(device)).replace('/sys/class/net/eth1/type', str(device / 'type'))
     (device / 'type').write_text('1\n')
@@ -235,6 +237,10 @@ export PATH='{jshn}/bin':$PATH
 ram='{root}/ram'; state='{root}/state'; manifest='{mf}'; dirs='usr/lib/lua usr/lib/ucode usr/lib/rpcd usr/libexec usr/lib/opkg usr/lib/sqm etc/sqm usr/share www lib/netifd/wireless'; bindings='etc/init.d/network sbin/wifi etc/board.json'
 sha256sum() {{ python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest(), sys.argv[1])' "$1"; }}
 logger() {{ :; }}
+opkg() {{
+ [ "$fail_opkg" != 1 ] || return 1
+ '{jshn}/bin/opkg' "$@"
+}}
 stat() {{ if [ "$2" = %u:%a ]; then echo 0:755; else echo 0; fi; }}
 service() {{ echo "$*" >> '{root}/services'; }}
 ubus() {{ :; }}
@@ -268,6 +274,7 @@ umount() {{
  awk -v target="$1" '$2 != target' '{mounts}' > '{mounts}.new'
  mv '{mounts}.new' '{mounts}'
 }}
+cp '{status}' '{status}.before'
 fail_curl=1
 if start; then exit 10; fi
 [ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
@@ -278,7 +285,16 @@ rm -f '{root}/services'
 fail_curl=0; bad_sha=1
 if start; then exit 12; fi
 [ ! -e "$ram" ] && [ ! -e "$state" ]
-bad_sha=0; fetch
+bad_sha=0; fail_opkg=1
+if start; then exit 17; fi
+[ ! -e "$ram" ] && [ ! -s '{mounts}' ] && [ ! -e "$state" ]
+fail_opkg=0
+cp "$manifest" "$manifest.good"
+sed '1s/ [^ ]* / wrong-version /' "$manifest.good" > "$manifest"
+if start; then exit 18; fi
+[ ! -e "$ram" ] && [ ! -e "$state" ]
+mv "$manifest.good" "$manifest"
+fetch
 [ -f "$ram/etc/sqm/sqm.conf" ]
 [ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq {len(ram_names) + 2} ]
 grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"
@@ -286,6 +302,7 @@ grep -q '^Package: dropbear$' "$ram/usr/lib/opkg/status"
 [ "$(find "$ram/usr/lib/opkg/info" -name '*.control' | wc -l | tr -d ' ')" -eq {len(ram_names)} ]
 ! grep -qx /usr/lib/liblucihttp.so.0 "$ram/usr/lib/opkg/info/liblucihttp0.list"
 ! grep -q '^/lib/upgrade/' "$ram/usr/lib/opkg/info/luci-base.list"
+cmp '{status}' '{status}.before'
 requests="$(wc -l < '{requests}')"
 fetch
 [ "$(wc -l < '{requests}')" = "$requests" ]
@@ -324,6 +341,34 @@ echo corrupt > "$ram/.manifest-sha256"
 if start; then exit 14; fi
 [ "$(wc -l < '{requests}')" = "$requests" ]
 '''
+    # A real package with observable hooks checks that offline installation never executes them.
+    hook_ipk = root / 'offline-hooks.ipk'
+    with tarfile.open(hook_ipk, 'w:gz') as outer:
+        for name, entries in {'debian-binary': None, 'control.tar.gz': {
+            'control': b'Package: offline-hooks\nVersion: 1\nArchitecture: all\nDescription: hook isolation probe\n',
+            'preinst': ('#!/bin/sh\ntouch "' + str(root / 'hook-ran') + '"\n').encode(),
+            'postinst': ('#!/bin/sh\ntouch "' + str(root / 'hook-ran') + '"\n').encode(),
+        }, 'data.tar.gz': {'probe': b'ok'}}.items():
+            stream = io.BytesIO()
+            if entries is None:
+                data = b'2.0\n'
+            else:
+                with tarfile.open(fileobj=stream, mode='w:gz') as inner:
+                    for file, content in entries.items():
+                        member = tarfile.TarInfo(file); member.size = len(content)
+                        member.mode = 0o755 if file in ('preinst', 'postinst') else 0o644
+                        inner.addfile(member, io.BytesIO(content))
+                data = stream.getvalue()
+            member = tarfile.TarInfo(name); member.size = len(data)
+            outer.addfile(member, io.BytesIO(data))
+    hook_root = root / 'hook-root'
+    (hook_root / 'tmp').mkdir(parents=True)
+    (hook_root / 'var/lock').mkdir(parents=True)
+    config = root / 'opkg.conf'; config.write_text('dest root /\narch all 1\n')
+    subprocess.run([str(jshn / 'bin/opkg'), '-f', str(config), '--offline-root', str(hook_root),
+                    '--tmp-dir', str(root), '--nodeps', 'install', str(hook_ipk)], check=True)
+    assert not (root / 'hook-ran').exists()
+    assert (hook_root / 'probe').read_bytes() == b'ok'
     result = subprocess.run(['bash', '-ex'], input=(script + stub).encode(), capture_output=True)
     assert result.returncode == 0, result.stdout.decode() + '\n'.join(result.stderr.decode().splitlines()[-35:]) + str(result.returncode)
 print(f'{len(custom_names)} custom and {len(official)} official IPKs passed: minimal persistent bootstrap, all {len(ram_names)} runtime packages in RAM, pinned downloads, package records, addon persistence, failure isolation, mount rollback and ARM ABI')

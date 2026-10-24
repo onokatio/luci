@@ -105,6 +105,7 @@ flowchart TD
     SSH["［公式・追加済み］Dropbear SSH<br/>LuCI に依存せず起動"]
     START["［独自・overlay に常駐］luci-ram"]
     DOWNLOAD["公式アーカイブ／フォークの Release<br/>固定した IPK を取得・検証"]
+    OPKG["［純正］opkg --offline-root<br/>検証済み IPK を RAM へインストール<br/>展開・管理情報の生成／フックは実行しない"]
     RAM["RAM：/tmp/luci-ram<br/>LuCI・ucode・RPC 拡張・ライブラリ<br/>無線プラグイン・SQM など"]
     MOUNT["［独自］OverlayFS・bind mount<br/>必要なファイルを実行環境へ接続"]
     RPC["純正 rpcd を再起動<br/>追加 RPC 拡張を読み込む"]
@@ -117,7 +118,9 @@ flowchart TD
     BOOT --> SSH
     OEM --> START
     START --> DOWNLOAD
-    DOWNLOAD -->|"全て成功"| RAM
+    DOWNLOAD -->|"全て成功"| OPKG
+    OPKG -->|"全て成功・名前と版を照合"| RAM
+    OPKG -.->|"失敗・不一致"| FAILURE
     DOWNLOAD -.->|"失敗"| FAILURE
     RAM --> MOUNT
     UPPER -->|"書き込み・変更を保持"| MOUNT
@@ -125,6 +128,8 @@ flowchart TD
     RPC --> NET
     NET --> WEB
 ```
+
+IPK の展開、control・ファイル一覧・インストール状態の生成は、本体の純正 `opkg --offline-root` に任せます。取得先と SHA-256 の検証、名前・バージョンの照合、純正と追加パッケージの DB 統合、永続設定と起動処理は `luci-ram` が担当します。依存関係はビルド時に検査した固定構成を使い、起動時にフィードの解決やインストール用スクリプトの実行は行いません。ファイル一覧からは、永続設定と bootstrap のリンクを削除対象にしないための除外を行います。
 
 RAM 展開後も、実際に動く rpcd・netifd 本体は純正バイナリです。追加部分を認識させるために再起動する段階で、通信が一時的に切れます。ダウンロードが完了するまでは純正サービスとマウント構成を変更しません。
 

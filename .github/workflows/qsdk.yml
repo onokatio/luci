@@ -39,7 +39,7 @@ jobs:
           ./scripts/feeds install libubox ubus uci lua libnl-tiny rpcd
           make defconfig
           sed -i 's/^CONFIG_AUTOREMOVE=y/# CONFIG_AUTOREMOVE is not set/' .config
-          make -j1 package/libubox/compile package/ubus/compile package/uci/compile package/lua/compile package/libnl-tiny/compile package/rpcd/compile
+          make -j1 package/libubox/compile package/ubus/compile package/uci/compile package/lua/compile package/libnl-tiny/compile package/rpcd/compile package/opkg/host/compile
       - name: Build and check
         run: |
           python3 luci/contrib/wn7t94xr/sqm-selfcheck.py

@@ -89,7 +89,7 @@ def record(path, payload, control):
 
 def control(name, depends, version=VERSION, provides=''):
     text = f"Package: {name}\nVersion: {version}\nArchitecture: {ARCH}\nDepends: {depends}\nSection: luci\nMaintainer: onokatio\nLicense: Apache-2.0 AND ISC AND MIT\nDescription: LuCI 25.12 userspace for WN-7T94XR stock v2.5.1\n"
-    return text + ('Provides: ' + provides + '\n' if provides else '')
+    return text + ('Provides: ' + provides + '\n' if provides else '') + ('Replaces: sqm-scripts\n' if name == 'luci-qsdk-wn7t94xr-runtime' else '')
 
 
 def emit(name, depends, payload, provides='', version=VERSION):

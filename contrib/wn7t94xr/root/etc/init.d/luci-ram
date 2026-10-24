@@ -23,38 +23,50 @@ fetch() {
 	fi
 	download="$(mktemp -d /tmp/luci-download.XXXXXX)" || return 1
 	unpack="$(mktemp -d /tmp/luci-unpack.XXXXXX)" || { rm -rf "$download"; return 1; }
-	mkdir -p "$unpack/usr/lib/opkg/info" || { rm -rf "$unpack" "$download"; return 1; }
+	mkdir -p "$unpack/usr/lib/opkg/info" "$unpack/var/lock" "$unpack/tmp" || { rm -rf "$unpack" "$download"; return 1; }
 	database=/usr/lib/opkg/status
 	[ ! -f "$state/upper/usr/lib/opkg/status" ] || database="$state/upper/usr/lib/opkg/status"
 	awk 'BEGIN { packages["luci-qsdk-wn7t94xr"]=1; packages["luci-qsdk-wn7t94xr-prepare"]=1 } NR==FNR { packages[$1]=1; next } /^Package: / { skip=($2 in packages) } !skip { print }' \
-		"$manifest" "$database" > "$unpack/usr/lib/opkg/status"
+		"$manifest" "$database" > "$download/stock-status" || { rm -rf "$unpack" "$download"; return 1; }
 	awk '/^Package: / { keep=($2=="luci-qsdk-wn7t94xr" || $2=="luci-qsdk-wn7t94xr-prepare") } keep { print }' \
-		/usr/lib/opkg/status >> "$unpack/usr/lib/opkg/status" || { rm -rf "$unpack" "$download"; return 1; }
+		/usr/lib/opkg/status >> "$download/stock-status" || { rm -rf "$unpack" "$download"; return 1; }
+	set --
 	while read -r name version sha url; do
-		if ! curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors --connect-timeout 10 --max-time 45 "$url" -o "$download/package.ipk" ||
-		   [ "$(sha256sum "$download/package.ipk" | cut -d ' ' -f 1)" != "$sha" ] ||
-		   ! tar -xzf "$download/package.ipk" -C "$download" ||
-		   ! tar -xzf "$download/data.tar.gz" -C "$unpack" ||
-		   ! tar -xzf "$download/control.tar.gz" -C "$download" ||
-		   [ "$(sed -n 's/^Package: //p' "$download/control")" != "$name" ] ||
-		   [ "$(sed -n 's/^Version: //p' "$download/control")" != "$version" ]; then
+		if ! curl -fsSL --retry 4 --retry-delay 3 --retry-all-errors --connect-timeout 10 --max-time 45 "$url" -o "$download/$name.ipk" ||
+		   [ "$(sha256sum "$download/$name.ipk" | cut -d ' ' -f 1)" != "$sha" ]; then
 			rm -rf "$unpack" "$download"
 			logger -t luci-ram "LuCI package download or verification failed: $name"
 			return 1
 		fi
-		if ! cp "$download/control" "$unpack/usr/lib/opkg/info/$name.control" ||
-		   ! { cat "$download/control"; printf 'Status: install ok installed\n\n'; } >> "$unpack/usr/lib/opkg/status" ||
-		   ! tar -tzf "$download/data.tar.gz" > "$download/filelist" ||
-		   ! sed -e '/\/$/d' -e 's,^\./,,' -e '/^etc\//d' -e '/^sbin\/luci-reload$/d' -e '/^sbin\/wifi$/d' \
-		     -e '/^lib\/upgrade\/keep.d\//d' \
-		     -e '/^usr\/bin\/ucode$/d' -e '/^usr\/sbin\/uhttpd$/d' -e '/^usr\/libexec\/cgi-io$/d' \
-		     -e '/^usr\/lib\/libiwinfo.so.20230701$/d' -e '/^usr\/lib\/liblucihttp.so$/d' -e '/^usr\/lib\/liblucihttp.so.0$/d' \
-		     -e '/^usr\/lib\/uhttpd_ubus.so$/d' -e 's,^,/,' \
-		     "$download/filelist" > "$unpack/usr/lib/opkg/info/$name.list"; then
+		set -- "$@" "$download/$name.ipk"
+	done < "$manifest"
+	# The pinned manifest is dependency-checked at build time; never resolve feeds or run hooks here.
+	printf 'dest root /\narch all 1\narch arm_cortex-a7_neon-vfpv4 10\n' > "$download/opkg.conf"
+	if ! IPKG_NO_SCRIPT=1 opkg -f "$download/opkg.conf" --offline-root "$unpack" --tmp-dir "$download" --nodeps install "$@" > "$download/install.log" 2>&1; then
+		cat "$download/install.log" >&2
+		rm -rf "$unpack" "$download"
+		logger -t luci-ram 'LuCI offline package installation failed'
+		return 1
+	fi
+	cat "$download/stock-status" >> "$unpack/usr/lib/opkg/status" || { rm -rf "$unpack" "$download"; return 1; }
+	while read -r name version sha url; do
+		if [ "$(sed -n 's/^Package: //p' "$unpack/usr/lib/opkg/info/$name.control")" != "$name" ] ||
+		   [ "$(sed -n 's/^Version: //p' "$unpack/usr/lib/opkg/info/$name.control")" != "$version" ]; then
+			rm -rf "$unpack" "$download"
+			logger -t luci-ram "LuCI package identity verification failed: $name"
+			return 1
+		fi
+		# Persistent settings and bootstrap links must not become RAM package removal targets.
+		if ! sed -e '/\/$/d' -e '/^\/etc\//d' -e '/^\/sbin\/luci-reload$/d' -e '/^\/sbin\/wifi$/d' \
+		     -e '/^\/lib\/upgrade\/keep.d\//d' \
+		     -e '/^\/usr\/bin\/ucode$/d' -e '/^\/usr\/sbin\/uhttpd$/d' -e '/^\/usr\/libexec\/cgi-io$/d' \
+		     -e '/^\/usr\/lib\/libiwinfo.so.20230701$/d' -e '/^\/usr\/lib\/liblucihttp.so$/d' -e '/^\/usr\/lib\/liblucihttp.so.0$/d' \
+		     -e '/^\/usr\/lib\/uhttpd_ubus.so$/d' \
+		     "$unpack/usr/lib/opkg/info/$name.list" > "$download/filelist" ||
+		   ! mv "$download/filelist" "$unpack/usr/lib/opkg/info/$name.list"; then
 			rm -rf "$unpack" "$download"
 			return 1
 		fi
-		rm -f "$download"/*
 	done < "$manifest"
 	[ -x "$unpack/usr/sbin/uhttpd" ] && [ -x "$unpack/usr/bin/ucode" ] && [ -f "$unpack/usr/share/ucode/luci/dispatcher.uc" ] &&
 	   [ -f "$unpack/lib/netifd/wireless/qcawificfg80211.sh" ] &&
