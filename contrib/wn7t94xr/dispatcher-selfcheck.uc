@@ -7,7 +7,7 @@ try {
 }
 catch (e) {
 	if (e.message != 'dispatcher-selfcheck-connect')
-		throw e;
+		die(e.message);
 	connected = true;
 }
 if (!connected)

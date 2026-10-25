@@ -50,6 +50,7 @@ jobs:
           python3 luci/contrib/wn7t94xr/build-ipk.py sdk native netifd base-cache package
           python3 luci/contrib/wn7t94xr/ipk-selfcheck.py package base-cache
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: wn7t94xr-ipk
           path: |
