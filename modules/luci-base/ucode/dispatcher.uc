@@ -13,7 +13,7 @@ import { revision as luciversion, branch as luciname } from 'luci.version';
 import { default as LuCIRuntime } from 'luci.runtime';
 import { urldecode, urlencode } from 'luci.http';
 
-let ubus = connect();
+let ubus;
 let uci = cursor();
 
 let indexcache = "/tmp/luci-indexcache";
@@ -880,6 +880,8 @@ function run_action(request_path, lang, tree, resolved, action) {
 }
 
 dispatch = function(_http, path) {
+	// uhttpd preloads this module before forking; keep the connection request-local.
+	ubus ??= connect();
 	http = _http;
 
 	let version = determine_version();

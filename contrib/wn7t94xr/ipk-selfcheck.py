@@ -302,6 +302,9 @@ if start; then exit 18; fi
 [ ! -e "$ram" ] && [ ! -e "$state" ]
 mv "$manifest.good" "$manifest"
 fetch
+qemu-arm -L '{HERE.parents[2] / 'sdk/staging_dir/toolchain-arm_cortex-a7+neon-vfpv4_gcc-7.5.0_musl_eabi'}' \
+ -E "LD_LIBRARY_PATH=$ram/usr/lib:{HERE.parents[2] / 'sdk/staging_dir/target-arm_cortex-a7+neon-vfpv4_musl_eabi/usr/lib'}" \
+ "$ram/usr/bin/ucode" -L "$ram/usr/lib/ucode" -L "$ram/usr/share/ucode" -L '{HERE / 'fixtures'}' '{HERE / 'dispatcher-selfcheck.uc'}'
 [ -f "$ram/etc/sqm/sqm.conf" ]
 [ "$(grep -c '^Package:' "$ram/usr/lib/opkg/status")" -eq {len(ram_names) + 2} ]
 grep -q '^Version: stock$' "$ram/usr/lib/opkg/status"

@@ -23,6 +23,7 @@ LuCI と HTTP 中継は、設定変更と情報取得で共通です。図では
 flowchart TD
     UI["ブラウザー内の LuCI<br/>Wireless・Associated Stations・Switch<br/>［フォーク］Wireless・network.js<br/>設定変換・RPC 応答の表示補正<br/>［公式］フォーム・保存・適用"]
     HTTP["［公式］追加 uhttpd :8080<br/>公式 uhttpd-mod-ucode → LuCI<br/>HTTP → ubus の中継"]
+    DISPATCH["［フォーク］LuCI dispatcher<br/>子プロセスで要求ごとに ubus 接続を作る"]
 
     subgraph RPC["［純正］rpcd プロセス：公式・独自の拡張を追加"]
         UCIAPI["純正 UCI RPC<br/>設定の保存・適用"]
@@ -51,7 +52,8 @@ flowchart TD
     WEB["純正 Web 設定画面<br/>→ 純正 FcgiApp"]
 
     UI -->|"HTTP・JSON-RPC：共通経路"| HTTP
-    HTTP -->|"ubus：uci"| UCIAPI
+    HTTP -->|"子プロセスで要求を処理"| DISPATCH
+    DISPATCH -->|"ubus：uci"| UCIAPI
     UCIAPI -->|"保存：QSDK の有効値は disabled=0"| CONFIG
     UCIAPI -->|"適用通知"| EVENT
     EVENT --> WRAP
@@ -66,11 +68,11 @@ flowchart TD
     PLUGIN -->|"VAP・ブリッジの状態を通知"| CORE
     WEB -->|"同じ UCI 設定を保存"| CONFIG
 
-    HTTP -.->|"ubus：状態・ホスト・board.json"| LRPC
-    HTTP -.->|"ubus：iwinfo.info など"| IRPC
-    HTTP -.->|"ubus：機能情報・Switch"| URPC
-    HTTP -->|"ubus：端末切断"| DISCONNECT
-    HTTP -.->|"ubus：network.wireless.status"| CORE
+    DISPATCH -.->|"ubus：状態・ホスト・board.json"| LRPC
+    DISPATCH -.->|"ubus：iwinfo.info など"| IRPC
+    DISPATCH -.->|"ubus：機能情報・Switch"| URPC
+    DISPATCH -->|"ubus：端末切断"| DISCONNECT
+    DISPATCH -.->|"ubus：network.wireless.status"| CORE
     IRPC -.->|"同一プロセス内のライブラリ呼び出し"| IW
     IW -.-> NATIVE
     NATIVE -.->|"純正ドライバーへ照会"| DRIVER
@@ -84,7 +86,7 @@ LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で�
 
 純正 Web 設定画面も同じ UCI 設定を使います。純正画面からの反映経路は API ごとに異なるため、図では共通の保存先までを示しています。
 
-追加の uhttpd 本体、ubus・ucode モジュールは、同じ公式ソースを無改変でビルドします。LuCI の入口には公式 `uhttpd-mod-ucode` と `/usr/share/ucode/luci/uhttpd.uc` を使います。ucode の実行環境を読み込んだ親プロセスから要求ごとに子プロセスを作るため、CGI のように毎回 ucode コマンドを起動する必要がありません。LuCI の ubus 要求は引き続き公式 `/cgi-bin/luci/admin/ubus` を経由します。
+追加の uhttpd 本体、ubus・ucode モジュールは、同じ公式ソースを無改変でビルドします。LuCI の入口には公式 `uhttpd-mod-ucode` と `/usr/share/ucode/luci/uhttpd.uc` を使います。ucode の実行環境を読み込んだ親プロセスから要求ごとに子プロセスを作るため、CGI のように毎回 ucode コマンドを起動する必要がありません。LuCI の ubus 要求は引き続き公式 `/cgi-bin/luci/admin/ubus` を経由します。 LuCI dispatcher の ubus 接続は、子プロセスで要求処理を開始してから作ります。親プロセスからソケットを共有して並列要求が干渉することを防ぎます。
 
 HTTPS 用の公式 ustream-ssl は `/tmp/luci-ram/usr/lib/uhttpd` に分離し、uhttpd だけが読み込みます。純正プログラムが使う TLS ライブラリや OpenSSL は交換しません。uhttpd の起動処理・初期設定も、固定した OpenWrt 公式ファイルを使います。
 
