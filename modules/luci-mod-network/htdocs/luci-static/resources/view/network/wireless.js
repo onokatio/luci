@@ -361,18 +361,20 @@ function radio_restart(id, ev) {
 
 function network_updown(id, map, ev) {
 	const radio = uci.get('wireless', id, 'device');
+	const qca = uci.get('wireless', radio, 'type') == 'qcawificfg80211';
 	const disabled = (uci.get('wireless', id, 'disabled') == '1') ||
 	               (uci.get('wireless', radio, 'disabled') == '1');
 
-	if (disabled && uci.get('wireless', radio, 'type') == 'qcawificfg80211' && uci.get('wireless', id, 'mode') != 'monitor' &&
+	if (disabled && qca && uci.get('wireless', id, 'mode') != 'monitor' &&
 		(!qca_valid_ssid(qca_ssid(id) || '') || ([ 'psk2', 'sae', 'sae-mixed' ].indexOf(qca_security(id)) >= 0 && !qca_valid_key(uci.get('wireless', id, 'key') || '', qca_security(id))))) {
 		ui.addNotification(null, E('p', _('Set a valid SSID and key with Edit before enabling this network.')));
 		return Promise.resolve();
 	}
 
 	if (disabled) {
-		uci.unset('wireless', id, 'disabled');
-		uci.unset('wireless', radio, 'disabled');
+		// The vendor Web API requires explicit disabled=0 for enabled QSDK radios.
+		uci.set('wireless', id, 'disabled', qca ? '0' : null);
+		uci.set('wireless', radio, 'disabled', qca ? '0' : null);
 	}
 	else {
 		uci.set('wireless', id, 'disabled', '1');
@@ -2765,7 +2767,7 @@ return view.extend({
 						if (ws.device == radioDev.getName())
 							uci.set('wireless', ws['.name'], 'disabled', '1');
 
-					uci.unset('wireless', radioDev.getName(), 'disabled');
+					uci.set('wireless', radioDev.getName(), 'disabled', radioDev.get('type') == 'qcawificfg80211' ? '0' : null);
 				}
 
 				const htmodes = radioDev.getHTModes();

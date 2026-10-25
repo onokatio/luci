@@ -37,7 +37,7 @@ async function check(radioType) {
 	const uci = {
 		loadPackage: async () => {}, load: async () => {}, save: async () => {},
 		get: (c, s, k) => k == null ? configs[c]?.[s] : configs[c]?.[s]?.[k],
-		set: (c, s, k, v) => { configs[c][s][k] = v; },
+		set: (c, s, k, v) => { if (v == null) delete configs[c][s][k]; else configs[c][s][k] = v; },
 		unset: (c, s, k) => { delete configs[c][s][k]; },
 		sections: (c, t) => Object.entries(configs[c] || {}).filter(([, v]) => !t || v['.type'] == t).map(([id, v]) => ({ '.name': id, ...v }))
 	};
@@ -73,7 +73,7 @@ async function check(radioType) {
 	};
 	const mocks = {
 		uci, rpc,
-		ui: { createHandlerFn: () => () => {}, changes: { init: async () => {} }, addNotification: (...args) => notices.push(args) },
+		ui: { createHandlerFn: (context, fn, ...args) => (...rest) => (typeof fn == 'function' ? fn : context[fn]).apply(context, [...args, ...rest]), changes: { init: async () => {}, apply: () => {} }, addNotification: (...args) => notices.push(args) },
 		dom: { elem: () => false }, validation: {}, firewall: {}, view: baseclass, poll: { add() {} }, fs: {}, uqr: {}
 	};
 	const requireModule = L.require;
@@ -156,6 +156,23 @@ async function check(radioType) {
 	const iface = namedSections.find(s => s.sectiontype == 'wifi-iface' && s.getOption('encryption'));
 	const radio = namedSections.find(s => s.getOption('_freq'));
 	assert(iface && radio);
+	// Exercise the public modal toggle for shared-radio and last-network transitions.
+	const snapshot = structuredClone(data), originalSave = modal.save;
+	let toggleSaves = 0;
+	modal.save = async () => { toggleSaves++; };
+	for (const lastNetwork of [false, true]) {
+		data.ath1.disabled = lastNetwork ? '1' : '0';
+		data.ath15.disabled = '0'; data.wifi1.disabled = '0';
+		await radio.getOption('_toggle').onclick();
+		assert.equal(data.ath15.disabled, '1');
+		assert.equal(data.wifi1.disabled, lastNetwork ? '1' : '0');
+		await radio.getOption('_toggle').onclick();
+		assert.equal(data.ath15.disabled, legacy ? '0' : undefined);
+		assert.equal(data.wifi1.disabled, legacy ? '0' : undefined);
+		assert.equal(data.ath25.disabled, snapshot.ath25.disabled);
+	}
+	assert.equal(toggleSaves, 4);
+	Object.assign(data, snapshot); modal.save = originalSave;
 	const frequencyNode = { querySelector: selector => ({ value: ({ '.htmode': 'EHT40', '.mode': 'be', '.band': '2g', '.channel': 'auto' })[selector] }) };
 	mocks.dom.findClassInstance = node => node.field;
 	modal.findElement = (attribute, id) => {
@@ -175,7 +192,7 @@ async function check(radioType) {
 	assert.equal(distance.placeholder, radioType == 'qcawificfg80211' ? '0' : 'auto');
 	if (radioType == 'qcawificfg80211') {
 		const field = name => iface.getOption(name);
-		const shared = (key, value) => { for (const id of grouped) assert.deepEqual(data[id][key], value, id + '.' + key); };
+		const shared = (key, value) => { for (const id of grouped) assert.deepEqual(data[id][key] ?? null, value, id + '.' + key); };
 		await field('dtim_period').write('ath15', '3'); shared('dtim_period', '3');
 		const alias = field('private_key');
 		assert.equal(alias.ucioption, 'priv_key');

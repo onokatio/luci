@@ -297,6 +297,14 @@ postinst = '#!/bin/sh\nset -e\n[ -z "$IPKG_INSTROOT" ] || exit 0\n' + auth + '''
  uci add_list rpcd.qsdk_luci.write='*'
  uci commit rpcd
 fi
+# Older LuCI versions removed enabled flags required by the vendor Web API.
+for section in $(uci -q show wireless | awk -F '[.=]' '$3 == "wifi-device" || $3 == "wifi-iface" { print $2 }'); do
+ radio="$section"
+ [ "$(uci -q get "wireless.$section")" != wifi-iface ] || radio="$(uci -q get "wireless.$section.device")"
+ [ "$(uci -q get "wireless.$radio.type")" = qcawificfg80211 ] || continue
+ uci -q get "wireless.$section.disabled" >/dev/null || uci set "wireless.$section.disabled=0"
+done
+uci commit wireless
 uci -q delete uhttpd.main.listen_http || true
 uci -q delete uhttpd.main.listen_https || true
 uci -q delete uhttpd.main.lua_prefix || true

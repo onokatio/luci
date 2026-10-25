@@ -52,7 +52,7 @@ flowchart TD
 
     UI -->|"HTTP・JSON-RPC：共通経路"| HTTP
     HTTP -->|"ubus：uci"| UCIAPI
-    UCIAPI -->|"保存"| CONFIG
+    UCIAPI -->|"保存：QSDK の有効値は disabled=0"| CONFIG
     UCIAPI -->|"適用通知"| EVENT
     EVENT --> WRAP
     WRAP -->|"ubus：network／network.wireless"| CORE
@@ -80,7 +80,7 @@ flowchart TD
     DISCONNECT -->|"hostapd の UNIX 制御ソケット"| AUTH
 ```
 
-LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で共有設定を同期します。その後は純正 netifd、追加した無線プラグイン、純正 QSDK 制御処理の順に反映します。netifd リポジトリのフォークから使うのは無線プラグインと `/sbin/wifi` の処理であり、netifd 本体のバイナリは交換しません。
+LuCI 側で設定名・暗号形式を変換し、既存 MLO のリンク間で共有設定を同期します。 QSDK の無線を有効にするときは `disabled=0` を明示し、項目を削除するとエラーになる純正 Web API との互換性を保ちます。その後は純正 netifd、追加した無線プラグイン、純正 QSDK 制御処理の順に反映します。netifd リポジトリのフォークから使うのは無線プラグインと `/sbin/wifi` の処理であり、netifd 本体のバイナリは交換しません。
 
 純正 Web 設定画面も同じ UCI 設定を使います。純正画面からの反映経路は API ごとに異なるため、図では共通の保存先までを示しています。
 
