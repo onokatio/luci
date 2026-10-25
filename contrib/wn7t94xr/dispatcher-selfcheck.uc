@@ -6,7 +6,9 @@ try {
 	dispatch(null);
 }
 catch (e) {
-	connected = e.message == 'dispatcher-selfcheck-connect';
+	if (e.message != 'dispatcher-selfcheck-connect')
+		throw e;
+	connected = true;
 }
 if (!connected)
 	die('Dispatcher must open ubus when handling a request, not during preload');
