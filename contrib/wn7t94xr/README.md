@@ -46,6 +46,8 @@ v5.11.0-1ではuhttpd本体・ubus・ucodeモジュールを、公式ソース `
 
 v5.11.1-2では、QSDKのSSID・無線機の有効化時に `disabled=0` を明示します。標準LuCIのように項目を削除すると純正Webの設定取得が失敗するためです。スキャンからの接続も同じ扱いにし、更新時には過去の操作で欠けたQSDKのフラグだけを補います。既存の無効値・SSID・鍵・暗号化方式は保持します。 また、ucode経路の並列要求が同じubusソケットを共有しないよう、dispatcherの接続作成を要求処理の開始まで遅らせます。uhttpd本体・公式モジュールは変更しません。
 
+v5.11.2-1では、送信出力が未指定のVAPに0を書き込む処理を削除しました。純正処理と同じく指定された値だけを扱い、MLOと個別SSIDの併用時に5GHzが起動に失敗する問題を修正します。明示した送信出力の反映と失敗の検出は維持します。
+
 ## Wirelessの対応範囲
 
 | 標準画面の機能 | QSDKへの反映 |
@@ -162,8 +164,8 @@ v3.11.0-3から更新する場合は、設定をバックアップし、`/etc/in
 set -e
 wn7_install_dir="$(mktemp -d /tmp/wn7-luci.XXXXXX)"
 cd "$wn7_install_dir"
-wn7_release=https://github.com/onokatio/luci/releases/download/v5.11.1-2
-wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.11.1-2_arm_cortex-a7_neon-vfpv4.ipk
+wn7_release=https://github.com/onokatio/luci/releases/download/v5.11.2-1
+wn7_prepare=luci-qsdk-wn7t94xr-prepare_5.11.2-1_arm_cortex-a7_neon-vfpv4.ipk
 curl -fL "$wn7_release/$wn7_prepare" -o "$wn7_prepare"
 curl -fL "$wn7_release/SHA256SUMS" -o SHA256SUMS
 awk -v name="$wn7_prepare" '$2 == name' SHA256SUMS > prepare.sha256
@@ -177,7 +179,7 @@ opkg --force-space install luci-qsdk-wn7t94xr
 /etc/init.d/luci-ram start
 ```
 
-[リリース](https://github.com/onokatio/luci/releases/tag/v5.11.1-2)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
+[リリース](https://github.com/onokatio/luci/releases/tag/v5.11.2-1)のIPKには取得先とSHA-256を固定した一覧が入っています。公式IPKは[OpenWrtの公式アーカイブ](https://archive.openwrt.org/releases/packages-19.07/arm_cortex-a7_neon-vfpv4/)から取得します。準備パッケージは純正のネットワーク・無線制御の入口とログイン設定、起動パッケージ用の空き容量を検査します。未知の変更や容量不足では停止します。Dropbearの導入と設定は別途必要です。
 
 v3.2.1以前の依存パッケージをoverlayへ入れた構成は、そのまま上書きできません。既存の設定とoverlayをPCへバックアップし、LuCI用の追加パッケージを削除し、置き換えたiwinfoの3パッケージをROM版へ戻してから移行してください。旧 `luci-base-ram` や `/overlay/luci-base` が残っている場合は、準備処理が停止します。純正の設定、SSH、無線の校正データは削除対象にしません。
 

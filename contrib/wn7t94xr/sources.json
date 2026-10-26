@@ -21,7 +21,7 @@
   ],
   "forks": {
     "iwinfo": "acaedae956da4bd8fde606f548824c0b9c66328c",
-    "netifd": "067135717695c300c814e57a1bdd37e23cceb5bd"
+    "netifd": "bdda0578656495b32faa672b1803535e6423d239"
   },
   "iwinfo_upstream": "66bdd1a071895d91babc9b9228bb84626bbce226",
   "luci_upstream": "ae5571bc7a41bc351d6939521425bb4113fde19d",
@@ -91,5 +91,5 @@
     }
   },
   "sdk_base": "d03dc49943db1d02ff89e056a18eefe5e2d51dec",
-  "version": "5.11.1-2"
+  "version": "5.11.2-1"
 }
