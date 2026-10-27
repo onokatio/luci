@@ -2281,10 +2281,13 @@ return view.extend({
 						o = ss.taboption('roaming', form.Flag, 'rrm_neighbor_report', _('Neighbour Report'), _('802.11k: Enable neighbor report via radio measurements.'));
 						o.depends({ ieee80211k: '1' });
 						o.default = o.enabled;
+						// QSDK infers the RRM switch from explicitly stored report flags.
+						if (hwtype == 'qcawificfg80211') o.rmempty = false;
 
 						o = ss.taboption('roaming', form.Flag, 'rrm_beacon_report', _('Beacon Report'), _('802.11k: Enable beacon report via radio measurements.'));
 						o.depends({ ieee80211k: '1' });
 						o.default = o.enabled;
+						if (hwtype == 'qcawificfg80211') o.rmempty = false;
 						/* 802.11k settings end */
 
 						/* 802.11v settings start */

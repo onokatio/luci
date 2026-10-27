@@ -190,6 +190,34 @@ async function check(radioType) {
 	const distance = radio.getOption('distance');
 	assert.equal(distance.datatype, radioType == 'qcawificfg80211' ? 'and(uinteger,range(0,21150))' : 'or(range(0,114750),"auto")');
 	assert.equal(distance.placeholder, radioType == 'qcawificfg80211' ? '0' : 'auto');
+	// Parse real Flag options: enabled defaults must survive QSDK's virtual RRM switch.
+	const rrmSnapshot = structuredClone(data), master = iface.getOption('ieee80211k');
+	const reports = ['rrm_neighbor_report', 'rrm_beacon_report'].map(name => iface.getOption(name));
+	const rrmOptions = [master, ...reports], reportValues = {};
+	let rrmEnabled = true;
+	const rrmMethods = rrmOptions.map(option => [option, option.isActive, option.isValid, option.formvalue]);
+	for (const option of rrmOptions) {
+		option.isActive = () => option == master || rrmEnabled;
+		option.isValid = () => true;
+		option.formvalue = () => option == master ? (rrmEnabled ? '1' : '0') : (reportValues[option.option] || '1');
+		await option.parse('ath15');
+	}
+	assert.equal(legacy ? master.cfgvalue('ath15') : data.ath15.ieee80211k, '1');
+	for (const option of reports) {
+		for (const id of grouped) assert.equal(data[id][option.option], legacy ? '1' : undefined);
+		assert.equal(data.ath1[option.option], undefined);
+	}
+	for (const option of reports) {
+		reportValues[option.option] = '0';
+		await option.parse('ath15');
+	}
+	assert.equal(legacy ? master.cfgvalue('ath15') : data.ath15.ieee80211k, legacy ? '0' : '1');
+	rrmEnabled = false;
+	for (const option of rrmOptions) await option.parse('ath15');
+	assert.equal((legacy ? master.cfgvalue('ath15') : data.ath15.ieee80211k) || '0', '0');
+	for (const option of reports) for (const id of grouped) assert.notEqual(data[id][option.option], '1');
+	for (const [option, isActive, isValid, formvalue] of rrmMethods) Object.assign(option, { isActive, isValid, formvalue });
+	Object.assign(data, rrmSnapshot);
 	if (radioType == 'qcawificfg80211') {
 		const field = name => iface.getOption(name);
 		const shared = (key, value) => { for (const id of grouped) assert.deepEqual(data[id][key] ?? null, value, id + '.' + key); };
