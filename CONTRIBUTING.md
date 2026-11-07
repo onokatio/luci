@@ -1,5 +1,7 @@
 # Contributing Guidelines
 
+WN-7T94XR の QSDK 固有の変更には、[機種別のコントリビューションガイド](contrib/wn7t94xr/CONTRIBUTING.md)を参照してください。以下は公式 LuCI への投稿手順です。
+
 ## Translations
 
 Use [Weblate](https://hosted.weblate.org/engage/openwrt/?utm_source=widget) instead of direct editing of the `*.po` files.
